@@ -20,7 +20,7 @@
     "crypto-js": "^4.2.0",
     "drizzle-orm": "^0.43.1",
     "mysql2": "^3.14.1",
-    "next": "15.3.2",
+    "next": "^16.0.7",
     "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-countup": "^6.5.3",
