@@ -1,0 +1,95 @@
+/* Audit Log Page Styles */
+
+.audit-log-section {
+  padding: 80px 0 120px;
+  background-color: #f8f9fa;
+  min-height: calc(100vh - 200px);
+}
+
+.audit-log-section .container {
+  max-width: 970px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.audit-log-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 32px 0;
+  line-height: 1.3;
+}
+
+.audit-log-table-wrapper {
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.audit-log-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.audit-log-table thead {
+  background-color: #1a1a1a;
+}
+
+.audit-log-table thead th {
+  padding: 16px 24px;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.4;
+}
+
+.audit-log-table tbody tr {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.audit-log-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.audit-log-table tbody td {
+  padding: 20px 24px;
+  font-size: 14px;
+  color: #1a1a1a;
+  line-height: 1.5;
+}
+
+.audit-log-table tbody td:nth-child(2) {
+  font-weight: bold;
+}
+
+.audit-log-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .audit-log-section {
+    padding: 40px 0 60px;
+  }
+
+  .audit-log-title {
+    font-size: 20px;
+    margin-bottom: 24px;
+  }
+
+  .audit-log-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .audit-log-table {
+    min-width: 600px;
+  }
+
+  .audit-log-table thead th,
+  .audit-log-table tbody td {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+}
