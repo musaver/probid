@@ -58,6 +58,7 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
     });
 
     const [formData, setFormData] = useState({
+        title: "",
         parcelId: "",
         address: "",
         city: "",
@@ -100,6 +101,7 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
                 const p = await res.json();
 
                 setFormData({
+                    title: p.title || "",
                     parcelId: p.parcelId || "",
                     address: p.address || "",
                     city: p.city || "",
@@ -309,6 +311,16 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
                                     <form id="edit-property-form" onSubmit={handleSubmit}>
                                         <div className="form-row">
                                             <div className="form-group">
+                                                <label>Property Title</label>
+                                                <input
+                                                    type="text"
+                                                    name="title"
+                                                    value={formData.title}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                />
+                                            </div>
+                                            <div className="form-group">
                                                 <label>Parcel ID</label>
                                                 <input
                                                     type="text"
@@ -318,6 +330,9 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
                                                     required
                                                 />
                                             </div>
+                                        </div>
+
+                                        <div className="form-row">
                                             <div className="form-group">
                                                 <label>Property Address</label>
                                                 <input
@@ -328,9 +343,6 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
                                                     required
                                                 />
                                             </div>
-                                        </div>
-
-                                        <div className="form-row">
                                             <div className="form-group">
                                                 <label>City</label>
                                                 <input

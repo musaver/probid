@@ -365,9 +365,9 @@ const DashboardOverviewSection = ({
               ) : (
                 recentActivity.map((r, idx) => (
                   <tr key={idx}>
-                    <td>{r.activity}</td>
-                    <td>{r.subject}</td>
-                    <td>{r.time}</td>
+                    <td data-label="Activity">{r.activity}</td>
+                    <td data-label="Property/Name">{r.subject}</td>
+                    <td data-label="Time">{r.time}</td>
                   </tr>
                 ))
               )}

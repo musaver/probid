@@ -68,11 +68,16 @@ export async function POST(req: Request) {
             visibilitySettings,
         } = body;
 
+        const safeTitle = String(title || "").trim() || String(address || "").trim();
+        if (!safeTitle) {
+            return new NextResponse("Property title is required", { status: 400 });
+        }
+
         const propertyId = uuidv4();
 
         await db.insert(property).values({
             id: propertyId,
-            title: address, // Using address as title for now as per UI
+            title: safeTitle,
             description,
             address,
             parcelId,

@@ -298,42 +298,23 @@ const PropertiesContent = () => {
 
             {showBidModal && (
                 <div
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: "rgba(0,0,0,0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 1000,
-                    }}
+                    className="app-modal-overlay"
                     onClick={() => setShowBidModal(false)}
                 >
                     <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "16px",
-                            padding: "24px",
-                            maxWidth: "640px",
-                            width: "92%",
-                            maxHeight: "85vh",
-                            overflow: "auto",
-                        }}
+                        className="app-modal app-modal--md"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                                <h2 style={{ margin: 0 }}>Add Bid</h2>
-                                <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "4px" }}>
+                        <div className="app-modal-header">
+                            <div style={{ minWidth: 0 }}>
+                                <h2 className="app-modal-title">Add Bid</h2>
+                                <div className="app-modal-subtitle" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {bidProperty?.address || "Property"}
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowBidModal(false)}
-                                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer" }}
+                                className="app-modal-close"
                                 aria-label="Close"
                             >
                                 ×

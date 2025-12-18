@@ -595,9 +595,6 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     <h2>Linked Bidders</h2>
                                     <p>Bidders who have access to this property</p>
                                 </div>
-                                <button className="link-bidder-btn" onClick={() => setShowLinkModal(true)}>
-                                    <i className="bi bi-plus-circle"></i> Link Bidder
-                                </button>
                             </div>
 
                             {loadingBidders ? (
@@ -645,36 +642,29 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
 
                             {/* Link Bidder Modal */}
                             {showLinkModal && (
-                                <div style={{
-                                    position: 'fixed',
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    bottom: 0,
-                                    background: 'rgba(0, 0, 0, 0.5)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    zIndex: 1000
-                                }}>
-                                    <div style={{
-                                        background: '#fff',
-                                        borderRadius: '16px',
-                                        padding: '32px',
-                                        maxWidth: '500px',
-                                        width: '90%',
-                                        maxHeight: '80vh',
-                                        overflow: 'auto'
-                                    }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                            <h2 style={{ margin: 0 }}>Link Bidder</h2>
+                                <div
+                                    className="app-modal-overlay"
+                                    onClick={() => {
+                                        setShowLinkModal(false);
+                                        setSearchEmail("");
+                                        setSearchResults([]);
+                                    }}
+                                >
+                                    <div
+                                        className="app-modal app-modal--sm"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="app-modal-header">
+                                            <h2 className="app-modal-title">Link Bidder</h2>
                                             <button
+                                                type="button"
                                                 onClick={() => {
                                                     setShowLinkModal(false);
                                                     setSearchEmail("");
                                                     setSearchResults([]);
                                                 }}
-                                                style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer' }}
+                                                className="app-modal-close"
+                                                aria-label="Close"
                                             >
                                                 ×
                                             </button>
@@ -831,42 +821,23 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
 
             {showBidModal && (
                 <div
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: "rgba(0,0,0,0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 1000,
-                    }}
+                    className="app-modal-overlay"
                     onClick={() => setShowBidModal(false)}
                 >
                     <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "16px",
-                            padding: "24px",
-                            maxWidth: "640px",
-                            width: "92%",
-                            maxHeight: "85vh",
-                            overflow: "auto",
-                        }}
+                        className="app-modal app-modal--md"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <div>
-                                <h2 style={{ margin: 0 }}>Add Bid</h2>
-                                <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "4px" }}>
+                        <div className="app-modal-header">
+                            <div style={{ minWidth: 0 }}>
+                                <h2 className="app-modal-title">Add Bid</h2>
+                                <div className="app-modal-subtitle" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                     {property?.address || "Property"}
                                 </div>
                             </div>
                             <button
                                 onClick={() => setShowBidModal(false)}
-                                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer" }}
+                                className="app-modal-close"
                                 aria-label="Close"
                             >
                                 ×
@@ -998,35 +969,18 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
 
             {showAlertModal && (
                 <div
-                    style={{
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        background: "rgba(0, 0, 0, 0.5)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        zIndex: 1000,
-                    }}
+                    className="app-modal-overlay"
                     onClick={() => setShowAlertModal(false)}
                 >
                     <div
-                        style={{
-                            background: "#fff",
-                            borderRadius: "16px",
-                            padding: "28px",
-                            maxWidth: "560px",
-                            width: "92%",
-                        }}
+                        className="app-modal app-modal--sm"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                            <h2 style={{ margin: 0 }}>Send Alert</h2>
+                        <div className="app-modal-header">
+                            <h2 className="app-modal-title">Send Alert</h2>
                             <button
                                 onClick={() => setShowAlertModal(false)}
-                                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer" }}
+                                className="app-modal-close"
                                 aria-label="Close"
                             >
                                 ×

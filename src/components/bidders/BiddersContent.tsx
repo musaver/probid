@@ -212,44 +212,24 @@ export default function BiddersContent() {
 
       {showPropsModal && (
         <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: "rgba(0,0,0,0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            padding: "14px",
-          }}
+          className="app-modal-overlay"
           onClick={() => setShowPropsModal(false)}
         >
           <div
-            style={{
-              background: "#fff",
-              borderRadius: "16px",
-              padding: "22px",
-              maxWidth: "820px",
-              width: "100%",
-              maxHeight: "85vh",
-              overflow: "auto",
-            }}
+            className="app-modal"
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-              <div>
-                <h2 style={{ margin: 0 }}>Linked Properties</h2>
-                <div style={{ color: "#6B7280", fontSize: "13px", marginTop: "4px" }}>
+            <div className="app-modal-header">
+              <div style={{ minWidth: 0 }}>
+                <h2 className="app-modal-title">Linked Properties</h2>
+                <div className="app-modal-subtitle" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {propsBidder?.name || propsBidder?.email || "Bidder"}
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowPropsModal(false)}
-                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer" }}
+                className="app-modal-close"
                 aria-label="Close"
               >
                 ×

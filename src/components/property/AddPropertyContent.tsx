@@ -21,6 +21,7 @@ const AddPropertyContent = () => {
     const visibilityTouchedRef = useRef(false);
 
     const [formData, setFormData] = useState({
+        title: "",
         parcelId: "",
         address: "",
         city: "",
@@ -223,6 +224,17 @@ const AddPropertyContent = () => {
                                         <form id="add-property-form" onSubmit={handleSubmit}>
                                             <div className="form-row">
                                                 <div className="form-group">
+                                                    <label>Property Title</label>
+                                                    <input
+                                                        type="text"
+                                                        name="title"
+                                                        placeholder="e.g. 3BR Single Family Home"
+                                                        value={formData.title}
+                                                        onChange={handleInputChange}
+                                                        required
+                                                    />
+                                                </div>
+                                                <div className="form-group">
                                                     <label>Parcel ID</label>
                                                     <input
                                                         type="text"
@@ -233,6 +245,8 @@ const AddPropertyContent = () => {
                                                         required
                                                     />
                                                 </div>
+                                            </div>
+                                            <div className="form-row">
                                                 <div className="form-group">
                                                     <label>Property Address</label>
                                                     <input
@@ -244,8 +258,6 @@ const AddPropertyContent = () => {
                                                         required
                                                     />
                                                 </div>
-                                            </div>
-                                            <div className="form-row">
                                                 <div className="form-group">
                                                     <label>City</label>
                                                     <input

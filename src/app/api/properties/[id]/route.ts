@@ -102,7 +102,7 @@ export async function PATCH(
 
         // Only property creator can edit; also capture old status/address for notifications
         const [existing] = await db
-            .select({ id: property.id, createdBy: property.createdBy, status: property.status, address: property.address })
+            .select({ id: property.id, createdBy: property.createdBy, status: property.status, address: property.address, title: property.title })
             .from(property)
             .where(eq(property.id, params.id))
             .limit(1);
@@ -130,11 +130,16 @@ export async function PATCH(
         } = body;
 
         const nextStatus = status || "active";
+        const safeTitle =
+            String(title || "").trim() ||
+            String(address || "").trim() ||
+            String(existing.title || "").trim() ||
+            String(existing.address || "").trim();
 
         await db
             .update(property)
             .set({
-                title: address || title,
+                title: safeTitle,
                 description,
                 address,
                 parcelId,
