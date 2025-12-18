@@ -546,7 +546,9 @@ body {
   }
 
   .dashboard-menu .nav-item span {
-    display: none;
+    display: inline-block;
+    font-size: 12px;
+    line-height: 1.2;
   }
 
   .dashboard-menu .nav-item i {
@@ -1809,7 +1811,14 @@ input:checked+.slider:before {
   }
 
   .dashboard-menu .nav-item span {
-    display: none;
+    display: block;
+    font-size: 11px;
+    line-height: 1.15;
+    text-align: center;
+    max-width: 92px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .dashboard-menu .nav-item i {
@@ -2951,7 +2960,7 @@ input:checked+.slider:before {
   }
 
   header.style-1 .sidebar-button.mobile-menu-btn {
-    margin-left: 15px;
+    margin-left: 0px;
   }
 }
 
@@ -3007,7 +3016,7 @@ input:checked+.slider:before {
   }
 
   header.style-1 .sidebar-button.mobile-menu-btn {
-    margin-left: 8px;
+    margin-left: 0px;
   }
 }
 
@@ -4201,19 +4210,70 @@ input:checked+.slider:before {
     align-items: flex-start;
   }
 
+  .property-details-content {
+    padding: 18px 0 44px;
+  }
+
+  .back-link {
+    margin-bottom: 16px;
+  }
+
+  .property-header-card {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .property-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+  }
+
+  .property-icon i {
+    font-size: 26px;
+  }
+
+  .property-title-info h1 {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .property-location {
+    font-size: 14px;
+  }
+
   .status-badge-large {
     align-self: flex-start;
+    padding: 8px 18px;
+    font-size: 13px;
   }
 
   .property-stats-grid {
     grid-template-columns: 1fr;
+    gap: 12px !important;
+    margin-top: 14px !important;
+    margin-bottom: 18px;
+  }
+
+  /* The stats cards on PropertyDetails are currently inline-styled for desktop.
+     Override key spacing so they don't feel oversized on mobile. */
+  .property-stats-grid .stat-card-new {
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+
+  .property-stats-grid .stat-icon-wrapper {
+    width: 44px !important;
+    height: 44px !important;
+    margin-right: 12px !important;
   }
 
   .property-actions {
     flex-direction: column;
   }
 
-  .action-btn {
+  .action-btn,
+  .action-btn-1 {
     width: 100%;
     justify-content: center;
   }
@@ -4221,15 +4281,46 @@ input:checked+.slider:before {
   .property-tabs {
     overflow-x: auto;
     white-space: nowrap;
+    width: 100%;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .property-tabs::-webkit-scrollbar {
+    height: 0;
   }
 
   .tab-btn {
     flex: 0 0 auto;
-    min-width: 150px;
+    min-width: 120px;
+    padding: 10px 18px;
+    font-size: 13px;
   }
 
   .detail-row {
     grid-template-columns: 1fr;
+  }
+
+  .details-card,
+  .bidding-section {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .detail-group {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .detail-item {
+    padding: 14px 16px;
+    border-radius: 14px;
+  }
+
+  .auction-timeline {
+    padding: 16px 14px;
+    border-radius: 14px;
   }
 
   .linked-bidders-header {
@@ -4303,6 +4394,22 @@ input:checked+.slider:before {
   .document-actions {
     flex-direction: column;
     gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .property-tabs {
+    padding: 6px 6px;
+    border-radius: 18px;
+  }
+
+  .tab-btn {
+    min-width: 110px;
+    padding: 10px 14px;
+  }
+
+  .property-title-info h1 {
+    font-size: 18px;
   }
 }
 

@@ -3547,12 +3547,14 @@ header.style-1 .nav-right .mobile-menu-btn {
 @media (max-width: 991px) {
   header.style-1 .nav-right .mobile-menu-btn {
     display: flex;
-    margin-left: 50px;
+    margin-left: 0px;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     visibility: visible;
     justify-content: center;
     position: relative;
+    width: 44px;
+    height: 44px;
   }
 
   header.style-1 .nav-right .mobile-menu-btn span {
@@ -3562,7 +3564,8 @@ header.style-1 .nav-right .mobile-menu-btn {
     display: flex;
     transition: transform 0.5s ease-in;
     position: absolute;
-    top: 0px;
+    top: 50%;
+    transform: translateY(-50%);
   }
 
   header.style-1 .nav-right .mobile-menu-btn span::before {

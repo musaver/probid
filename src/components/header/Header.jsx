@@ -45,6 +45,7 @@ const Header = () => {
   const router = useRouter();
   const avatarFallback = "/assets/img/avatar-placeholder.svg";
   const [isMenuOpen, setMenuOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const pathName = usePathname()
 
@@ -103,6 +104,48 @@ const Header = () => {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
+
+  useEffect(() => {
+    const compute = () => setIsMobileViewport(window.innerWidth <= 576);
+    compute();
+    window.addEventListener("resize", compute);
+    return () => window.removeEventListener("resize", compute);
+  }, []);
+
+  const dropdownPanelStyle = (opts) => {
+    const desktopTop = (opts && opts.desktopTop) || "52px";
+    const desktopWidth = (opts && opts.desktopWidth) || "360px";
+    const base = {
+      background: "#fff",
+      border: "1px solid rgba(17,24,39,0.12)",
+      borderRadius: "14px",
+      boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+      overflow: "hidden",
+      zIndex: 2000,
+    };
+
+    if (isMobileViewport) {
+      return {
+        ...base,
+        position: "fixed",
+        top: "72px",
+        left: "12px",
+        right: "12px",
+        width: "auto",
+        maxWidth: "calc(100vw - 24px)",
+        maxHeight: "calc(100vh - 92px)",
+      };
+    }
+
+    return {
+      ...base,
+      position: "absolute",
+      top: desktopTop,
+      right: 0,
+      width: desktopWidth,
+      maxWidth: "calc(100vw - 24px)",
+    };
+  };
 
   const markAllRead = async () => {
     if (!session) return;
@@ -485,21 +528,7 @@ const Header = () => {
                 </button>
 
                 {msgOpen && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "52px",
-                      right: 0,
-                      width: "360px",
-                      maxWidth: "calc(100vw - 24px)",
-                      background: "#fff",
-                      border: "1px solid rgba(17,24,39,0.12)",
-                      borderRadius: "14px",
-                      boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
-                      overflow: "hidden",
-                      zIndex: 1000,
-                    }}
-                  >
+                  <div style={dropdownPanelStyle({ desktopTop: "52px", desktopWidth: "360px" })}>
                     <div
                       style={{
                         padding: "12px 14px",
@@ -537,7 +566,13 @@ const Header = () => {
                       </div>
                     </div>
 
-                    <div style={{ maxHeight: "420px", overflow: "auto" }}>
+                    <div
+                      style={{
+                        maxHeight: isMobileViewport ? "calc(100vh - 180px)" : "420px",
+                        overflow: "auto",
+                        WebkitOverflowScrolling: "touch",
+                      }}
+                    >
                       {msgLoading ? (
                         <div style={{ padding: "14px", color: "#6B7280" }}>Loading...</div>
                       ) : msgItems.length === 0 ? (
@@ -653,21 +688,7 @@ const Header = () => {
                 </button>
 
                 {notifOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "52px",
-                    right: 0,
-                    width: "360px",
-                    maxWidth: "calc(100vw - 24px)",
-                    background: "#fff",
-                    border: "1px solid rgba(17,24,39,0.12)",
-                    borderRadius: "14px",
-                    boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
-                    overflow: "hidden",
-                    zIndex: 1000,
-                  }}
-                >
+                <div style={dropdownPanelStyle({ desktopTop: "52px", desktopWidth: "360px" })}>
                   <div
                     style={{
                       padding: "12px 14px",
@@ -713,7 +734,13 @@ const Header = () => {
                     </div>
                   </div>
 
-                  <div style={{ maxHeight: "420px", overflow: "auto" }}>
+                  <div
+                    style={{
+                      maxHeight: isMobileViewport ? "calc(100vh - 200px)" : "420px",
+                      overflow: "auto",
+                      WebkitOverflowScrolling: "touch",
+                    }}
+                  >
                     {notifLoading ? (
                       <div style={{ padding: "14px", color: "#6B7280" }}>Loading...</div>
                     ) : notifItems.length === 0 ? (
@@ -761,7 +788,7 @@ const Header = () => {
             </div>
           )}
           {session ? (
-            <div ref={accountRef} style={{ position: "relative" }} className="d-lg-flex d-none">
+            <div ref={accountRef} style={{ position: "relative" }} className="d-flex">
               <button
                 type="button"
                 onClick={() => {
@@ -777,7 +804,7 @@ const Header = () => {
                   background: "transparent",
                   border: "none",
                   cursor: "pointer",
-                  padding: "6px 0px",
+                  padding: isMobileViewport ? "0px" : "6px 0px",
                   borderRadius: "12px",
                 }}
                 aria-label="Account menu"
@@ -788,34 +815,33 @@ const Header = () => {
                   onError={(e) => {
                     e.currentTarget.src = avatarFallback;
                   }}
-                  style={{ width: "40px", height: "40px", borderRadius: "999px", objectFit: "cover" }}
+                  style={{
+                    width: isMobileViewport ? "44px" : "40px",
+                    height: isMobileViewport ? "44px" : "40px",
+                    borderRadius: "999px",
+                    objectFit: "cover",
+                    border: isMobileViewport ? "1px solid rgba(17,24,39,0.12)" : "none",
+                    background: "#fff",
+                    padding: isMobileViewport ? "2px" : "0px",
+                  }}
                 />
-                <div style={{ textAlign: "left", lineHeight: 1.1 }}>
-                  <div style={{ fontWeight: 800, color: "#111827", fontSize: "14px" }}>
-                    {session.user.name || "My Account"}
-                  </div>
-                  <div style={{ color: "#6B7280", fontSize: "12px", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {session.user.email || ""}
-                  </div>
-                </div>
-                <i className={`bi ${accountOpen ? "bi-chevron-up" : "bi-chevron-down"}`} style={{ color: "#6B7280" }} />
+                {!isMobileViewport && (
+                  <>
+                    <div style={{ textAlign: "left", lineHeight: 1.1 }}>
+                      <div style={{ fontWeight: 800, color: "#111827", fontSize: "14px" }}>
+                        {session.user.name || "My Account"}
+                      </div>
+                      <div style={{ color: "#6B7280", fontSize: "12px", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {session.user.email || ""}
+                      </div>
+                    </div>
+                    <i className={`bi ${accountOpen ? "bi-chevron-up" : "bi-chevron-down"}`} style={{ color: "#6B7280" }} />
+                  </>
+                )}
               </button>
 
               {accountOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    top: "54px",
-                    width: "320px",
-                    background: "#fff",
-                    border: "1px solid rgba(17,24,39,0.12)",
-                    borderRadius: "16px",
-                    boxShadow: "0 18px 40px rgba(0,0,0,0.18)",
-                    overflow: "hidden",
-                    zIndex: 1000,
-                  }}
-                >
+                <div style={dropdownPanelStyle({ desktopTop: "54px", desktopWidth: "320px" })}>
                   <div style={{ padding: "16px 16px 12px 16px", borderBottom: "1px solid rgba(17,24,39,0.08)" }}>
                     <div style={{ fontWeight: 800, fontSize: "16px", color: "#111827" }}>{session.user.name || "User"}</div>
                     <div style={{ color: "#6B7280", fontSize: "13px" }}>{session.user.email || ""}</div>
