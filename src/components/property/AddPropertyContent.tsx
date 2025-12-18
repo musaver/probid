@@ -109,10 +109,12 @@ const AddPropertyContent = () => {
                 }
                 const data = await res.json();
                 const list = Array.isArray(data) ? data : [];
-                // Prefer email matches (user requested email search)
+                // Exact email match only (start-to-end)
                 const qLower = q.toLowerCase();
-                const filtered = list.filter((u: any) => String(u?.email || "").toLowerCase().includes(qLower));
-                setBidderResults(filtered.slice(0, 10));
+                const filtered = list.filter(
+                    (u: any) => String(u?.email || "").toLowerCase() === qLower
+                );
+                setBidderResults(filtered.slice(0, 1));
             } catch (e) {
                 console.error("Error searching bidders:", e);
                 setBidderResults([]);
