@@ -193,7 +193,7 @@ const PropertyDetailsContent = () => {
         <div className="property-details-content">
           <div className="container">
             {/* Back to Properties */}
-            <Link href="/add-property" className="back-link">
+            <Link href="/properties" className="back-link">
               <i className="bi bi-arrow-left"></i> Back to Properties
             </Link>
 

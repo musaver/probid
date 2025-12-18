@@ -35,3 +35,20 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 # probid
+
+## Environment Variables
+
+This app expects the following environment variables:
+
+- **Database (Drizzle/MySQL)**:
+  - `DB_HOST`
+  - `DB_USER`
+  - `DB_PASS`
+  - `DB_NAME`
+- **Auth (NextAuth)**:
+  - `NEXTAUTH_SECRET`
+  - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (if using Google)
+  - `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET` (if using Facebook)
+- **Vercel Blob (documents for properties)**:
+  - `BLOB_READ_WRITE_TOKEN` (token scoped to Blob store **`probid-blob`**)
+    - Alternatively `VERCEL_BLOB_READ_WRITE_TOKEN`

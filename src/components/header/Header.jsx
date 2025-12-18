@@ -1,9 +1,9 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import React, { useReducer, useState } from "react";
-import { useSession } from "next-auth/react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useEffect, useReducer, useRef, useState } from "react";
+import { signOut, useSession } from "next-auth/react";
 
 
 const initialState = {
@@ -42,9 +42,129 @@ function reducer(state, action) {
 
 const Header = () => {
   const { data: session } = useSession();
+  const router = useRouter();
+  const avatarFallback = "/assets/img/avatar-placeholder.svg";
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const pathName = usePathname()
+
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifUnread, setNotifUnread] = useState(0);
+  const [notifItems, setNotifItems] = useState([]);
+
+  const [msgOpen, setMsgOpen] = useState(false);
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [msgUnread, setMsgUnread] = useState(0);
+  const [msgItems, setMsgItems] = useState([]);
+
+  const fetchNotifications = async () => {
+    if (!session) return;
+    try {
+      setNotifLoading(true);
+      const res = await fetch("/api/notifications?limit=15");
+      if (!res.ok) return;
+      const data = await res.json();
+      setNotifUnread(data.unreadCount || 0);
+      setNotifItems(data.notifications || []);
+    } catch (e) {
+      console.error("Failed to fetch notifications:", e);
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const fetchMessages = async () => {
+    if (!session) return;
+    try {
+      setMsgLoading(true);
+      const res = await fetch("/api/conversations");
+      if (!res.ok) return;
+      const data = await res.json();
+      const items = Array.isArray(data) ? data : [];
+      setMsgItems(items.slice(0, 8));
+      setMsgUnread(items.reduce((sum, c) => sum + (c.unreadCount || 0), 0));
+    } catch (e) {
+      console.error("Failed to fetch messages:", e);
+    } finally {
+      setMsgLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!session) return;
+    fetchNotifications();
+    fetchMessages();
+    const t = setInterval(fetchNotifications, 30000);
+    const t2 = setInterval(fetchMessages, 30000);
+    return () => {
+      clearInterval(t);
+      clearInterval(t2);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
+
+  const markAllRead = async () => {
+    if (!session) return;
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ all: true }),
+      });
+      await fetchNotifications();
+    } catch (e) {
+      console.error("Failed to mark notifications read:", e);
+    }
+  };
+
+  const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef(null);
+  const [headerSearch, setHeaderSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchItems, setSearchItems] = useState([]);
+  const searchRef = useRef(null);
+  const msgRef = useRef(null);
+  const notifRef = useRef(null);
+
+  useEffect(() => {
+    const onDocClick = (e) => {
+      const t = e.target;
+
+      if (accountRef.current && !accountRef.current.contains(t)) setAccountOpen(false);
+      if (searchRef.current && !searchRef.current.contains(t)) setSearchOpen(false);
+      if (msgRef.current && !msgRef.current.contains(t)) setMsgOpen(false);
+      if (notifRef.current && !notifRef.current.contains(t)) setNotifOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    const q = headerSearch.trim();
+    if (q.length < 2) {
+      setSearchItems([]);
+      setSearchOpen(false);
+      return;
+    }
+    const t = setTimeout(async () => {
+      try {
+        setSearchLoading(true);
+        const res = await fetch(`/api/properties/suggestions?q=${encodeURIComponent(q)}&limit=8`);
+        if (!res.ok) return;
+        const data = await res.json();
+        setSearchItems(Array.isArray(data) ? data : []);
+        setSearchOpen(true);
+      } catch (e) {
+        console.error("Search suggestions error:", e);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [headerSearch, session]);
   const collapseMenu = (menu) => {
     dispatch({ type: "TOGGLE_MENU", menu });
   };
@@ -189,11 +309,78 @@ const Header = () => {
         </div>
         <div className="nav-right d-flex jsutify-content-end align-items-center">
           <form className="d-xl-flex d-none">
-            <div className="form-inner" style={{ borderRadius: "25px", position: "relative" }}>
-              <input type="text" placeholder="Search your property ..." style={{ borderRadius: "25px", paddingRight: "80px" }} />
+            <div ref={searchRef} className="form-inner" style={{ borderRadius: "25px", position: "relative" }}>
+              <input
+                type="text"
+                placeholder="Search your property ..."
+                value={headerSearch}
+                onChange={(e) => setHeaderSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const q = headerSearch.trim();
+                    router.push(`/properties${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+                    setSearchOpen(false);
+                  }
+                }}
+                onFocus={() => {
+                  setMsgOpen(false);
+                  setNotifOpen(false);
+                  setAccountOpen(false);
+                  if (searchItems.length > 0) setSearchOpen(true);
+                }}
+                style={{ borderRadius: "25px", paddingRight: "80px" }}
+              />
               <button className="search-btn" style={{ position: "absolute", right: "5px", top: "50%", transform: "translateY(-50%)", backgroundColor: "#6EA500", borderRadius: "25px", width: "70px", height: "40px", display: "flex", alignItems: "center", justifyContent: "center", border: "none" }}>
                 <i className="bi bi-search" style={{ color: "white" }} />
               </button>
+
+              {searchOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    top: "52px",
+                    background: "#fff",
+                    border: "1px solid rgba(17,24,39,0.12)",
+                    borderRadius: "14px",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+                    overflow: "hidden",
+                    zIndex: 1000,
+                  }}
+                >
+                  {searchLoading ? (
+                    <div style={{ padding: "12px 14px", color: "#6B7280" }}>Searching...</div>
+                  ) : searchItems.length === 0 ? (
+                    <div style={{ padding: "12px 14px", color: "#6B7280" }}>No properties found.</div>
+                  ) : (
+                    searchItems.map((p) => (
+                      <div
+                        key={p.id}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setSearchOpen(false);
+                          setHeaderSearch("");
+                          router.push(`/property-details/${p.id}`);
+                        }}
+                        style={{
+                          padding: "12px 14px",
+                          borderBottom: "1px solid rgba(17,24,39,0.06)",
+                          cursor: "pointer",
+                        }}
+                      >
+                        <div style={{ fontWeight: 800, color: "#111827", fontSize: "13px" }}>
+                          {p.address || "Property"}
+                        </div>
+                        <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px" }}>
+                          {(p.city || "-") + (p.parcelId ? ` • ${p.parcelId}` : "")}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </form>
           <div className="search-bar d-xl-none d-lg-block d-none">
@@ -205,7 +392,19 @@ const Header = () => {
               <form>
                 <div className="search-group">
                   <div className="form-inner2">
-                    <input type="text" placeholder="Search your property ..." />
+                    <input
+                      type="text"
+                      placeholder="Search your property ..."
+                      value={headerSearch}
+                      onChange={(e) => setHeaderSearch(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const q = headerSearch.trim();
+                          router.push(`/properties${q ? `?q=${encodeURIComponent(q)}` : ""}`);
+                        }
+                      }}
+                    />
                     <button type="submit">
                       <svg
                         width={16}
@@ -225,7 +424,451 @@ const Header = () => {
               </form>
             </div>
           </div>
-          <Link href={session ? "/dashboard" : "/register"} className="login-btn btn-hover d-lg-flex d-none" style={{ backgroundColor: "#00008b", color: "white", borderRadius: "25px" }}>
+          {session && (
+            <div
+              style={{
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              {/* Messages */}
+              <div ref={msgRef} style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = !msgOpen;
+                    setMsgOpen(next);
+                    setNotifOpen(false);
+                    setSearchOpen(false);
+                    setAccountOpen(false);
+                    if (next) await fetchMessages();
+                  }}
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "22px",
+                    border: "1px solid rgba(17,24,39,0.12)",
+                    background: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                  aria-label="Messages"
+                >
+                  <i className="bi bi-chat-dots" style={{ fontSize: "18px", color: "#111827" }} />
+                  {msgUnread > 0 && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "4px",
+                        right: "4px",
+                        minWidth: "18px",
+                        height: "18px",
+                        padding: "0 5px",
+                        borderRadius: "9px",
+                        background: "#EF4444",
+                        color: "#fff",
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {msgUnread > 99 ? "99+" : msgUnread}
+                    </span>
+                  )}
+                </button>
+
+                {msgOpen && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "52px",
+                      right: 0,
+                      width: "360px",
+                      maxWidth: "calc(100vw - 24px)",
+                      background: "#fff",
+                      border: "1px solid rgba(17,24,39,0.12)",
+                      borderRadius: "14px",
+                      boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+                      overflow: "hidden",
+                      zIndex: 1000,
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: "12px 14px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        borderBottom: "1px solid rgba(17,24,39,0.08)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, color: "#111827" }}>Messages</div>
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        <Link
+                          href="/messaging"
+                          onClick={() => setMsgOpen(false)}
+                          style={{ color: "#6EA500", fontWeight: 800, fontSize: "12px", textDecoration: "none" }}
+                        >
+                          View all
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => setMsgOpen(false)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#6B7280",
+                            cursor: "pointer",
+                            padding: 0,
+                            fontSize: "18px",
+                            lineHeight: 1,
+                          }}
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ maxHeight: "420px", overflow: "auto" }}>
+                      {msgLoading ? (
+                        <div style={{ padding: "14px", color: "#6B7280" }}>Loading...</div>
+                      ) : msgItems.length === 0 ? (
+                        <div style={{ padding: "14px", color: "#6B7280" }}>No conversations yet.</div>
+                      ) : (
+                        msgItems.map((c) => (
+                          <div
+                            key={c.id}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={async () => {
+                              try {
+                                await fetch("/api/messages/read", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ conversationId: c.id }),
+                                });
+                              } catch {}
+                              setMsgOpen(false);
+                              router.push(`/messaging/${c.id}`);
+                            }}
+                            style={{
+                              padding: "12px 14px",
+                              borderBottom: "1px solid rgba(17,24,39,0.06)",
+                              cursor: "pointer",
+                              background: c.unreadCount ? "rgba(110,165,0,0.07)" : "#fff",
+                              display: "flex",
+                              gap: "10px",
+                              alignItems: "center",
+                            }}
+                          >
+                            <img
+                              src={c.otherUser?.image || avatarFallback}
+                              alt={c.otherUser?.name || "User"}
+                              onError={(e) => {
+                                e.currentTarget.src = avatarFallback;
+                              }}
+                              style={{ width: "36px", height: "36px", borderRadius: "999px", objectFit: "cover" }}
+                            />
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
+                                <div style={{ fontWeight: 800, color: "#111827", fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                  {c.otherUser?.name || c.otherUser?.email || "Conversation"}
+                                </div>
+                                {c.unreadCount > 0 && (
+                                  <div style={{ fontSize: "11px", fontWeight: 800, color: "#EF4444" }}>
+                                    {c.unreadCount}
+                                  </div>
+                                )}
+                              </div>
+                              <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {c.otherUser?.email || ""}
+                              </div>
+                              <div style={{ color: "#9CA3AF", fontSize: "11px", marginTop: "4px" }}>
+                                {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString() : ""}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div ref={notifRef} style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const next = !notifOpen;
+                    setNotifOpen(next);
+                    setMsgOpen(false);
+                    setSearchOpen(false);
+                    setAccountOpen(false);
+                    if (next) await fetchNotifications();
+                  }}
+                  style={{
+                    width: "44px",
+                    height: "44px",
+                    borderRadius: "22px",
+                    border: "1px solid rgba(17,24,39,0.12)",
+                    background: "#fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                  }}
+                  aria-label="Notifications"
+                >
+                  <i className="bi bi-bell" style={{ fontSize: "18px", color: "#111827" }} />
+                  {notifUnread > 0 && (
+                    <span
+                      style={{
+                        position: "absolute",
+                        top: "4px",
+                        right: "4px",
+                        minWidth: "18px",
+                        height: "18px",
+                        padding: "0 5px",
+                        borderRadius: "9px",
+                        background: "#EF4444",
+                        color: "#fff",
+                        fontSize: "11px",
+                        fontWeight: 800,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {notifUnread > 99 ? "99+" : notifUnread}
+                    </span>
+                  )}
+                </button>
+
+                {notifOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "52px",
+                    right: 0,
+                    width: "360px",
+                    maxWidth: "calc(100vw - 24px)",
+                    background: "#fff",
+                    border: "1px solid rgba(17,24,39,0.12)",
+                    borderRadius: "14px",
+                    boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+                    overflow: "hidden",
+                    zIndex: 1000,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      borderBottom: "1px solid rgba(17,24,39,0.08)",
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, color: "#111827" }}>Notifications</div>
+                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                      <button
+                        type="button"
+                        onClick={markAllRead}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#6EA500",
+                          fontWeight: 800,
+                          cursor: "pointer",
+                          padding: 0,
+                          fontSize: "12px",
+                        }}
+                      >
+                        Mark all read
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setNotifOpen(false)}
+                        style={{
+                          background: "none",
+                          border: "none",
+                          color: "#6B7280",
+                          cursor: "pointer",
+                          padding: 0,
+                          fontSize: "18px",
+                          lineHeight: 1,
+                        }}
+                        aria-label="Close"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ maxHeight: "420px", overflow: "auto" }}>
+                    {notifLoading ? (
+                      <div style={{ padding: "14px", color: "#6B7280" }}>Loading...</div>
+                    ) : notifItems.length === 0 ? (
+                      <div style={{ padding: "14px", color: "#6B7280" }}>No notifications yet.</div>
+                    ) : (
+                      notifItems.map((n) => (
+                        <div
+                          key={n.id}
+                          onClick={async () => {
+                            if (n.href) window.location.href = n.href;
+                            if (!n.isRead) {
+                              await fetch("/api/notifications", {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ ids: [n.id] }),
+                              });
+                              await fetchNotifications();
+                            }
+                          }}
+                          style={{
+                            padding: "12px 14px",
+                            borderBottom: "1px solid rgba(17,24,39,0.06)",
+                            cursor: n.href ? "pointer" : "default",
+                            background: n.isRead ? "#fff" : "rgba(110,165,0,0.07)",
+                          }}
+                        >
+                          <div style={{ fontWeight: 800, color: "#111827", fontSize: "13px" }}>
+                            {n.title}
+                          </div>
+                          {n.message && (
+                            <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px" }}>
+                              {n.message}
+                            </div>
+                          )}
+                          <div style={{ color: "#9CA3AF", fontSize: "11px", marginTop: "4px" }}>
+                            {n.createdAt ? new Date(n.createdAt).toLocaleString() : ""}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+                )}
+              </div>
+            </div>
+          )}
+          {session ? (
+            <div ref={accountRef} style={{ position: "relative" }} className="d-lg-flex d-none">
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchOpen(false);
+                  setMsgOpen(false);
+                  setNotifOpen(false);
+                  setAccountOpen((v) => !v);
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  background: "transparent",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: "6px 0px",
+                  borderRadius: "12px",
+                }}
+                aria-label="Account menu"
+              >
+                <img
+                  src={session.user.image || avatarFallback}
+                  alt={session.user.name || "User"}
+                  onError={(e) => {
+                    e.currentTarget.src = avatarFallback;
+                  }}
+                  style={{ width: "40px", height: "40px", borderRadius: "999px", objectFit: "cover" }}
+                />
+                <div style={{ textAlign: "left", lineHeight: 1.1 }}>
+                  <div style={{ fontWeight: 800, color: "#111827", fontSize: "14px" }}>
+                    {session.user.name || "My Account"}
+                  </div>
+                  <div style={{ color: "#6B7280", fontSize: "12px", maxWidth: "180px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {session.user.email || ""}
+                  </div>
+                </div>
+                <i className={`bi ${accountOpen ? "bi-chevron-up" : "bi-chevron-down"}`} style={{ color: "#6B7280" }} />
+              </button>
+
+              {accountOpen && (
+                <div
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: "54px",
+                    width: "320px",
+                    background: "#fff",
+                    border: "1px solid rgba(17,24,39,0.12)",
+                    borderRadius: "16px",
+                    boxShadow: "0 18px 40px rgba(0,0,0,0.18)",
+                    overflow: "hidden",
+                    zIndex: 1000,
+                  }}
+                >
+                  <div style={{ padding: "16px 16px 12px 16px", borderBottom: "1px solid rgba(17,24,39,0.08)" }}>
+                    <div style={{ fontWeight: 800, fontSize: "16px", color: "#111827" }}>{session.user.name || "User"}</div>
+                    <div style={{ color: "#6B7280", fontSize: "13px" }}>{session.user.email || ""}</div>
+                  </div>
+                  <div style={{ padding: "10px 8px" }}>
+                    <Link
+                      href="/dashboard"
+                      onClick={() => setAccountOpen(false)}
+                      style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "12px", color: "#111827", textDecoration: "none", fontWeight: 700 }}
+                    >
+                      <i className="bi bi-grid" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setAccountOpen(false)}
+                      style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "12px", color: "#111827", textDecoration: "none", fontWeight: 700 }}
+                    >
+                      <i className="bi bi-person" />
+                      Profile Settings
+                    </Link>
+                    <div style={{ height: "1px", background: "rgba(17,24,39,0.08)", margin: "10px 6px" }} />
+                    <button
+                      type="button"
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "10px 12px",
+                        borderRadius: "12px",
+                        background: "transparent",
+                        border: "none",
+                        color: "#EF4444",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                        textAlign: "left",
+                      }}
+                    >
+                      <i className="bi bi-box-arrow-right" />
+                      Log Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/register"
+              className="login-btn btn-hover d-lg-flex d-none"
+              style={{ backgroundColor: "#00008b", color: "white", borderRadius: "25px" }}
+            >
             <svg
               width={15}
               height={19}
@@ -235,9 +878,10 @@ const Header = () => {
             >
               <path d="M11.8751 4.17663C11.875 5.00255 11.6183 5.8099 11.1375 6.49658C10.6567 7.18326 9.97335 7.71843 9.17389 8.03442C8.37443 8.35041 7.49475 8.43303 6.6461 8.27184C5.79744 8.11064 5.01792 7.71286 4.40611 7.12881C3.79429 6.54475 3.37766 5.80064 3.20889 4.99058C3.04012 4.18052 3.1268 3.34088 3.45796 2.57783C3.78912 1.81479 4.34989 1.16261 5.06937 0.703757C5.78884 0.244909 6.6347 7.28125e-09 7.5 0C8.07459 3.64089e-05 8.64354 0.108097 9.17438 0.318012C9.70521 0.527927 10.1875 0.835585 10.5938 1.22342C11.0001 1.61126 11.3223 2.07167 11.5422 2.57839C11.762 3.0851 11.8752 3.62818 11.8751 4.17663ZM7.5 9.58844C6.26105 9.58705 5.0354 9.83216 3.90124 10.3082C2.76708 10.7842 1.74932 11.4806 0.912902 12.353C-0.563582 13.8885 -0.20194 16.3311 1.6571 17.4243C3.41487 18.4546 5.43728 19 7.5 19C9.56272 19 11.5851 18.4546 13.3429 17.4243C15.2019 16.3311 15.5636 13.8885 14.0871 12.353C13.2507 11.4806 12.2329 10.7842 11.0988 10.3082C9.9646 9.83216 8.73895 9.58705 7.5 9.58844Z" />
             </svg>
-            {session ? "My Account" : "Sign In"}
+              Sign In
             <span style={{ top: "40.5px", left: "84.2344px" }} />
           </Link>
+          )}
           <div
             className={`sidebar-button mobile-menu-btn ${isMenuOpen ? "active" : ""
               } `}

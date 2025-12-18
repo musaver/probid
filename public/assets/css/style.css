@@ -11964,21 +11964,6 @@ footer .footer-wrapper .footer-menu-wrap .footer-logo-area::after {
   }
 }
 
-footer .footer-wrapper .footer-menu-wrap .footer-logo-area .footer-logo {
-  margin-bottom: 50px;
-}
-
-@media (max-width: 991px) {
-  footer .footer-wrapper .footer-menu-wrap .footer-logo-area .footer-logo {
-    margin-bottom: 40px;
-  }
-}
-
-@media (max-width: 767px) {
-  footer .footer-wrapper .footer-menu-wrap .footer-logo-area .footer-logo {
-    margin-bottom: 30px;
-  }
-}
 
 footer .footer-wrapper .footer-menu-wrap .footer-logo-area .footer-logo img {
   max-width: 171px;

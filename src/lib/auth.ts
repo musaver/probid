@@ -16,6 +16,7 @@ declare module "next-auth" {
       email?: string | null;
       name?: string | null;
       image?: string | null;
+      type?: "bidder" | "county";
     }
   }
   
@@ -27,6 +28,7 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     id: string;
+    type?: "bidder" | "county";
   }
 }
 
@@ -105,11 +107,23 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.id = user.id;
       }
+
+      // Attach user.type for role gating (avoid client needing extra DB calls)
+      if (token.id && !token.type) {
+        const [u] = await db
+          .select({ type: userTable.type })
+          .from(userTable)
+          .where(eq(userTable.id, token.id as string))
+          .limit(1);
+        token.type = (u?.type as any) || "bidder";
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user && token.id) {
         session.user.id = token.id as string;
+        session.user.type = (token.type as any) || undefined;
       }
       return session;
     },

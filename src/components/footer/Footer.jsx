@@ -13,7 +13,7 @@ const Footer = () => {
           <div className="container">
             <div className="footer-menu-wrap simple">
               <div className="row g-lg-4 gy-5 align-items-start">
-                <div className="col-lg-3 col-md-6">
+                <div className="col-lg-4 col-md-6">
                   <div className="footer-logo-area simple">
                     <div className="footer-logo">
                       <Image src="/images/logo.png" alt="Bid Bridge logo" width={120} height={120} style={{ objectFit: "contain" }} />
@@ -50,30 +50,13 @@ const Footer = () => {
                     </div>
                   </div>
                 </div>
-                <div className="col-lg-2 col-md-6">
-                  <div className="footer-widget">
-                    <div className="widget-title">
-                      <h4>Category</h4>
-                    </div>
-                    <ul className="widget-list">
-                      <li><Link href="/auction-grid">Automotive</Link></li>
-                      <li><Link href="/auction-grid">Antiques</Link></li>
-                      <li><Link href="/auction-grid">Digital art</Link></li>
-                      <li><Link href="/auction-grid">Books &amp; comics</Link></li>
-                      <li><Link href="/auction-grid">Gadget</Link></li>
-                      <li><Link href="/auction-grid">Electronics</Link></li>
-                      <li><Link href="/auction-grid">Coin</Link></li>
-                    </ul>
-                  </div>
-                </div>
+                
                 <div className="col-lg-2 col-md-6">
                   <div className="footer-widget">
                     <div className="widget-title">
                       <h4>Company</h4>
                     </div>
                     <ul className="widget-list">
-                      <li><Link href="/how-to-buy">How to bid with us</Link></li>
-                      <li><Link href="/how-to-sell">How to sell with us</Link></li>
                       <li><Link href="/about">About us</Link></li>
                       <li><Link href="/faq">F.A.Q</Link></li>
                       <li><a href="#">Our Brand</a></li>
@@ -87,15 +70,13 @@ const Footer = () => {
                     </div>
                     <ul className="widget-list">
                       <li><Link href="/support-center">Help &amp; Support</Link></li>
-                      <li><Link href="/faq">FAQ Probid</Link></li>
                       <li><Link href="/contact">Contact Us</Link></li>
                       <li><Link href="/terms-condition">Terms of Service</Link></li>
                       <li><Link href="/privacy-policy">Our Policy</Link></li>
-                      <li><Link href="/how-to-sell">Sell Support</Link></li>
                     </ul>
                   </div>
                 </div>
-                <div className="col-lg-3 col-md-6">
+                <div className="col-lg-4 col-md-6">
                   <div className="newletter-and-payment-wrap">
                     <div className="newletter-area">
                       <h4>Join Our Newsletter &amp; More information.</h4>
@@ -106,15 +87,7 @@ const Footer = () => {
                         </div>
                       </form>
                     </div>
-                    <div className="payment-area">
-                      <h6>Secured Payment Gateways</h6>
-                      <ul className="payment-options">
-                        <li><img src="assets/img/home1/icon/visa.svg" alt="" /></li>
-                        <li><img src="assets/img/home1/icon/master-card.svg" alt="" /></li>
-                        <li><img src="assets/img/home1/icon/american-express.svg" alt="" /></li>
-                        <li><img src="assets/img/home1/icon/maestro.svg" alt="" /></li>
-                      </ul>
-                    </div>
+                   
                   </div>
                 </div>
               </div>

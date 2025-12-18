@@ -54,62 +54,34 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab }) => {
                             </Link>
                         </SwiperSlide>
                         <SwiperSlide style={{ width: "auto" }}>
-                            <Link className="nav-item" href="/bid-management">
-                                <i className="bi bi-clipboard-check"></i>
-                                <span>Bid Management</span>
-                            </Link>
-                        </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
                             <Link
                                 className={`nav-item ${activeTab === "bidders" ? "active" : ""}`}
-                                href="/dashboard?tab=bidders"
+                                href="/bidders"
                             >
                                 <i className="bi bi-people"></i>
                                 <span>Bidders</span>
                             </Link>
                         </SwiperSlide>
                         <SwiperSlide style={{ width: "auto" }}>
-                            <Link className="nav-item" href="/visibility-control">
+                            <Link
+                                className={`nav-item ${activeTab === "visibility-control" ? "active" : ""}`}
+                                href="/visibility-control"
+                            >
                                 <i className="bi bi-eye"></i>
                                 <span>Visibility Control</span>
                             </Link>
                         </SwiperSlide>
+                        
                         <SwiperSlide style={{ width: "auto" }}>
-                            <Link className="nav-item" href="/notifications">
-                                <i className="bi bi-bell"></i>
-                                <span>Notifications</span>
-                            </Link>
-                        </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link className={`nav-item ${activeTab === 'messaging' ? 'active' : ''}`} href="/messaging">
-                                <i className="bi bi-chat-left-dots"></i>
-                                <span>Messaging</span>
-                            </Link>
-                        </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link className="nav-item" href="/reports">
+                            <Link
+                                className={`nav-item ${activeTab === "reports" ? "active" : ""}`}
+                                href="/reports"
+                            >
                                 <i className="bi bi-file-text"></i>
                                 <span>Reports</span>
                             </Link>
                         </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link className="nav-item" href="/subscription">
-                                <i className="bi bi-wallet2"></i>
-                                <span>Subscription</span>
-                            </Link>
-                        </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link className="nav-item" href="/audit-log">
-                                <i className="bi bi-clock-history"></i>
-                                <span>Audit Log</span>
-                            </Link>
-                        </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} href="/profile">
-                                <i className="bi bi-person"></i>
-                                <span>Profile</span>
-                            </Link>
-                        </SwiperSlide>
+                        
                         <SwiperSlide style={{ width: "auto" }}>
                             <button className="nav-item" onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                                 <i className="bi bi-box-arrow-right"></i>

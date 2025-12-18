@@ -19,24 +19,42 @@ export async function PATCH(req: NextRequest) {
 
         // Parse the request body
         const body = await req.json();
-        const { fullName, phone, address, aboutMe } = body;
+        const { fullName, phone, address, aboutMe, visibilityControl } = body ?? {};
 
-        // Validate input
-        if (!fullName || fullName.trim() === '') {
-            return NextResponse.json(
-                { error: 'Full name is required' },
-                { status: 400 }
-            );
+        // Build update payload (support partial updates, e.g. visibility-control toggles)
+        const updateData: Record<string, any> = {};
+
+        if (fullName !== undefined) {
+            if (!fullName || `${fullName}`.trim() === '') {
+                return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
+            }
+            updateData.name = `${fullName}`.trim();
+        }
+        if (phone !== undefined) updateData.phone = phone || null;
+        if (address !== undefined) updateData.address = address || null;
+        if (aboutMe !== undefined) updateData.aboutMe = aboutMe || null;
+
+        if (visibilityControl !== undefined && visibilityControl !== null) {
+            const vc = visibilityControl;
+            const toBool = (v: any) => v === true || v === 1 || v === "1" || v === "true";
+
+            updateData.visibilityMinBid = toBool(vc.minBid) ? 1 : 0;
+            updateData.visibilityCurrentBid = toBool(vc.currentBid) ? 1 : 0;
+            updateData.visibilityBidHistory = toBool(vc.bidHistory) ? 1 : 0;
+            updateData.visibilityPropertyStatus = toBool(vc.propertyStatus) ? 1 : 0;
+            updateData.visibilityBidderList = toBool(vc.bidderList) ? 1 : 0;
+            updateData.visibilityDocuments = toBool(vc.documents) ? 1 : 0;
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ error: 'No fields to update' }, { status: 400 });
         }
 
         // Update the user in the database
-        const updatedUser = await db
+        await db
             .update(user)
             .set({
-                name: fullName,
-                phone: phone || null,
-                address: address || null,
-                aboutMe: aboutMe || null,
+                ...updateData,
             })
             .where(eq(user.email, session.user.email));
 
@@ -56,6 +74,14 @@ export async function PATCH(req: NextRequest) {
                 phone: userData.phone,
                 address: userData.address,
                 aboutMe: userData.aboutMe,
+                visibilityControl: {
+                    minBid: (userData as any).visibilityMinBid === 1,
+                    currentBid: (userData as any).visibilityCurrentBid === 1,
+                    bidHistory: (userData as any).visibilityBidHistory === 1,
+                    propertyStatus: (userData as any).visibilityPropertyStatus === 1,
+                    bidderList: (userData as any).visibilityBidderList === 1,
+                    documents: (userData as any).visibilityDocuments === 1,
+                },
             },
         });
     } catch (error) {
@@ -101,6 +127,14 @@ export async function GET(req: NextRequest) {
                 phone: userData.phone,
                 address: userData.address,
                 aboutMe: userData.aboutMe,
+                visibilityControl: {
+                    minBid: (userData as any).visibilityMinBid === 1,
+                    currentBid: (userData as any).visibilityCurrentBid === 1,
+                    bidHistory: (userData as any).visibilityBidHistory === 1,
+                    propertyStatus: (userData as any).visibilityPropertyStatus === 1,
+                    bidderList: (userData as any).visibilityBidderList === 1,
+                    documents: (userData as any).visibilityDocuments === 1,
+                },
             },
         });
     } catch (error) {

@@ -1,14 +1,41 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import Footer from "@/components/footer/Footer";
+import { useSession } from "next-auth/react";
+import PropertyDocumentsManager from "@/components/property/PropertyDocumentsManager";
 
 const PropertyDetailsContent = ({ id }: { id: string }) => {
+    const { data: session } = useSession();
+    const isCounty = session?.user?.type === "county";
+    const avatarFallback = "/assets/img/avatar-placeholder.svg";
     const [activeTab, setActiveTab] = useState("overview");
     const [property, setProperty] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [bids, setBids] = useState<any[]>([]);
+    const [loadingBids, setLoadingBids] = useState(false);
+
+    // Add Bid (county-only)
+    const [showBidModal, setShowBidModal] = useState(false);
+    const [bidAmount, setBidAmount] = useState<string>("");
+    const [selectedBidderId, setSelectedBidderId] = useState<string>("");
+    const [loadingBidData, setLoadingBidData] = useState(false);
+    const [submittingBid, setSubmittingBid] = useState(false);
+
+    const [showAlertModal, setShowAlertModal] = useState(false);
+    const [alertSubject, setAlertSubject] = useState("");
+    const [alertMessage, setAlertMessage] = useState("");
+    const [sendingAlert, setSendingAlert] = useState(false);
+    const [alertBidderIds, setAlertBidderIds] = useState<string[]>([]);
+
+    useEffect(() => {
+        if (!showAlertModal) return;
+        // Initialize selection when opening (default: all linked bidders)
+        setAlertBidderIds(linkedBidders.map((b) => b.bidderId));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [showAlertModal]);
 
     useEffect(() => {
         const fetchProperty = async () => {
@@ -32,20 +59,28 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
         }
     }, [id]);
 
-    const biddingActivity = [
-        {
-            bidder: "John Doe",
-            amount: "$52,000",
-            status: "Current High",
-            date: "Oct 14, 2024 10:30 AM",
-        },
-        {
-            bidder: "Jane Smith",
-            amount: "$51,500",
-            status: "Outbid",
-            date: "Oct 13, 2024 3:45 PM",
-        },
-    ];
+    // Fetch bid history
+    useEffect(() => {
+        const fetchBids = async () => {
+            if (!id) return;
+            setLoadingBids(true);
+            try {
+                const response = await fetch(`/api/properties/${id}/bids`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setBids(data);
+                } else {
+                    setBids([]);
+                }
+            } catch (error) {
+                console.error("Error fetching bids:", error);
+                setBids([]);
+            } finally {
+                setLoadingBids(false);
+            }
+        };
+        fetchBids();
+    }, [id]);
 
     const [linkedBidders, setLinkedBidders] = useState<any[]>([]);
     const [loadingBidders, setLoadingBidders] = useState(false);
@@ -53,6 +88,86 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
     const [searchEmail, setSearchEmail] = useState("");
     const [searchResults, setSearchResults] = useState<any[]>([]);
     const [searchingUsers, setSearchingUsers] = useState(false);
+
+    const refreshProperty = async () => {
+        try {
+            const res = await fetch(`/api/properties/${id}`);
+            if (res.ok) setProperty(await res.json());
+        } catch { }
+    };
+
+    const refreshBids = async () => {
+        try {
+            const res = await fetch(`/api/properties/${id}/bids`);
+            if (res.ok) setBids(await res.json());
+            else setBids([]);
+        } catch {
+            setBids([]);
+        }
+    };
+
+    const refreshLinkedBidders = async () => {
+        try {
+            const res = await fetch(`/api/properties/${id}/linked-bidders`);
+            if (res.ok) setLinkedBidders(await res.json());
+            else setLinkedBidders([]);
+        } catch {
+            setLinkedBidders([]);
+        }
+    };
+
+    const openBidModal = async () => {
+        if (!isCounty) return;
+        setShowBidModal(true);
+        setBidAmount("");
+        setLoadingBidData(true);
+        try {
+            const [bidsRes, linkedRes] = await Promise.all([
+                fetch(`/api/properties/${id}/bids`),
+                fetch(`/api/properties/${id}/linked-bidders`),
+            ]);
+            if (bidsRes.ok) setBids(await bidsRes.json());
+            if (linkedRes.ok) {
+                const linked = await linkedRes.json();
+                setLinkedBidders(linked);
+                if (Array.isArray(linked) && linked.length) setSelectedBidderId(linked[0].bidderId);
+                else setSelectedBidderId("");
+            }
+            await refreshProperty();
+        } catch (e) {
+            console.error("Error loading bid data:", e);
+        } finally {
+            setLoadingBidData(false);
+        }
+    };
+
+    const submitBid = async () => {
+        if (!isCounty) return;
+        if (!selectedBidderId) {
+            alert("Select a linked bidder first.");
+            return;
+        }
+        setSubmittingBid(true);
+        try {
+            const res = await fetch(`/api/properties/${id}/bids`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ amount: bidAmount, bidderId: selectedBidderId }),
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                alert(text || "Failed to add bid");
+                return;
+            }
+            await Promise.all([refreshBids(), refreshProperty()]);
+            setBidAmount("");
+        } catch (e) {
+            console.error("Error submitting bid:", e);
+            alert("Failed to add bid");
+        } finally {
+            setSubmittingBid(false);
+        }
+    };
 
     // Fetch linked bidders
     useEffect(() => {
@@ -169,14 +284,37 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
         return Object.values(visibilitySettings).filter(Boolean).length;
     };
 
-    const documents = [
-        {
-            name: "Property_Deed.pdf",
-            size: "2.4 MB",
-            type: "Deed",
-            uploadDate: "Oct 1, 2024",
-        },
-    ];
+    const auctionEndInfo = useMemo(() => {
+        const raw = property?.auctionEnd;
+        if (!raw) return { label: "Not set", relative: "" };
+        const dt = new Date(raw);
+        if (Number.isNaN(dt.getTime())) return { label: String(raw), relative: "" };
+
+        const label = dt.toLocaleString(undefined, {
+            weekday: "short",
+            month: "short",
+            day: "2-digit",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+        });
+
+        const diffMs = dt.getTime() - Date.now();
+        if (!Number.isFinite(diffMs)) return { label, relative: "" };
+        if (diffMs <= 0) return { label, relative: "Ended" };
+
+        const totalMinutes = Math.floor(diffMs / 60000);
+        const days = Math.floor(totalMinutes / (60 * 24));
+        const hours = Math.floor((totalMinutes - days * 60 * 24) / 60);
+        const minutes = Math.max(0, totalMinutes - days * 60 * 24 - hours * 60);
+
+        const parts = [];
+        if (days) parts.push(`${days}d`);
+        if (hours || days) parts.push(`${hours}h`);
+        parts.push(`${minutes}m`);
+
+        return { label, relative: `Ends in ${parts.join(" ")}` };
+    }, [property?.auctionEnd]);
 
     if (loading) {
         return <div>Loading...</div>;
@@ -188,7 +326,7 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
 
             <div className="property-details-content">
                 <div className="container">
-                    <Link href="/add-property" className="back-link">
+                    <Link href="/properties" className="back-link">
                         <i className="bi bi-arrow-left"></i> Back to Properties
                     </Link>
 
@@ -326,13 +464,23 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                         </div>
 
                         <div className="property-actions">
-                            <button className="action-btn-1 primary">
-                                <i className="bi bi-pencil-square"></i> Edit Property
-                            </button>
-                            <button className="action-btn-1 secondary">
-                                <i className="bi bi-people"></i> Manage Bidders
-                            </button>
-                            <button className="action-btn-1 secondary">
+                            {isCounty && (
+                                <Link href={`/edit-property/${id}`} className="action-btn-1 primary">
+                                    <i className="bi bi-pencil-square"></i> Edit Property
+                                </Link>
+                            )}
+                            {isCounty && (
+                                <button className="action-btn-1 secondary" onClick={openBidModal}>
+                                    <i className="bi bi-hammer"></i> Add Bid
+                                </button>
+                            )}
+                            <button
+                                className="action-btn-1 secondary"
+                                onClick={() => {
+                                    setShowAlertModal(true);
+                                    setAlertSubject(`Update: ${property?.address || "Property"}`);
+                                }}
+                            >
                                 <i className="bi bi-bell"></i> Send Alert
                             </button>
                         </div>
@@ -390,7 +538,13 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                         </div>
                                         <div className="timeline-info">
                                             <h4>Auction Timeline</h4>
-                                            <p>Ends: {property.auctionEnd}</p>
+                                            <p>
+                                                <span className="timeline-meta">Ends:</span>{" "}
+                                                <span className="timeline-value">{auctionEndInfo.label}</span>
+                                            </p>
+                                            {auctionEndInfo.relative && (
+                                                <div className="timeline-relative">{auctionEndInfo.relative}</div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -400,23 +554,34 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 <h3>Recent Bidding Activity</h3>
                                 <div className="bidding-card">
                                     <div className="bidding-list">
-                                        {biddingActivity.map((bid, index) => (
-                                            <div key={index} className="bid-item">
+                                        {loadingBids ? (
+                                            <div style={{ padding: "20px", color: "#6B7280" }}>Loading bids...</div>
+                                        ) : bids.length === 0 ? (
+                                            <div style={{ padding: "20px", color: "#6B7280" }}>No bids yet.</div>
+                                        ) : (
+                                            bids.map((bid, index) => {
+                                                const isHigh = index === 0;
+                                                return (
+                                                    <div key={bid.id || index} className="bid-item">
                                                 <div className="bid-left">
                                                     <div className="bidder-dot"></div>
                                                     <div className="bid-info">
-                                                        <h5>{bid.bidder}</h5>
-                                                        <p className="bid-amount">{bid.amount}</p>
-                                                        <p className="bid-date">{bid.date}</p>
+                                                                <h5>{bid.bidderName || bid.bidderEmail || bid.bidderId}</h5>
+                                                                <p className="bid-amount">${bid.amount?.toLocaleString?.() ?? bid.amount}</p>
+                                                                <p className="bid-date">
+                                                                    {bid.createdAt ? new Date(bid.createdAt).toLocaleString() : ""}
+                                                                </p>
                                                     </div>
                                                 </div>
                                                 <div className="bid-right">
-                                                    <span className={`bid-status ${bid.status === "Current High" ? "current" : "outbid"}`}>
-                                                        {bid.status}
+                                                            <span className={`bid-status ${isHigh ? "current" : "outbid"}`}>
+                                                                {isHigh ? "Current High" : "Outbid"}
                                                     </span>
                                                 </div>
                                             </div>
-                                        ))}
+                                                );
+                                            })
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -448,11 +613,14 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                             <div className="bidder-details">
                                                 <div className="bidder-avatar-large">
                                                     <img
-                                                        src={bidder.image || "/assets/img/avatar.png"}
+                                                        src={bidder.image || avatarFallback}
                                                         alt={bidder.name || "Bidder"}
                                                         width={48}
                                                         height={48}
                                                         style={{ borderRadius: '50%', objectFit: 'cover' }}
+                                                        onError={(e) => {
+                                                            (e.currentTarget as HTMLImageElement).src = avatarFallback;
+                                                        }}
                                                     />
                                                 </div>
                                                 <div className="bidder-info-text">
@@ -649,44 +817,406 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 <h2>Property Documents</h2>
                                 <p>Upload and manage property documents (deeds, certificates, surveys, etc.)</p>
                             </div>
-
-                            <div className="document-upload-area">
-                                <div className="upload-icon-circle">
-                                    <i className="bi bi-download"></i>
+                            {!isCounty && (
+                                <div style={{ marginBottom: "12px", color: "#6B7280", fontSize: "13px" }}>
+                                    You can view documents here. Only the county that created this property can upload or delete documents.
                                 </div>
-                                <h3>Click to upload or drag and drop</h3>
-                                <p>PDF, DOC, DOCX, JPG, PNG (Max 10MB)</p>
-                            </div>
-
-                            <div className="documents-list">
-                                {documents.map((doc, index) => (
-                                    <div key={index} className="document-item">
-                                        <div className="document-icon">
-                                            <i className="bi bi-file-earmark-pdf"></i>
-                                        </div>
-                                        <div className="document-info">
-                                            <h4>{doc.name}</h4>
-                                            <p>{doc.size} • {doc.type} • Uploaded: {doc.uploadDate}</p>
-                                        </div>
-                                        <div className="document-actions">
-                                            <button className="doc-action-btn download">
-                                                <i className="bi bi-download"></i>
-                                            </button>
-                                            <button className="doc-action-btn view">
-                                                <i className="bi bi-eye"></i>
-                                            </button>
-                                            <button className="doc-action-btn delete">
-                                                <i className="bi bi-trash"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            )}
+                            <PropertyDocumentsManager propertyId={id} readOnly={!isCounty} />
                         </div>
                     )}
                 </div>
             </div>
             <Footer />
+
+            {showBidModal && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "rgba(0,0,0,0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1000,
+                    }}
+                    onClick={() => setShowBidModal(false)}
+                >
+                    <div
+                        style={{
+                            background: "#fff",
+                            borderRadius: "16px",
+                            padding: "24px",
+                            maxWidth: "640px",
+                            width: "92%",
+                            maxHeight: "85vh",
+                            overflow: "auto",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div>
+                                <h2 style={{ margin: 0 }}>Add Bid</h2>
+                                <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "4px" }}>
+                                    {property?.address || "Property"}
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowBidModal(false)}
+                                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer" }}
+                                aria-label="Close"
+                            >
+                                ×
+                            </button>
+                        </div>
+
+                        {loadingBidData ? (
+                            <div style={{ padding: "20px", color: "#6B7280" }}>Loading...</div>
+                        ) : (
+                            <>
+                                <div style={{ marginTop: "16px" }}>
+                                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                                        Linked Bidder
+                                    </label>
+                                    {linkedBidders.length === 0 ? (
+                                        <div style={{ padding: "12px", background: "#F9FAFB", borderRadius: "10px", color: "#6B7280" }}>
+                                            No linked bidders. Link a bidder to this property first.
+                                        </div>
+                                    ) : (
+                                        <select
+                                            value={selectedBidderId}
+                                            onChange={(e) => setSelectedBidderId(e.target.value)}
+                                            style={{
+                                                width: "100%",
+                                                padding: "12px",
+                                                border: "1px solid #E5E7EB",
+                                                borderRadius: "10px",
+                                            }}
+                                        >
+                                            {linkedBidders.map((b) => (
+                                                <option key={b.bidderId} value={b.bidderId}>
+                                                    {(b.name || "Unknown") + " — " + b.email}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
+                                <div style={{ marginTop: "16px" }}>
+                                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                                        Bid Amount
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="50000"
+                                        value={bidAmount}
+                                        onChange={(e) => setBidAmount(e.target.value)}
+                                        style={{
+                                            width: "100%",
+                                            padding: "12px",
+                                            border: "1px solid #E5E7EB",
+                                            borderRadius: "10px",
+                                        }}
+                                    />
+                                </div>
+
+                                <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+                                    <button
+                                        onClick={submitBid}
+                                        disabled={submittingBid || linkedBidders.length === 0}
+                                        style={{
+                                            padding: "12px 16px",
+                                            background: "#6EA500",
+                                            color: "#fff",
+                                            border: "none",
+                                            borderRadius: "10px",
+                                            cursor: "pointer",
+                                            fontWeight: 700,
+                                            flex: 1,
+                                        }}
+                                    >
+                                        {submittingBid ? "Adding..." : "Add Bid"}
+                                    </button>
+                                    <button
+                                        onClick={() => setShowBidModal(false)}
+                                        style={{
+                                            padding: "12px 16px",
+                                            background: "#F3F4F6",
+                                            color: "#111827",
+                                            border: "1px solid #E5E7EB",
+                                            borderRadius: "10px",
+                                            cursor: "pointer",
+                                            fontWeight: 700,
+                                        }}
+                                    >
+                                        Close
+                                    </button>
+                                </div>
+
+                                <div style={{ marginTop: "22px" }}>
+                                    <h3 style={{ margin: "0 0 10px 0" }}>Bid History</h3>
+                                    {bids.length === 0 ? (
+                                        <div style={{ padding: "12px", color: "#6B7280" }}>No bids yet.</div>
+                                    ) : (
+                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                            {bids.map((bid) => (
+                                                <div
+                                                    key={bid.id}
+                                                    style={{
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        alignItems: "center",
+                                                        padding: "12px",
+                                                        border: "1px solid #E5E7EB",
+                                                        borderRadius: "12px",
+                                                    }}
+                                                >
+                                                    <div>
+                                                        <div style={{ fontWeight: 700 }}>
+                                                            {bid.bidderName || bid.bidderEmail || bid.bidderId}
+                                                        </div>
+                                                        <div style={{ fontSize: "12px", color: "#6B7280" }}>
+                                                            {bid.createdAt ? new Date(bid.createdAt).toLocaleString() : ""}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ fontWeight: 800, color: "#6EA500" }}>
+                                                        ${Number(bid.amount).toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {showAlertModal && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: "rgba(0, 0, 0, 0.5)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        zIndex: 1000,
+                    }}
+                    onClick={() => setShowAlertModal(false)}
+                >
+                    <div
+                        style={{
+                            background: "#fff",
+                            borderRadius: "16px",
+                            padding: "28px",
+                            maxWidth: "560px",
+                            width: "92%",
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <h2 style={{ margin: 0 }}>Send Alert</h2>
+                            <button
+                                onClick={() => setShowAlertModal(false)}
+                                style={{ background: "none", border: "none", fontSize: "24px", cursor: "pointer" }}
+                                aria-label="Close"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <div style={{ color: "#6B7280", fontSize: "13px", marginTop: "6px" }}>
+                            This will email all linked bidders and also send a copy to the county.
+                        </div>
+
+                        <div style={{ marginTop: "14px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <div style={{ fontWeight: 800 }}>Recipients</div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const allIds = linkedBidders.map((b) => b.bidderId);
+                                        if (alertBidderIds.length === allIds.length) setAlertBidderIds([]);
+                                        else setAlertBidderIds(allIds);
+                                    }}
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        color: "#6EA500",
+                                        cursor: "pointer",
+                                        fontWeight: 800,
+                                        fontSize: "12px",
+                                        padding: 0,
+                                    }}
+                                >
+                                    {alertBidderIds.length === linkedBidders.length ? "Uncheck all" : "Check all"}
+                                </button>
+                            </div>
+
+                            {loadingBidders ? (
+                                <div style={{ padding: "10px 0", color: "#6B7280" }}>Loading linked bidders...</div>
+                            ) : linkedBidders.length === 0 ? (
+                                <div style={{ padding: "10px 0", color: "#6B7280" }}>
+                                    No linked bidders to notify. County copy will still be sent.
+                                </div>
+                            ) : (
+                                <div
+                                    style={{
+                                        marginTop: "10px",
+                                        border: "1px solid #E5E7EB",
+                                        borderRadius: "12px",
+                                        overflow: "hidden",
+                                        maxHeight: "180px",
+                                        overflowY: "auto",
+                                    }}
+                                >
+                                    {linkedBidders.map((b) => {
+                                        const checked = alertBidderIds.includes(b.bidderId);
+                                        return (
+                                            <label
+                                                key={b.bidderId}
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "10px",
+                                                    padding: "10px 12px",
+                                                    borderBottom: "1px solid rgba(17,24,39,0.06)",
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={() => {
+                                                        setAlertBidderIds((prev) =>
+                                                            prev.includes(b.bidderId)
+                                                                ? prev.filter((id) => id !== b.bidderId)
+                                                                : [...prev, b.bidderId]
+                                                        );
+                                                    }}
+                                                />
+                                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                                    <div style={{ fontWeight: 700, fontSize: "13px", color: "#111827" }}>
+                                                        {b.name || "Unknown"}
+                                                    </div>
+                                                    <div style={{ fontSize: "12px", color: "#6B7280" }}>{b.email}</div>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {linkedBidders.length > 0 && (
+                                <div style={{ marginTop: "8px", fontSize: "12px", color: "#6B7280" }}>
+                                    Selected: <strong>{alertBidderIds.length}</strong> / {linkedBidders.length} bidders
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ marginTop: "16px" }}>
+                            <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>Subject</label>
+                            <input
+                                value={alertSubject}
+                                onChange={(e) => setAlertSubject(e.target.value)}
+                                placeholder={`Update: ${property?.address || "Property"}`}
+                                style={{
+                                    width: "100%",
+                                    padding: "12px",
+                                    border: "1px solid #E5E7EB",
+                                    borderRadius: "10px",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ marginTop: "14px" }}>
+                            <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>Message</label>
+                            <textarea
+                                value={alertMessage}
+                                onChange={(e) => setAlertMessage(e.target.value)}
+                                rows={5}
+                                placeholder="Write your alert..."
+                                style={{
+                                    width: "100%",
+                                    padding: "12px",
+                                    border: "1px solid #E5E7EB",
+                                    borderRadius: "10px",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+                            <button
+                                disabled={sendingAlert}
+                                onClick={async () => {
+                                    if (!alertMessage.trim()) return alert("Message is required");
+                                    setSendingAlert(true);
+                                    try {
+                                        const subject =
+                                            alertSubject.trim() || `Update: ${property?.address || "Property"}`;
+                                        const res = await fetch(`/api/properties/${id}/alerts`, {
+                                            method: "POST",
+                                            headers: { "Content-Type": "application/json" },
+                                            body: JSON.stringify({
+                                                subject,
+                                                message: alertMessage,
+                                                bidderIds: alertBidderIds,
+                                            }),
+                                        });
+                                        if (!res.ok) {
+                                            const text = await res.text();
+                                            alert(text || "Failed to send alert");
+                                            return;
+                                        }
+                                        setShowAlertModal(false);
+                                        setAlertSubject("");
+                                        setAlertMessage("");
+                                        alert("Alert sent!");
+                                    } catch (e) {
+                                        console.error("Send alert error:", e);
+                                        alert("Failed to send alert");
+                                    } finally {
+                                        setSendingAlert(false);
+                                    }
+                                }}
+                                style={{
+                                    flex: 1,
+                                    padding: "12px 16px",
+                                    background: "#6EA500",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "10px",
+                                    cursor: "pointer",
+                                    fontWeight: 800,
+                                }}
+                            >
+                                {sendingAlert ? "Sending..." : "Send Alert"}
+                            </button>
+                            <button
+                                onClick={() => setShowAlertModal(false)}
+                                style={{
+                                    padding: "12px 16px",
+                                    background: "#F3F4F6",
+                                    color: "#111827",
+                                    border: "1px solid #E5E7EB",
+                                    borderRadius: "10px",
+                                    cursor: "pointer",
+                                    fontWeight: 800,
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

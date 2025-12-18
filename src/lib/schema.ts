@@ -7,6 +7,7 @@ import {
   mysqlEnum,
   int,
   json,
+  index,
 } from 'drizzle-orm/mysql-core';
 
 // ✅ User table (required)
@@ -28,6 +29,13 @@ export const user = mysqlTable('user', {
   state: varchar('state', { length: 100 }),
   aboutMe: text('about_me'),
   phone: varchar('phone', { length: 20 }),
+  // Visibility Control (user-level defaults)
+  visibilityMinBid: int('visibility_min_bid').default(1).notNull(),
+  visibilityCurrentBid: int('visibility_current_bid').default(1).notNull(),
+  visibilityBidHistory: int('visibility_bid_history').default(0).notNull(),
+  visibilityPropertyStatus: int('visibility_property_status').default(1).notNull(),
+  visibilityBidderList: int('visibility_bidder_list').default(0).notNull(),
+  visibilityDocuments: int('visibility_documents').default(0).notNull(),
 });
 
 // ✅ Accounts table (OAuth support: Google, Facebook)
@@ -85,12 +93,32 @@ export const property = mysqlTable('property', {
   yearBuilt: int('year_built'),
   lotSize: varchar('lot_size', { length: 50 }),
   auctionEnd: datetime('auction_end'),
+  minBid: int('min_bid'),
   visibilitySettings: json('visibility_settings'),
   status: mysqlEnum('status', ['active', 'sold', 'withdrawn']).default('active'),
   createdBy: varchar('created_by', { length: 255 }).notNull(), // FK to user.id
   createdAt: datetime('created_at').notNull(),
   updatedAt: datetime('updated_at').notNull(),
 });
+
+// ✅ Property Bids table (real bidding)
+export const propertyBids = mysqlTable(
+  'property_bids',
+  {
+    id: varchar('id', { length: 255 }).primaryKey(),
+    propertyId: varchar('property_id', { length: 255 }).notNull(), // FK to property.id
+    bidderId: varchar('bidder_id', { length: 255 }).notNull(), // FK to user.id
+    amount: int('amount').notNull(),
+    createdAt: datetime('created_at').notNull(),
+  },
+  (table) => ({
+    propertyIdIdx: index('property_bids_property_id_idx').on(table.propertyId),
+    propertyAmountIdx: index('property_bids_property_amount_idx').on(
+      table.propertyId,
+      table.amount
+    ),
+  })
+);
 
 // ✅ Property Linked Bidders table
 export const propertyLinkedBidders = mysqlTable('property_linked_bidders', {
@@ -107,10 +135,30 @@ export const propertyDocuments = mysqlTable('property_documents', {
   propertyId: varchar('property_id', { length: 255 }).notNull(), // FK to property.id
   name: varchar('name', { length: 255 }),
   url: text('url'),
+  pathname: text('pathname'),
   type: varchar('type', { length: 50 }),
   size: varchar('size', { length: 50 }),
   uploadedAt: datetime('uploaded_at').notNull(),
 });
+
+// ✅ Bidder Identity Documents table
+export const bidderDocuments = mysqlTable(
+  'bidder_documents',
+  {
+    id: varchar('id', { length: 255 }).primaryKey(),
+    bidderId: varchar('bidder_id', { length: 255 }).notNull(), // FK to user.id
+    name: varchar('name', { length: 255 }),
+    url: text('url'),
+    pathname: text('pathname'),
+    type: varchar('type', { length: 50 }),
+    size: varchar('size', { length: 50 }),
+    uploadedAt: datetime('uploaded_at').notNull(),
+  },
+  (table) => ({
+    bidderIdIdx: index('bidder_documents_bidder_id_idx').on(table.bidderId),
+    uploadedAtIdx: index('bidder_documents_uploaded_at_idx').on(table.uploadedAt),
+  })
+);
 
 // ✅ Conversations table
 export const conversations = mysqlTable('conversations', {
@@ -131,3 +179,42 @@ export const messages = mysqlTable('messages', {
   createdAt: datetime('created_at').notNull(),
   isRead: int('is_read').default(0), // 0 or 1
 });
+
+// ✅ Property Alerts (audit log of emails sent)
+export const propertyAlerts = mysqlTable(
+  'property_alerts',
+  {
+    id: varchar('id', { length: 255 }).primaryKey(),
+    propertyId: varchar('property_id', { length: 255 }).notNull(), // FK to property.id
+    sentByUserId: varchar('sent_by_user_id', { length: 255 }).notNull(), // FK to user.id
+    subject: varchar('subject', { length: 255 }).notNull(),
+    message: text('message').notNull(),
+    recipientCount: int('recipient_count').notNull(),
+    createdAt: datetime('created_at').notNull(),
+  },
+  (table) => ({
+    propertyIdIdx: index('property_alerts_property_id_idx').on(table.propertyId),
+    sentByIdx: index('property_alerts_sent_by_idx').on(table.sentByUserId),
+  })
+);
+
+// ✅ Notifications (in-app)
+export const notifications = mysqlTable(
+  'notifications',
+  {
+    id: varchar('id', { length: 255 }).primaryKey(),
+    userId: varchar('user_id', { length: 255 }).notNull(), // FK to user.id
+    type: mysqlEnum('type', ['alert', 'bid', 'status']).notNull(),
+    title: varchar('title', { length: 255 }).notNull(),
+    message: text('message'),
+    href: varchar('href', { length: 255 }),
+    metadata: json('metadata'),
+    isRead: int('is_read').default(0),
+    createdAt: datetime('created_at').notNull(),
+  },
+  (table) => ({
+    userIdIdx: index('notifications_user_id_idx').on(table.userId),
+    userUnreadIdx: index('notifications_user_unread_idx').on(table.userId, table.isRead),
+    createdAtIdx: index('notifications_created_at_idx').on(table.createdAt),
+  })
+);
