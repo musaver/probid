@@ -1,0 +1,131 @@
+/* Bid Management Page Styles */
+
+.bid-management-wrapper {
+  padding: 40px 0;
+}
+
+.bid-management-table-wrapper {
+  background: #FFFFFF;
+  border-radius: 12px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.bid-management-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bid-management-table thead {
+  background-color: #1E293B;
+}
+
+.bid-management-table thead th {
+  padding: 18px 24px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #FFFFFF;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.bid-management-table thead th:first-child {
+  padding-left: 32px;
+}
+
+.bid-management-table thead th:last-child {
+  padding-right: 32px;
+}
+
+.bid-management-table tbody tr {
+  border-bottom: 1px solid #E5E7EB;
+  transition: background-color 0.2s ease;
+}
+
+.bid-management-table tbody tr:hover {
+  background-color: #F9FAFB;
+}
+
+.bid-management-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.bid-management-table tbody td {
+  padding: 22px 24px;
+  font-size: 14px;
+  color: #333;
+  vertical-align: middle;
+}
+
+.bid-management-table tbody td:first-child {
+  padding-left: 32px;
+}
+
+.bid-management-table tbody td:last-child {
+  padding-right: 32px;
+}
+
+.bid-management-table tbody td.bid-id {
+  font-weight: 700;
+  color: #1A1A1A;
+}
+
+.bid-management-table tbody td.bid-amount {
+  font-weight: 600;
+  color: #1A1A1A;
+}
+
+.bid-status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.bid-status-badge.pending {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.bid-status-badge.won {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.bid-status-badge.redeemed {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+.bid-update-btn {
+  background: #6EA500;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.bid-update-btn:hover {
+  background: #5a8700;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(110, 165, 0, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .bid-management-table-wrapper {
+    overflow-x: auto;
+  }
+
+  .bid-management-table {
+    min-width: 800px;
+  }
+}

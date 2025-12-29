@@ -1,0 +1,220 @@
+"use client";
+import React, { useState } from "react";
+import Link from "next/link";
+
+const NotificationsContent = () => {
+  const [activeTab, setActiveTab] = useState("send");
+  const [notificationPreferences, setNotificationPreferences] = useState({
+    email: true,
+    inApp: true,
+  });
+
+  const togglePreference = (pref) => {
+    setNotificationPreferences((prev) => ({
+      ...prev,
+      [pref]: !prev[pref],
+    }));
+  };
+
+  return (
+    <div className="dashboard-wrapper">
+      {/* Dashboard Navigation */}
+      <div className="dashboard-nav">
+        <div className="container">
+          <nav className="dashboard-menu">
+            <Link href="/dashboard" className="nav-item">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7.5 2.5H3.33333C2.8731 2.5 2.5 2.8731 2.5 3.33333V9.16667C2.5 9.6269 2.8731 10 3.33333 10H7.5C7.96024 10 8.33333 9.6269 8.33333 9.16667V3.33333C8.33333 2.8731 7.96024 2.5 7.5 2.5Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16.6673 2.5H12.5007C12.0404 2.5 11.6673 2.8731 11.6673 3.33333V5.83333C11.6673 6.29357 12.0404 6.66667 12.5007 6.66667H16.6673C17.1276 6.66667 17.5007 6.29357 17.5007 5.83333V3.33333C17.5007 2.8731 17.1276 2.5 16.6673 2.5Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M16.6673 10H12.5007C12.0404 10 11.6673 10.3731 11.6673 10.8333V16.6667C11.6673 17.1269 12.0404 17.5 12.5007 17.5H16.6673C17.1276 17.5 17.5007 17.1269 17.5007 16.6667V10.8333C17.5007 10.3731 17.1276 10 16.6673 10Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.5 13.332H3.33333C2.8731 13.332 2.5 13.7051 2.5 14.1654V16.6654C2.5 17.1256 2.8731 17.4987 3.33333 17.4987H7.5C7.96024 17.4987 8.33333 17.1256 8.33333 16.6654V14.1654C8.33333 13.7051 7.96024 13.332 7.5 13.332Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Dashboard</span>
+            </Link>
+            <Link href="/add-property" className="nav-item">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M5 18.3307V3.33073C5 2.8887 5.17559 2.46478 5.48816 2.15222C5.80072 1.83966 6.22464 1.66406 6.66667 1.66406H13.3333C13.7754 1.66406 14.1993 1.83966 14.5118 2.15222C14.8244 2.46478 15 2.8887 15 3.33073V18.3307H5Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4.99935 10H3.33268C2.89065 10 2.46673 10.1756 2.15417 10.4882C1.84161 10.8007 1.66602 11.2246 1.66602 11.6667V16.6667C1.66602 17.1087 1.84161 17.5326 2.15417 17.8452C2.46673 18.1577 2.89065 18.3333 3.33268 18.3333H4.99935" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15 7.5H16.6667C17.1087 7.5 17.5326 7.6756 17.8452 7.98816C18.1577 8.30072 18.3333 8.72464 18.3333 9.16667V16.6667C18.3333 17.1087 18.1577 17.5326 17.8452 17.8452C17.5326 18.1577 17.1087 18.3333 16.6667 18.3333H15" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.33398 5H11.6673" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.33398 8.33594H11.6673" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.33398 11.6641H11.6673" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.33398 15H11.6673" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Properties</span>
+            </Link>
+            <Link href="/bid-management" className="nav-item">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.6667 10.8368L4.68254 17.8201C4.51839 17.9843 4.3235 18.1146 4.109 18.2035C3.89451 18.2924 3.6646 18.3381 3.43242 18.3382C2.9635 18.3382 2.51376 18.152 2.18212 17.8205C1.85049 17.489 1.66414 17.0393 1.66406 16.5704C1.66398 16.1015 1.85019 15.6517 2.18171 15.3201L9.16837 8.33594" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.334 13.3359L18.334 8.33594" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M17.9167 8.7526L11.25 2.08594" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M6.66602 6.66406L11.666 1.66406" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.08398 6.25L13.7507 12.9167" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Bid Management</span>
+            </Link>
+            <Link href="/add-bidder" className="nav-item">
+              <i className="bi bi-people"></i>
+              <span>Bidders</span>
+            </Link>
+            <Link href="/visibility-control" className="nav-item">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2.5" y="5" width="15" height="11.6667" stroke="currentColor" strokeWidth="1.66667" strokeLinejoin="round"/>
+                <path d="M13.334 10.832C13.334 12.3068 12.1421 13.4987 10.6673 13.4987C9.19255 13.4987 8.00065 12.3068 8.00065 10.832C8.00065 9.35726 9.19255 8.16536 10.6673 8.16536C12.1421 8.16536 13.334 9.35726 13.334 10.832Z" stroke="currentColor" strokeWidth="1.66667" strokeLinejoin="round"/>
+                <path d="M5.83398 5V3.33333" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M10.834 5V3.33333" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M15.834 5V3.33333" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Visibility Control</span>
+            </Link>
+            <Link href="/notifications" className="nav-item active">
+              <i className="bi bi-bell"></i>
+              <span>Notifications</span>
+            </Link>
+            <Link href="/messaging" className="nav-item">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M17.5 12.5C17.5 13.163 17.2366 13.7989 16.7678 14.2678C16.2989 14.7366 15.663 15 15 15H5L2.5 17.5V5C2.5 4.33696 2.76339 3.70107 3.23223 3.23223C3.70107 2.76339 4.33696 2.5 5 2.5H15C15.663 2.5 16.2989 2.76339 16.7678 3.23223C17.2366 3.70107 17.5 4.33696 17.5 5V12.5Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Messaging</span>
+            </Link>
+            <Link href="/reports" className="nav-item">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12.5007 1.66406H5.00065C4.55862 1.66406 4.1347 1.83966 3.82214 2.15222C3.50958 2.46478 3.33398 2.8887 3.33398 3.33073V16.6641C3.33398 17.1061 3.50958 17.53 3.82214 17.8426C4.1347 18.1551 4.55862 18.3307 5.00065 18.3307H15.0007C15.4427 18.3307 15.8666 18.1551 16.1792 17.8426C16.4917 17.53 16.6673 17.1061 16.6673 16.6641V5.83073L12.5007 1.66406Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11.666 1.66406V4.9974C11.666 5.43942 11.8416 5.86335 12.1542 6.17591C12.4667 6.48847 12.8907 6.66406 13.3327 6.66406H16.666" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M8.33268 7.5H6.66602" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.3327 10.8359H6.66602" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13.3327 14.1641H6.66602" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Reports</span>
+            </Link>
+            <Link href="/subscription" className="nav-item">
+              <svg width="18" height="16" viewBox="0 0 19 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0.833984" y="0.835938" width="16.6667" height="11.6667" stroke="currentColor" strokeWidth="1.66667" strokeLinejoin="round"/>
+                <path d="M2.22266 5.69531H16.1115" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Subscription</span>
+            </Link>
+            <Link href="/audit-log" className="nav-item">
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11.666 1.66406V4.9974C11.666 5.43942 11.8416 5.86335 12.1542 6.17591C12.4667 6.48847 12.8907 6.66406 13.3327 6.66406H16.666" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M3.55732 17.4974C3.70324 17.7501 3.91297 17.9601 4.16554 18.1064C4.4181 18.2526 4.70464 18.33 4.99648 18.3307H15.0007C15.4427 18.3307 15.8666 18.1551 16.1792 17.8426C16.4917 17.53 16.6673 17.1061 16.6673 16.6641V5.83073L12.5007 1.66406H5.00065C4.55862 1.66406 4.1347 1.83966 3.82214 2.15222C3.50958 2.46478 3.33398 2.8887 3.33398 3.33073V5.83073" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7.5 15L6.25 13.75" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4.16602 14.1641C5.54673 14.1641 6.66602 13.0448 6.66602 11.6641C6.66602 10.2834 5.54673 9.16406 4.16602 9.16406C2.7853 9.16406 1.66602 10.2834 1.66602 11.6641C1.66602 13.0448 2.7853 14.1641 4.16602 14.1641Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Audit Log</span>
+            </Link>
+            <Link href="/profile" className="nav-item">
+              <svg width="17" height="19" viewBox="0 0 17 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0.833984" y="0.835938" width="14.9273" height="16.6368" stroke="currentColor" strokeWidth="1.66667" strokeLinejoin="round"/>
+                <path d="M8.29755 11.2373C9.32806 11.2373 10.1635 10.3063 10.1635 9.15772C10.1635 8.00919 9.32806 7.07812 8.29755 7.07812C7.26704 7.07812 6.43164 8.00919 6.43164 9.15772C6.43164 10.3063 7.26704 11.2373 8.29755 11.2373Z" stroke="currentColor" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Profile</span>
+            </Link>
+          </nav>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="dashboard-content" style={{ background: '#FFFFFF' }}>
+        <div className="container">
+          <div className="notifications-wrapper">
+            {/* Tabs */}
+            <div className="notifications-tabs">
+              <button
+                className={`notif-tab ${activeTab === "send" ? "active" : ""}`}
+                onClick={() => setActiveTab("send")}
+              >
+                Send Update
+              </button>
+              <button
+                className={`notif-tab ${activeTab === "view" ? "active" : ""}`}
+                onClick={() => setActiveTab("view")}
+              >
+                View Notifications
+              </button>
+            </div>
+
+            {/* Send Update Tab Content */}
+            {activeTab === "send" && (
+              <div className="notifications-card">
+                {/* Header */}
+                <div className="notif-header">
+                  <div className="notif-icon">
+                    <i className="bi bi-send"></i>
+                  </div>
+                  <div>
+                    <h2 className="notif-title">Send Update to Bidders</h2>
+                    <p className="notif-subtitle">Broadcast notifications to bidders</p>
+                  </div>
+                </div>
+
+                {/* Form */}
+                <form className="notif-form">
+                  <div className="form-row-two">
+                    <div className="form-group">
+                      <label>Recipient Group</label>
+                      <input type="text" placeholder="Select recipient group" />
+                    </div>
+
+                    <div className="form-group">
+                      <label>Notification Type</label>
+                      <input type="text" placeholder="Select notification type" />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Subject</label>
+                    <input type="text" placeholder="Enter notification subject" />
+                  </div>
+
+                  <div className="form-group">
+                    <label>Message</label>
+                    <textarea rows="6" placeholder="Enter your message here..."></textarea>
+                  </div>
+
+                  {/* Notification Preferences */}
+                  <div className="notif-preferences">
+                    <div className="pref-header">
+                      <div className="pref-icon">
+                        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M10.2177 21.105C10.1089 21.2243 10.037 21.3727 10.0109 21.5321C9.98486 21.6915 10.0057 21.855 10.0708 22.0028C10.136 22.1506 10.2427 22.2763 10.3779 22.3646C10.5132 22.4528 10.6712 22.4999 10.8327 22.5H24.1661C24.3276 22.5001 24.4856 22.4532 24.6209 22.3651C24.7563 22.277 24.8631 22.1515 24.9285 22.0038C24.9938 21.8561 25.0148 21.6926 24.9889 21.5332C24.9631 21.3737 24.8914 21.2253 24.7827 21.1058C23.6744 19.9633 22.4994 18.7492 22.4994 15C22.4994 13.6739 21.9726 12.4021 21.0349 11.4645C20.0972 10.5268 18.8255 10 17.4994 10C16.1733 10 14.9015 10.5268 13.9639 11.4645C13.0262 12.4021 12.4994 13.6739 12.4994 15C12.4994 18.7492 11.3236 19.9633 10.2177 21.105Z" stroke="#155DFC" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M15 26C15.2633 26.456 15.642 26.8347 16.0981 27.098C16.5541 27.3613 17.0714 27.4999 17.598 27.4999C18.1246 27.4999 18.6419 27.3613 19.0979 27.098C19.554 26.8347 19.9327 26.456 20.196 26" stroke="#155DFC" strokeWidth="1.66667" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="pref-title">Notification Preferences</h3>
+                        <p className="pref-description">Email and In-App</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="notif-actions">
+                    <button type="submit" className="btn-send">
+                      <i className="bi bi-send"></i>
+                      Send Notification
+                    </button>
+                    <button type="button" className="btn-draft">
+                      Save as Draft
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* View Notifications Tab Content */}
+            {activeTab === "view" && (
+              <div className="notifications-card">
+                <p style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+                  No notifications to display
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default NotificationsContent;
