@@ -37,8 +37,8 @@ function timeAgo(d: Date) {
 
 type ActivityRow = { activity: string; subject: string; time: string; at: Date };
 
-function add48Hours(d: Date) {
-  return new Date(d.getTime() + 48 * 60 * 60 * 1000);
+function add10Days(d: Date) {
+  return new Date(d.getTime() + 10 * 24 * 60 * 60 * 1000);
 }
 
 
@@ -204,9 +204,9 @@ const DashboardPage = async () => {
 
   const recentActivity = activity.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 8);
 
-  // Upcoming deadlines (next 48h)
+  // Upcoming deadlines (next 10 days)
   const now = new Date();
-  const end = add48Hours(now);
+  const end = add10Days(now);
   let upcomingDeadlines = 0;
   if (role === "county") {
     const row = await db
@@ -360,7 +360,7 @@ const DashboardOverviewSection = ({
         </div>
         <div className="notification-content">
           <h4>{upcomingDeadlines} Upcoming Auction Deadlines</h4>
-          <p>Properties closing in the next 48 hours require your attention</p>
+          <p>Properties closing in the next 10 days require your attention</p>
         </div>
         <Link href="/properties?endingSoon=1" className="notification-btn">
           View All
