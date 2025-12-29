@@ -118,7 +118,8 @@ export async function GET(req: Request) {
         const q = qRaw.length ? `%${qRaw}%` : null;
         const endingSoon = searchParams.get("endingSoon") === "1";
         const now = new Date();
-        const end = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+        // Ending soon window: next 10 days
+        const end = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000);
 
         // Determine user type (from session if present, otherwise DB)
         let userType = (session.user as any)?.type as "bidder" | "county" | undefined;

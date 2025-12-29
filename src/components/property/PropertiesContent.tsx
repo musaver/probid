@@ -212,7 +212,7 @@ const PropertiesContent = () => {
                                             Ending soon filter
                                         </div>
                                         <div style={{ color: "#6B7280", fontSize: "13px", marginTop: "2px" }}>
-                                            Showing auctions ending in the next 48 hours.
+                                            Showing auctions ending in the next 10 days.
                                         </div>
                                     </div>
                                 </div>
