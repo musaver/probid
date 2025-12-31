@@ -569,7 +569,7 @@ const PropertiesContent = () => {
                                                                 <i className="bi bi-hammer"></i>
                                                             </button>
                                                         )}
-                                                        {isCounty && (
+                                                        {isCounty && Number(property.linkedBiddersCount) > 0 && (
                                                             <button
                                                                 className="action-btn"
                                                                 title="Send Alert"

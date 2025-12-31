@@ -10,18 +10,18 @@ function formatDateTime(date) {
   if (!date) return "";
   const dt = new Date(date);
   if (isNaN(dt.getTime())) return "";
-  
+
   const month = String(dt.getMonth() + 1).padStart(2, '0');
   const day = String(dt.getDate()).padStart(2, '0');
   const year = dt.getFullYear();
-  
+
   let hours = dt.getHours();
   const minutes = String(dt.getMinutes()).padStart(2, '0');
   const ampm = hours >= 12 ? 'PM' : 'AM';
-  
+
   hours = hours % 12;
   hours = hours ? hours : 12;
-  
+
   return `${month}/${day}/${year} ${hours}:${minutes} ${ampm}`;
 }
 
@@ -241,7 +241,7 @@ const Header = () => {
   };
   return (
     <div className="header-topbar-area">
-      
+
       <header className="container header-area style-1 d-flex flex-nowrap align-items-center justify-content-between py-2">
         <div className="nav-left">
           <div className="company-logo">
@@ -435,9 +435,16 @@ const Header = () => {
                         <div style={{ fontWeight: 800, color: "#111827", fontSize: "13px" }}>
                           {p.address || "Property"}
                         </div>
-                        <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px" }}>
-                          {(p.city || "-") + (p.parcelId ? ` • ${p.parcelId}` : "")}
+                        <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px", display: "flex", flexWrap: "wrap", gap: "6px" }}>
+                          <span>{p.city || "-"}</span>
+                          {p.parcelId && <span>• {p.parcelId}</span>}
+                          {p.saleId && <span>• Sale #{p.saleId}</span>}
                         </div>
+                        {(p.minBid || p.winningBid) && (
+                          <div style={{ color: "#059669", fontSize: "11px", marginTop: "2px", fontWeight: 600 }}>
+                            {p.winningBid ? `Winning: $${Number(p.winningBid).toLocaleString()}` : `Min: $${Number(p.minBid).toLocaleString()}`}
+                          </div>
+                        )}
                       </div>
                     ))
                   )}
@@ -608,7 +615,7 @@ const Header = () => {
                                   headers: { "Content-Type": "application/json" },
                                   body: JSON.stringify({ conversationId: c.id }),
                                 });
-                              } catch {}
+                              } catch { }
                               setMsgOpen(false);
                               router.push(`/messaging/${c.id}`);
                             }}
@@ -642,11 +649,11 @@ const Header = () => {
                                 )}
                               </div>
                               <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {c.otherUser?.email || ""}
-                            </div>
-                            <div style={{ color: "#9CA3AF", fontSize: "11px", marginTop: "4px" }}>
-                              {formatDateTime(c.lastMessageAt)}
-                            </div>
+                                {c.otherUser?.email || ""}
+                              </div>
+                              <div style={{ color: "#9CA3AF", fontSize: "11px", marginTop: "4px" }}>
+                                {formatDateTime(c.lastMessageAt)}
+                              </div>
                             </div>
                           </div>
                         ))
@@ -707,101 +714,101 @@ const Header = () => {
                 </button>
 
                 {notifOpen && (
-                <div style={dropdownPanelStyle({ desktopTop: "52px", desktopWidth: "360px" })}>
-                  <div
-                    style={{
-                      padding: "12px 14px",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      borderBottom: "1px solid rgba(17,24,39,0.08)",
-                    }}
-                  >
-                    <div style={{ fontWeight: 800, color: "#111827" }}>Notifications</div>
-                    <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                      <button
-                        type="button"
-                        onClick={markAllRead}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#6EA500",
-                          fontWeight: 800,
-                          cursor: "pointer",
-                          padding: 0,
-                          fontSize: "12px",
-                        }}
-                      >
-                        Mark all read
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setNotifOpen(false)}
-                        style={{
-                          background: "none",
-                          border: "none",
-                          color: "#6B7280",
-                          cursor: "pointer",
-                          padding: 0,
-                          fontSize: "18px",
-                          lineHeight: 1,
-                        }}
-                        aria-label="Close"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      maxHeight: isMobileViewport ? "calc(100vh - 200px)" : "420px",
-                      overflow: "auto",
-                      WebkitOverflowScrolling: "touch",
-                    }}
-                  >
-                    {notifLoading ? (
-                      <div style={{ padding: "14px", color: "#6B7280" }}>Loading...</div>
-                    ) : notifItems.length === 0 ? (
-                      <div style={{ padding: "14px", color: "#6B7280" }}>No notifications yet.</div>
-                    ) : (
-                      notifItems.map((n) => (
-                        <div
-                          key={n.id}
-                          onClick={async () => {
-                            if (n.href) window.location.href = n.href;
-                            if (!n.isRead) {
-                              await fetch("/api/notifications", {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ ids: [n.id] }),
-                              });
-                              await fetchNotifications();
-                            }
-                          }}
+                  <div style={dropdownPanelStyle({ desktopTop: "52px", desktopWidth: "360px" })}>
+                    <div
+                      style={{
+                        padding: "12px 14px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        borderBottom: "1px solid rgba(17,24,39,0.08)",
+                      }}
+                    >
+                      <div style={{ fontWeight: 800, color: "#111827" }}>Notifications</div>
+                      <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                        <button
+                          type="button"
+                          onClick={markAllRead}
                           style={{
-                            padding: "12px 14px",
-                            borderBottom: "1px solid rgba(17,24,39,0.06)",
-                            cursor: n.href ? "pointer" : "default",
-                            background: n.isRead ? "#fff" : "rgba(110,165,0,0.07)",
+                            background: "none",
+                            border: "none",
+                            color: "#6EA500",
+                            fontWeight: 800,
+                            cursor: "pointer",
+                            padding: 0,
+                            fontSize: "12px",
                           }}
                         >
-                          <div style={{ fontWeight: 800, color: "#111827", fontSize: "13px" }}>
-                            {n.title}
-                          </div>
-                          {n.message && (
-                            <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px" }}>
-                              {n.message}
+                          Mark all read
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setNotifOpen(false)}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            color: "#6B7280",
+                            cursor: "pointer",
+                            padding: 0,
+                            fontSize: "18px",
+                            lineHeight: 1,
+                          }}
+                          aria-label="Close"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        maxHeight: isMobileViewport ? "calc(100vh - 200px)" : "420px",
+                        overflow: "auto",
+                        WebkitOverflowScrolling: "touch",
+                      }}
+                    >
+                      {notifLoading ? (
+                        <div style={{ padding: "14px", color: "#6B7280" }}>Loading...</div>
+                      ) : notifItems.length === 0 ? (
+                        <div style={{ padding: "14px", color: "#6B7280" }}>No notifications yet.</div>
+                      ) : (
+                        notifItems.map((n) => (
+                          <div
+                            key={n.id}
+                            onClick={async () => {
+                              if (n.href) window.location.href = n.href;
+                              if (!n.isRead) {
+                                await fetch("/api/notifications", {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ ids: [n.id] }),
+                                });
+                                await fetchNotifications();
+                              }
+                            }}
+                            style={{
+                              padding: "12px 14px",
+                              borderBottom: "1px solid rgba(17,24,39,0.06)",
+                              cursor: n.href ? "pointer" : "default",
+                              background: n.isRead ? "#fff" : "rgba(110,165,0,0.07)",
+                            }}
+                          >
+                            <div style={{ fontWeight: 800, color: "#111827", fontSize: "13px" }}>
+                              {n.title}
                             </div>
-                          )}
-                          <div style={{ color: "#9CA3AF", fontSize: "11px", marginTop: "4px" }}>
-                            {formatDateTime(n.createdAt)}
+                            {n.message && (
+                              <div style={{ color: "#6B7280", fontSize: "12px", marginTop: "2px" }}>
+                                {n.message}
+                              </div>
+                            )}
+                            <div style={{ color: "#9CA3AF", fontSize: "11px", marginTop: "4px" }}>
+                              {formatDateTime(n.createdAt)}
+                            </div>
                           </div>
-                        </div>
-                      ))
-                    )}
+                        ))
+                      )}
+                    </div>
                   </div>
-                </div>
                 )}
               </div>
             </div>
@@ -914,18 +921,18 @@ const Header = () => {
               className="login-btn btn-hover d-lg-flex d-none"
               style={{ backgroundColor: "#00008b", color: "white", borderRadius: "25px" }}
             >
-            <svg
-              width={15}
-              height={19}
-              viewBox="0 0 15 19"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="white"
-            >
-              <path d="M11.8751 4.17663C11.875 5.00255 11.6183 5.8099 11.1375 6.49658C10.6567 7.18326 9.97335 7.71843 9.17389 8.03442C8.37443 8.35041 7.49475 8.43303 6.6461 8.27184C5.79744 8.11064 5.01792 7.71286 4.40611 7.12881C3.79429 6.54475 3.37766 5.80064 3.20889 4.99058C3.04012 4.18052 3.1268 3.34088 3.45796 2.57783C3.78912 1.81479 4.34989 1.16261 5.06937 0.703757C5.78884 0.244909 6.6347 7.28125e-09 7.5 0C8.07459 3.64089e-05 8.64354 0.108097 9.17438 0.318012C9.70521 0.527927 10.1875 0.835585 10.5938 1.22342C11.0001 1.61126 11.3223 2.07167 11.5422 2.57839C11.762 3.0851 11.8752 3.62818 11.8751 4.17663ZM7.5 9.58844C6.26105 9.58705 5.0354 9.83216 3.90124 10.3082C2.76708 10.7842 1.74932 11.4806 0.912902 12.353C-0.563582 13.8885 -0.20194 16.3311 1.6571 17.4243C3.41487 18.4546 5.43728 19 7.5 19C9.56272 19 11.5851 18.4546 13.3429 17.4243C15.2019 16.3311 15.5636 13.8885 14.0871 12.353C13.2507 11.4806 12.2329 10.7842 11.0988 10.3082C9.9646 9.83216 8.73895 9.58705 7.5 9.58844Z" />
-            </svg>
+              <svg
+                width={15}
+                height={19}
+                viewBox="0 0 15 19"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="white"
+              >
+                <path d="M11.8751 4.17663C11.875 5.00255 11.6183 5.8099 11.1375 6.49658C10.6567 7.18326 9.97335 7.71843 9.17389 8.03442C8.37443 8.35041 7.49475 8.43303 6.6461 8.27184C5.79744 8.11064 5.01792 7.71286 4.40611 7.12881C3.79429 6.54475 3.37766 5.80064 3.20889 4.99058C3.04012 4.18052 3.1268 3.34088 3.45796 2.57783C3.78912 1.81479 4.34989 1.16261 5.06937 0.703757C5.78884 0.244909 6.6347 7.28125e-09 7.5 0C8.07459 3.64089e-05 8.64354 0.108097 9.17438 0.318012C9.70521 0.527927 10.1875 0.835585 10.5938 1.22342C11.0001 1.61126 11.3223 2.07167 11.5422 2.57839C11.762 3.0851 11.8752 3.62818 11.8751 4.17663ZM7.5 9.58844C6.26105 9.58705 5.0354 9.83216 3.90124 10.3082C2.76708 10.7842 1.74932 11.4806 0.912902 12.353C-0.563582 13.8885 -0.20194 16.3311 1.6571 17.4243C3.41487 18.4546 5.43728 19 7.5 19C9.56272 19 11.5851 18.4546 13.3429 17.4243C15.2019 16.3311 15.5636 13.8885 14.0871 12.353C13.2507 11.4806 12.2329 10.7842 11.0988 10.3082C9.9646 9.83216 8.73895 9.58705 7.5 9.58844Z" />
+              </svg>
               Sign In
-            <span style={{ top: "40.5px", left: "84.2344px" }} />
-          </Link>
+              <span style={{ top: "40.5px", left: "84.2344px" }} />
+            </Link>
           )}
           <div
             className={`sidebar-button mobile-menu-btn ${isMenuOpen ? "active" : ""

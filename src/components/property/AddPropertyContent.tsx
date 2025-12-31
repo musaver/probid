@@ -331,7 +331,7 @@ const AddPropertyContent = () => {
 
                                                 <div className="form-row">
                                                     <div className="form-group">
-                                                        <label htmlFor="saleId" style={{ fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>Sale ID <span style={{ color: '#DC2626' }}>*</span></label>
+                                                        <label htmlFor="saleId" style={{ fontWeight: 700, cursor: 'pointer' }}>Sale ID <span style={{ color: '#DC2626' }}>*</span></label>
                                                         <input
                                                             id="saleId"
                                                             type="text"

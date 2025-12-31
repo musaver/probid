@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { property, propertyLinkedBidders, user as userTable } from "@/lib/schema";
-import { and, desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, like, or, sql } from "drizzle-orm";
 
 export async function GET(req: Request) {
   try {
@@ -36,11 +36,16 @@ export async function GET(req: Request) {
           id: property.id,
           address: property.address,
           parcelId: property.parcelId,
+          saleId: property.saleId,
           city: property.city,
           status: property.status,
           updatedAt: property.updatedAt,
+          minBid: property.minBid,
+          winningBid: property.winningBid,
         })
         .from(property)
+        .leftJoin(propertyLinkedBidders, eq(property.id, propertyLinkedBidders.propertyId))
+        .leftJoin(userTable, eq(propertyLinkedBidders.bidderId, userTable.id))
         .where(
           and(
             eq(property.createdBy, session.user.id),
@@ -48,10 +53,17 @@ export async function GET(req: Request) {
               like(property.address, q),
               like(property.parcelId, q),
               like(property.city, q),
-              like(property.zipCode, q)
+              like(property.zipCode, q),
+              like(property.saleId, q),
+              like(property.winningBidderId, q),
+              sql`CAST(${property.owners} AS CHAR) LIKE ${q}`,
+              sql`CAST(${property.minBid} AS CHAR) LIKE ${q}`,
+              sql`CAST(${property.winningBid} AS CHAR) LIKE ${q}`,
+              like(userTable.email, q)
             )
           )
         )
+        .groupBy(property.id)
         .orderBy(desc(property.updatedAt))
         .limit(limit);
 
@@ -64,9 +76,12 @@ export async function GET(req: Request) {
         id: property.id,
         address: property.address,
         parcelId: property.parcelId,
+        saleId: property.saleId,
         city: property.city,
         status: property.status,
         updatedAt: property.updatedAt,
+        minBid: property.minBid,
+        winningBid: property.winningBid,
       })
       .from(propertyLinkedBidders)
       .leftJoin(property, eq(propertyLinkedBidders.propertyId, property.id))
@@ -77,7 +92,12 @@ export async function GET(req: Request) {
             like(property.address, q),
             like(property.parcelId, q),
             like(property.city, q),
-            like(property.zipCode, q)
+            like(property.zipCode, q),
+            like(property.saleId, q),
+            like(property.winningBidderId, q),
+            sql`CAST(${property.owners} AS CHAR) LIKE ${q}`,
+            sql`CAST(${property.minBid} AS CHAR) LIKE ${q}`,
+            sql`CAST(${property.winningBid} AS CHAR) LIKE ${q}`
           )
         ) as any
       )
@@ -90,5 +110,3 @@ export async function GET(req: Request) {
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
-
-

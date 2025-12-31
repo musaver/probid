@@ -156,7 +156,10 @@ export async function GET(req: Request) {
                         like(property.zipCode, q),
                         like(property.saleId, q),
                         like(property.winningBidderId, q),
-                        sql`${property.owners} LIKE ${q}`
+                        sql`CAST(${property.owners} AS CHAR) LIKE ${q}`,
+                        sql`CAST(${property.minBid} AS CHAR) LIKE ${q}`,
+                        sql`CAST(${property.winningBid} AS CHAR) LIKE ${q}`,
+                        like(userTable.email, q)
                     )
                 )
                 : eq(property.createdBy, session.user.id);
@@ -168,7 +171,36 @@ export async function GET(req: Request) {
                 )
                 : baseClause;
 
-            properties = await db.select().from(property).where(whereClause);
+            properties = await db
+                .select({
+                    id: property.id,
+                    title: property.title,
+                    description: property.description,
+                    address: property.address,
+                    parcelId: property.parcelId,
+                    saleId: property.saleId,
+                    city: property.city,
+                    zipCode: property.zipCode,
+                    squareFeet: property.squareFeet,
+                    yearBuilt: property.yearBuilt,
+                    lotSize: property.lotSize,
+                    owners: property.owners,
+                    auctionEnd: property.auctionEnd,
+                    minBid: property.minBid,
+                    winningBid: property.winningBid,
+                    winningBidderId: property.winningBidderId,
+                    visibilitySettings: property.visibilitySettings,
+                    status: property.status,
+                    createdBy: property.createdBy,
+                    createdAt: property.createdAt,
+                    updatedAt: property.updatedAt,
+                    linkedBiddersCount: sql<number>`count(distinct ${propertyLinkedBidders.id})`,
+                })
+                .from(property)
+                .leftJoin(propertyLinkedBidders, eq(property.id, propertyLinkedBidders.propertyId))
+                .leftJoin(userTable, eq(propertyLinkedBidders.bidderId, userTable.id))
+                .where(whereClause)
+                .groupBy(property.id);
         } else {
             // bidder: only properties linked to this bidder
             // Drizzle join w/ search
@@ -182,7 +214,9 @@ export async function GET(req: Request) {
                         like(property.zipCode, q),
                         like(property.saleId, q),
                         like(property.winningBidderId, q),
-                        sql`${property.owners} LIKE ${q}`
+                        sql`CAST(${property.owners} AS CHAR) LIKE ${q}`,
+                        sql`CAST(${property.minBid} AS CHAR) LIKE ${q}`,
+                        sql`CAST(${property.winningBid} AS CHAR) LIKE ${q}`
                     )
                 )
                 : eq(propertyLinkedBidders.bidderId, session.user.id);
@@ -201,13 +235,17 @@ export async function GET(req: Request) {
                     description: property.description,
                     address: property.address,
                     parcelId: property.parcelId,
+                    saleId: property.saleId, // explicitly selecting saleId since it's used
                     city: property.city,
                     zipCode: property.zipCode,
                     squareFeet: property.squareFeet,
                     yearBuilt: property.yearBuilt,
                     lotSize: property.lotSize,
+                    owners: property.owners, // explicitly selecting owners
                     auctionEnd: property.auctionEnd,
                     minBid: property.minBid,
+                    winningBid: property.winningBid, // explicitly selecting winningBid
+                    winningBidderId: property.winningBidderId, // explicitly selecting
                     visibilitySettings: property.visibilitySettings,
                     status: property.status,
                     createdBy: property.createdBy,
@@ -244,7 +282,17 @@ export async function GET(req: Request) {
                 maxBid !== undefined && !Number.isNaN(maxBid)
                     ? maxBid
                     : p.minBid ?? null;
-            return { ...p, currentBid, visibilitySettings: normalizeVisibilitySettings(p.visibilitySettings) };
+
+            let owners = p.owners;
+            if (typeof owners === "string") {
+                try {
+                    owners = JSON.parse(owners);
+                } catch {
+                    owners = [];
+                }
+            }
+
+            return { ...p, owners, currentBid, visibilitySettings: normalizeVisibilitySettings(p.visibilitySettings) };
         });
 
         return NextResponse.json(enriched);

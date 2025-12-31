@@ -66,6 +66,14 @@ export async function GET(
 
         const p: any = propertyData[0];
 
+        if (typeof p.owners === "string") {
+            try {
+                p.owners = JSON.parse(p.owners);
+            } catch {
+                p.owners = [];
+            }
+        }
+
         const maxBidRows = await db
             .select({
                 maxAmount: sql<number>`max(${propertyBids.amount})`.as("maxAmount"),
