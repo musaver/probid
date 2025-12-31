@@ -57,20 +57,25 @@ export async function POST(req: Request) {
             description,
             address,
             parcelId,
+            saleId,
             city,
             zipCode,
             squareFeet,
             yearBuilt,
             lotSize,
+            owners,
             auctionEnd,
             minBid,
+            winningBid,
+            winningBidderId,
             status,
             visibilitySettings,
         } = body;
 
-        const safeTitle = String(title || "").trim() || String(address || "").trim();
-        if (!safeTitle) {
-            return new NextResponse("Property title is required", { status: 400 });
+        const safeTitle = String(body.address || "").trim(); // Use address as title since title is removed from UI
+
+        if (!saleId || String(saleId).trim() === "") {
+            return new NextResponse("Sale ID is required", { status: 400 });
         }
 
         const propertyId = uuidv4();
@@ -81,16 +86,23 @@ export async function POST(req: Request) {
             description,
             address,
             parcelId,
+            saleId,
             city,
             zipCode,
             squareFeet: squareFeet ? parseInt(squareFeet) : null,
             yearBuilt: yearBuilt ? parseInt(yearBuilt) : null,
             lotSize,
+            owners,
             auctionEnd: auctionEnd ? new Date(auctionEnd) : null,
             minBid:
                 minBid === undefined || minBid === null || `${minBid}`.trim() === ""
                     ? null
                     : parseInt(`${minBid}`.replace(/[^0-9]/g, ""), 10),
+            winningBid:
+                winningBid === undefined || winningBid === null || `${winningBid}`.trim() === ""
+                    ? null
+                    : parseInt(`${winningBid}`.replace(/[^0-9]/g, ""), 10),
+            winningBidderId,
             visibilitySettings: normalizeVisibilitySettings(visibilitySettings),
             status: status || "active",
             createdBy: session.user.id,
@@ -136,21 +148,24 @@ export async function GET(req: Request) {
         if (userType === "county") {
             const baseClause = q
                 ? and(
-                      eq(property.createdBy, session.user.id),
-                      or(
-                          like(property.address, q),
-                          like(property.parcelId, q),
-                          like(property.city, q),
-                          like(property.zipCode, q)
-                      )
-                  )
+                    eq(property.createdBy, session.user.id),
+                    or(
+                        like(property.address, q),
+                        like(property.parcelId, q),
+                        like(property.city, q),
+                        like(property.zipCode, q),
+                        like(property.saleId, q),
+                        like(property.winningBidderId, q),
+                        sql`${property.owners} LIKE ${q}`
+                    )
+                )
                 : eq(property.createdBy, session.user.id);
 
             const whereClause = endingSoon
                 ? and(
-                      baseClause as any,
-                      sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`
-                  )
+                    baseClause as any,
+                    sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`
+                )
                 : baseClause;
 
             properties = await db.select().from(property).where(whereClause);
@@ -159,21 +174,24 @@ export async function GET(req: Request) {
             // Drizzle join w/ search
             const baseClause = q
                 ? and(
-                      eq(propertyLinkedBidders.bidderId, session.user.id),
-                      or(
-                          like(property.address, q),
-                          like(property.parcelId, q),
-                          like(property.city, q),
-                          like(property.zipCode, q)
-                      )
-                  )
+                    eq(propertyLinkedBidders.bidderId, session.user.id),
+                    or(
+                        like(property.address, q),
+                        like(property.parcelId, q),
+                        like(property.city, q),
+                        like(property.zipCode, q),
+                        like(property.saleId, q),
+                        like(property.winningBidderId, q),
+                        sql`${property.owners} LIKE ${q}`
+                    )
+                )
                 : eq(propertyLinkedBidders.bidderId, session.user.id);
 
             const whereClause = endingSoon
                 ? and(
-                      baseClause as any,
-                      sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`
-                  )
+                    baseClause as any,
+                    sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`
+                )
                 : baseClause;
 
             properties = await db
@@ -207,13 +225,13 @@ export async function GET(req: Request) {
             propertyIds.length === 0
                 ? []
                 : await db
-                      .select({
-                          propertyId: propertyBids.propertyId,
-                          maxAmount: sql<number>`max(${propertyBids.amount})`.as("maxAmount"),
-                      })
-                      .from(propertyBids)
-                      .where(inArray(propertyBids.propertyId, propertyIds))
-                      .groupBy(propertyBids.propertyId);
+                    .select({
+                        propertyId: propertyBids.propertyId,
+                        maxAmount: sql<number>`max(${propertyBids.amount})`.as("maxAmount"),
+                    })
+                    .from(propertyBids)
+                    .where(inArray(propertyBids.propertyId, propertyIds))
+                    .groupBy(propertyBids.propertyId);
 
         const maxBidByPropertyId = new Map<string, number>();
         for (const row of maxBids) {

@@ -30,20 +30,19 @@ const AddPropertyContent = () => {
     const visibilityTouchedRef = useRef(false);
 
     const [formData, setFormData] = useState({
-        title: "",
+        saleId: "",
         parcelId: "",
         address: "",
         city: "",
         zipCode: "",
         minBid: "",
+        winningBid: "",
+        winningBidderId: "",
         status: "active",
-        description: "",
-        squareFeet: "",
-        yearBuilt: "",
-        lotSize: "",
     });
-    
+
     const [auctionEndDate, setAuctionEndDate] = useState<Date | null>(null);
+    const [owners, setOwners] = useState<string[]>([""]);
 
     const docsRef = useRef<PropertyDocumentsManagerHandle | null>(null);
 
@@ -52,7 +51,7 @@ const AddPropertyContent = () => {
     const [bidderResults, setBidderResults] = useState<any[]>([]);
     const [loadingBidderSearch, setLoadingBidderSearch] = useState(false);
     const bidderSearchTimer = useRef<number | null>(null);
-    
+
     // Track bidders selected for new property (before creation)
     const [selectedBidderIds, setSelectedBidderIds] = useState<string[]>([]);
     const [selectedBidderById, setSelectedBidderById] = useState<Record<string, any>>({});
@@ -63,6 +62,21 @@ const AddPropertyContent = () => {
             ...prev,
             [name]: value,
         }));
+    };
+
+    const handleOwnerChange = (index: number, value: string) => {
+        const newOwners = [...owners];
+        newOwners[index] = value;
+        setOwners(newOwners);
+    };
+
+    const addOwner = () => {
+        setOwners([...owners, ""]);
+    };
+
+    const removeOwner = (index: number) => {
+        const newOwners = owners.filter((_, i) => i !== index);
+        setOwners(newOwners);
     };
 
     const toggleSetting = (setting: keyof typeof visibilitySettings) => {
@@ -197,6 +211,7 @@ const AddPropertyContent = () => {
                 },
                 body: JSON.stringify({
                     ...formData,
+                    owners: owners.filter(o => o.trim() !== ""),
                     auctionEnd: auctionEndDate ? auctionEndDate.toISOString() : "",
                     visibilitySettings,
                 }),
@@ -253,11 +268,11 @@ const AddPropertyContent = () => {
                     style={{ height: 1, width: 1 }}
                 />
                 <div className="container">
-                    
+
 
                     {/* Placeholder when buttons are floating to prevent content jump */}
                     {isButtonsFloating && <div style={{ height: actionsBarHeight }} />}
-                    
+
                     {/* Action Buttons - Floating when scrolled */}
                     <div
                         ref={actionsBarRef}
@@ -307,161 +322,316 @@ const AddPropertyContent = () => {
                                             <i className="bi bi-x"></i>
                                         </button>
                                     </div>
-                                    
+
                                     <div className="modal-body">
                                         <form id="add-property-form" onSubmit={handleSubmit}>
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>Property Title</label>
-                                                    <input
-                                                        type="text"
-                                                        name="title"
-                                                        placeholder="e.g. 3BR Single Family Home"
-                                                        value={formData.title}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
+                                            {/* Section 1: Property & Ownership Info */}
+                                            <div className="form-section">
+                                                <h4 style={{ marginBottom: '15px', color: '#111827', fontWeight: 600 }}>Property & Ownership Info</h4>
+
+                                                <div className="form-row">
+                                                    <div className="form-group">
+                                                        <label htmlFor="saleId" style={{ fontWeight: 700, fontSize: '15px', cursor: 'pointer' }}>Sale ID <span style={{ color: '#DC2626' }}>*</span></label>
+                                                        <input
+                                                            id="saleId"
+                                                            type="text"
+                                                            name="saleId"
+                                                            placeholder="e.g. 2023-001"
+                                                            value={formData.saleId}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                            style={{
+                                                                fontWeight: 600,
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label htmlFor="parcelId" style={{ cursor: 'pointer' }}>Parcel Number</label>
+                                                        <input
+                                                            id="parcelId"
+                                                            type="text"
+                                                            name="parcelId"
+                                                            placeholder="123-456-789"
+                                                            value={formData.parcelId}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                        />
+                                                    </div>
                                                 </div>
-                                                <div className="form-group">
-                                                    <label>Parcel ID</label>
-                                                    <input
-                                                        type="text"
-                                                        name="parcelId"
-                                                        placeholder="123-456-789"
-                                                        value={formData.parcelId}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>Property Address</label>
-                                                    <input
-                                                        type="text"
-                                                        name="address"
-                                                        placeholder="123 Main Street"
-                                                        value={formData.address}
-                                                        onChange={handleInputChange}
-                                                        required
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>City</label>
-                                                    <input
-                                                        type="text"
-                                                        name="city"
-                                                        placeholder="City Name"
-                                                        value={formData.city}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>ZIP Code</label>
-                                                    <input
-                                                        type="text"
-                                                        name="zipCode"
-                                                        placeholder="12345"
-                                                        value={formData.zipCode}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>Minimum Bid</label>
-                                                    <input
-                                                        type="text"
-                                                        name="minBid"
-                                                        placeholder="$50,000"
-                                                        value={formData.minBid}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>Property Status</label>
-                                                    <select
-                                                        name="status"
-                                                        value={formData.status}
-                                                        onChange={handleInputChange}
-                                                        style={{
-                                                            padding: '12px 15px',
-                                                            border: '1px solid #ddd',
-                                                            borderRadius: '23px',
-                                                            fontSize: '14px',
-                                                            backgroundColor: '#FFFFFF',
-                                                            width: '100%'
-                                                        }}
+
+                                                <div className="form-group full-width">
+                                                    <label htmlFor="owner-0" style={{ cursor: 'pointer' }}>Owner Name(s) <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal' }}>(Last name first)</span></label>
+                                                    {owners.map((owner, index) => (
+                                                        <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                                            <input
+                                                                id={`owner-${index}`}
+                                                                type="text"
+                                                                placeholder="Doe, John"
+                                                                value={owner}
+                                                                onChange={(e) => handleOwnerChange(index, e.target.value)}
+                                                                style={{ flex: 1 }}
+                                                            />
+                                                            {owners.length > 1 && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => removeOwner(index)}
+                                                                    style={{ padding: '0 10px', color: '#EF4444', border: '1px solid #EF4444', borderRadius: '6px', background: 'white' }}
+                                                                >
+                                                                    <i className="bi bi-trash"></i>
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                    <button
+                                                        type="button"
+                                                        onClick={addOwner}
+                                                        style={{ fontSize: '13px', color: '#2563EB', background: 'none', border: 'none', padding: 0, fontWeight: 500, cursor: 'pointer' }}
                                                     >
-                                                        <option value="active">Active</option>
-                                                        <option value="sold">Sold</option>
-                                                        <option value="withdrawn">Withdrawn</option>
-                                                    </select>
+                                                        + Add another owner
+                                                    </button>
                                                 </div>
-                                            </div>
-                                            <div className="form-group full-width">
-                                                <label>Property Description</label>
-                                                <textarea
-                                                    name="description"
-                                                    placeholder="Enter detailed property description..."
-                                                    rows={4}
-                                                    value={formData.description}
-                                                    onChange={handleInputChange}
-                                                ></textarea>
-                                            </div>
 
-                                            {/* Additional Fields */}
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>Square Feet</label>
-                                                    <input
-                                                        type="number"
-                                                        name="squareFeet"
-                                                        placeholder="2400"
-                                                        value={formData.squareFeet}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>Year Built</label>
-                                                    <input
-                                                        type="number"
-                                                        name="yearBuilt"
-                                                        placeholder="1985"
-                                                        value={formData.yearBuilt}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                            </div>
-                                            <div className="form-row">
-                                                <div className="form-group">
-                                                    <label>Lot Size</label>
-                                                    <input
-                                                        type="text"
-                                                        name="lotSize"
-                                                        placeholder="0.25 acres"
-                                                        value={formData.lotSize}
-                                                        onChange={handleInputChange}
-                                                    />
-                                                </div>
-                                                <div className="form-group">
-                                                    <label>Auction End Date</label>
-                                                    <DatePicker
-                                                        selected={auctionEndDate}
-                                                        onChange={(date: Date | null) => setAuctionEndDate(date)}
-                                                        showTimeSelect
-                                                        timeFormat="h:mm aa"
-                                                        timeIntervals={15}
-                                                        dateFormat="MM/dd/yyyy h:mm aa"
-                                                        placeholderText="MM/DD/YYYY HH:MM AM/PM"
-                                                        className="date-picker-input"
-                                                        wrapperClassName="date-picker-wrapper"
-                                                    />
+                                                <div className="form-row">
+                                                    <div className="form-group">
+                                                        <label htmlFor="address" style={{ cursor: 'pointer' }}>Property Address</label>
+                                                        <input
+                                                            id="address"
+                                                            type="text"
+                                                            name="address"
+                                                            placeholder="123 Main Street"
+                                                            value={formData.address}
+                                                            onChange={handleInputChange}
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label htmlFor="city" style={{ cursor: 'pointer' }}>City</label>
+                                                        <input
+                                                            id="city"
+                                                            type="text"
+                                                            name="city"
+                                                            placeholder="City Name"
+                                                            value={formData.city}
+                                                            onChange={handleInputChange}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label htmlFor="zipCode" style={{ cursor: 'pointer' }}>ZIP Code</label>
+                                                        <input
+                                                            id="zipCode"
+                                                            type="text"
+                                                            name="zipCode"
+                                                            placeholder="12345"
+                                                            value={formData.zipCode}
+                                                            onChange={handleInputChange}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
 
+                                            {/* Section 2: Auction Info */}
+                                            <div className="form-section" style={{ marginTop: '25px' }}>
+                                                <h4 style={{ marginBottom: '15px', color: '#111827', fontWeight: 600 }}>Auction Info</h4>
+
+                                                <div className="form-row">
+                                                    <div className="form-group">
+                                                        <label htmlFor="minBid" style={{ cursor: 'pointer' }}>Minimum Bid</label>
+                                                        <input
+                                                            id="minBid"
+                                                            type="text"
+                                                            name="minBid"
+                                                            placeholder="$50,000"
+                                                            value={formData.minBid}
+                                                            onChange={handleInputChange}
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label htmlFor="winningBid" style={{ cursor: 'pointer' }}>Winning Bid</label>
+                                                        <input
+                                                            id="winningBid"
+                                                            type="text"
+                                                            name="winningBid"
+                                                            placeholder="$0"
+                                                            value={formData.winningBid}
+                                                            onChange={handleInputChange}
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                <div className="form-row">
+                                                    <div className="form-group" style={{ position: 'relative' }}>
+                                                        <label htmlFor="winningBidderSearch" style={{ cursor: 'pointer' }}>Bidder Number (Winning Bidder)</label>
+                                                        <input
+                                                            id="winningBidderSearch"
+                                                            type="text"
+                                                            placeholder="Search to link bidder..."
+                                                            value={bidderQuery}
+                                                            onChange={(e) => setBidderQuery(e.target.value)}
+                                                            autoComplete="off"
+                                                        />
+                                                        {loadingBidderSearch && <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>Searching...</div>}
+
+                                                        {/* Search Results Dropdown */}
+                                                        {bidderQuery.trim() && bidderResults.length > 0 && (
+                                                            <div className="dropdown-results" style={{
+                                                                position: 'absolute',
+                                                                top: '100%',
+                                                                left: 0,
+                                                                right: 0,
+                                                                backgroundColor: 'white',
+                                                                border: '1px solid #ddd',
+                                                                borderRadius: '8px',
+                                                                zIndex: 10,
+                                                                marginTop: '4px',
+                                                                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                                            }}>
+                                                                {bidderResults
+                                                                    .filter((b) => !selectedBidderIds.includes(b.id))
+                                                                    .map((bidder) => (
+                                                                        <div
+                                                                            key={bidder.id}
+                                                                            onClick={() => {
+                                                                                handleSelectBidder(bidder.id, bidder);
+                                                                                setBidderQuery(""); // Clear search on selection
+                                                                                setBidderResults([]);
+                                                                            }}
+                                                                            style={{
+                                                                                padding: '10px',
+                                                                                cursor: 'pointer',
+                                                                                borderBottom: '1px solid #eee',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                gap: '10px'
+                                                                            }}
+                                                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9fafb'}
+                                                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                                                        >
+                                                                            <img
+                                                                                src={bidder.image || avatarFallback}
+                                                                                alt={bidder.name}
+                                                                                style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+                                                                                onError={(e) => (e.currentTarget as HTMLImageElement).src = avatarFallback}
+                                                                            />
+                                                                            <div>
+                                                                                <div style={{ fontWeight: 500, fontSize: '14px' }}>{bidder.name || "Unknown"}</div>
+                                                                                <div style={{ fontSize: '12px', color: '#666' }}>{bidder.email}</div>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Selected Bidders List */}
+                                                        {selectedBidderIds.length > 0 && (
+                                                            <div className="selected-bidders-list" style={{ marginTop: '10px' }}>
+                                                                {selectedBidderIds.map((id) => {
+                                                                    const bidder = selectedBidderById[id];
+                                                                    return (
+                                                                        <div key={id} style={{
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'space-between',
+                                                                            padding: '8px 12px',
+                                                                            backgroundColor: '#f3f4f6',
+                                                                            borderRadius: '6px',
+                                                                            marginBottom: '6px'
+                                                                        }}>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                                <img
+                                                                                    src={bidder?.image || avatarFallback}
+                                                                                    alt={bidder?.name}
+                                                                                    style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+                                                                                    onError={(e) => (e.currentTarget as HTMLImageElement).src = avatarFallback}
+                                                                                />
+                                                                                <div>
+                                                                                    <div style={{ fontWeight: 500, fontSize: '13px' }}>{bidder?.name || "Unknown"}</div>
+                                                                                    <div style={{ fontSize: '11px', color: '#666' }}>{bidder?.email}</div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => handleUnselectBidder(id)}
+                                                                                style={{
+                                                                                    border: 'none',
+                                                                                    background: 'none',
+                                                                                    color: '#EF4444',
+                                                                                    cursor: 'pointer',
+                                                                                    fontSize: '16px'
+                                                                                }}
+                                                                            >
+                                                                                &times;
+                                                                            </button>
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="form-group">
+                                                        <label
+                                                            htmlFor="status"
+                                                            style={{ cursor: 'pointer' }}
+                                                            onClick={(e) => {
+                                                                const el = document.getElementById('status');
+                                                                if (el && 'showPicker' in el) {
+                                                                    // @ts-ignore
+                                                                    el.showPicker();
+                                                                }
+                                                            }}
+                                                        >
+                                                            Property Status
+                                                        </label>
+                                                        <select
+                                                            id="status"
+                                                            name="status"
+                                                            value={formData.status}
+                                                            onChange={handleInputChange}
+                                                            style={{
+                                                                padding: '12px 15px',
+                                                                border: '1px solid #ddd',
+                                                                borderRadius: '23px',
+                                                                fontSize: '14px',
+                                                                backgroundColor: '#FFFFFF',
+                                                                width: '100%'
+                                                            }}
+                                                        >
+                                                            <option value="active">Active</option>
+                                                            <option value="sold">Sold</option>
+                                                            <option value="withdrawn">Withdrawn</option>
+                                                            <option value="on_list">On List</option>
+                                                            <option value="sold_at_tax_sale">Sold At Tax Sale</option>
+                                                            <option value="redeemed">Redeemed</option>
+                                                            <option value="voided">Voided</option>
+                                                            <option value="cancelled">Cancelled</option>
+                                                            <option value="deed_in_progress">Deed in Progress</option>
+                                                            <option value="deed_issued">Deed Issued</option>
+                                                            <option value="redeemed_check_issued">Redeemed Check Issued</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="form-row">
+                                                    <div className="form-group">
+                                                        <label htmlFor="auctionEndDate" style={{ cursor: 'pointer' }}>Auction End Date</label>
+                                                        <DatePicker
+                                                            id="auctionEndDate"
+                                                            selected={auctionEndDate}
+                                                            onChange={(date: Date | null) => setAuctionEndDate(date)}
+                                                            showTimeSelect={false}
+                                                            dateFormat="MM/dd/yyyy"
+                                                            placeholderText="MM/DD/YYYY"
+                                                            className="date-picker-input"
+                                                            wrapperClassName="date-picker-wrapper"
+                                                        />
+                                                    </div>
+                                                    <div className="form-group">
+                                                        {/* Spacer or additional field if needed */}
+                                                    </div>
+                                                </div>
+                                            </div>
+
                                             <div className="form-group full-width">
-                                                <label>Document Attachments</label>
+                                                <label style={{ cursor: 'pointer' }}>Document Attachments</label>
                                                 <PropertyDocumentsManager ref={docsRef} />
                                             </div>
                                         </form>
@@ -494,100 +664,7 @@ const AddPropertyContent = () => {
                         </div>
 
                         <div className="dashboard-sidebar">
-                            <div className="sidebar-card">
-                                <h4>Linked Bidders</h4>
-                                <div className="bidders-list">
-                                    {selectedBidderIds.length === 0 ? (
-                                        <div style={{ padding: "12px", color: "#6B7280" }}>
-                                            No bidders selected yet. Select from below.
-                                        </div>
-                                    ) : (
-                                        selectedBidderIds.map((id, index) => {
-                                            const bidder = selectedBidderById[id];
-                                            return (
-                                                <div key={index} className="bidder-item">
-                                                    <div className="bidder-avatar">
-                                                        <img
-                                                            src={(bidder?.image as string) || avatarFallback}
-                                                            alt={bidder?.name || "User"}
-                                                            onError={(e) => {
-                                                                (e.currentTarget as HTMLImageElement).src = avatarFallback;
-                                                            }}
-                                                        />
-                                                    </div>
-                                                    <div className="bidder-info">
-                                                        <h5>{bidder?.name || "Unknown"}</h5>
-                                                        <p>{bidder?.email || id}</p>
-                                                    </div>
-                                                    <button
-                                                        className="link-btn linked"
-                                                        onClick={() => handleUnselectBidder(id)}
-                                                        title="Remove selection"
-                                                    >
-                                                        <i className="bi bi-x-lg"></i>
-                                                    </button>
-                                                </div>
-                                            );
-                                        })
-                                    )}
-                                </div>
-                            </div>
-
-                            <div className="sidebar-card">
-                                <h4>Link New Bidder</h4>
-                                <div style={{ marginBottom: "10px" }}>
-                                    <input
-                                        type="email"
-                                        placeholder="Search bidder by email..."
-                                        value={bidderQuery}
-                                        onChange={(e) => setBidderQuery(e.target.value)}
-                                        style={{
-                                            width: "100%",
-                                            padding: "10px 12px",
-                                            borderRadius: "10px",
-                                            border: "1px solid rgba(17,24,39,0.12)",
-                                        }}
-                                    />
-                                </div>
-                                <div className="bidders-list">
-                                    {!bidderQuery.trim() ? (
-                                        <div style={{ padding: "12px", color: "#6B7280" }}>
-                                            Search by email to find a bidder.
-                                        </div>
-                                    ) : loadingBidderSearch ? (
-                                        <div style={{ padding: "12px", color: "#6B7280" }}>Searching...</div>
-                                    ) : bidderResults.length === 0 ? (
-                                        <div style={{ padding: "12px", color: "#6B7280" }}>No bidders found.</div>
-                                    ) : (
-                                        bidderResults
-                                            .filter((b) => !selectedBidderIds.includes(b.id))
-                                            .map((bidder, index) => (
-                                        <div key={index} className="bidder-item">
-                                            <div className="bidder-avatar">
-                                                        <img
-                                                            src={bidder.image || avatarFallback}
-                                                            alt={bidder.name || "User"}
-                                                            onError={(e) => {
-                                                                (e.currentTarget as HTMLImageElement).src = avatarFallback;
-                                                            }}
-                                                        />
-                                            </div>
-                                            <div className="bidder-info">
-                                                        <h5>{bidder.name || "Unknown"}</h5>
-                                                <p>{bidder.email}</p>
-                                            </div>
-                                                    <button
-                                                        className="link-btn available"
-                                                        onClick={() => handleSelectBidder(bidder.id, bidder)}
-                                                        title="Select bidder"
-                                                    >
-                                                <i className="bi bi-plus"></i>
-                                            </button>
-                                        </div>
-                                            ))
-                                    )}
-                                </div>
-                            </div>
+                            {/* Bidders section removed and moved to main form */}
                         </div>
                     </div>
                 </div>

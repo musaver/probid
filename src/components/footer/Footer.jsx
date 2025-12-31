@@ -13,45 +13,19 @@ const Footer = () => {
           <div className="container">
             <div className="footer-menu-wrap simple">
               <div className="row g-lg-4 gy-5 align-items-start">
-                <div className="col-lg-4 col-md-6">
+                <div className="col-lg-3 col-md-6">
                   <div className="footer-logo-area simple">
                     <div className="footer-logo">
                       <Image src="/images/logo.png" alt="Bid Bridge logo" width={120} height={120} style={{ objectFit: "contain" }} />
                     </div>
                     <div className="social-area">
-                      <h5>Social Just You Connected Us!</h5>
-                      <p>All of update in social</p>
-                      <ul className="social-list">
-                        <li>
-                          <a href="https://www.linkedin.com/">
-                            <i className="bi bi-linkedin" />
-                            <span>LinkedIn</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://www.facebook.com/">
-                            <i className="bi bi-facebook" />
-                            <span>Facebook</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://twitter.com/">
-                            <i className="bi bi-twitter-x" />
-                            <span>Twitter</span>
-                          </a>
-                        </li>
-                        <li>
-                          <a href="https://www.instagram.com/">
-                            <i className="bi bi-instagram" />
-                            <span>Instagram</span>
-                          </a>
-                        </li>
-                      </ul>
+                      <h5>About Us!</h5>
+                      <p>A small about paragraph</p>
                     </div>
                   </div>
                 </div>
-                
-                <div className="col-lg-2 col-md-6">
+
+                <div className="col-lg-3 col-md-6">
                   <div className="footer-widget">
                     <div className="widget-title">
                       <h4>Company</h4>
@@ -63,7 +37,7 @@ const Footer = () => {
                     </ul>
                   </div>
                 </div>
-                <div className="col-lg-2 col-md-6">
+                <div className="col-lg-3 col-md-6">
                   <div className="footer-widget">
                     <div className="widget-title">
                       <h4>Support</h4>
@@ -76,10 +50,10 @@ const Footer = () => {
                     </ul>
                   </div>
                 </div>
-                <div className="col-lg-4 col-md-6">
+                <div className="col-lg-3 col-md-6">
                   <div className="newletter-and-payment-wrap">
                     <div className="newletter-area">
-                      <h4>Join Our Newsletter &amp; More information.</h4>
+                      <h4>Join Our Newsletter</h4>
                       <form>
                         <div className="form-inner">
                           <input type="email" placeholder="Email Address" />
@@ -87,7 +61,7 @@ const Footer = () => {
                         </div>
                       </form>
                     </div>
-                   
+
                   </div>
                 </div>
               </div>

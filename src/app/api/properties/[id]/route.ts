@@ -118,13 +118,17 @@ export async function PATCH(
             description,
             address,
             parcelId,
+            saleId,
             city,
             zipCode,
             squareFeet,
             yearBuilt,
             lotSize,
+            owners,
             auctionEnd,
             minBid,
+            winningBid,
+            winningBidderId,
             status,
             visibilitySettings,
         } = body;
@@ -136,6 +140,10 @@ export async function PATCH(
             String(existing.title || "").trim() ||
             String(existing.address || "").trim();
 
+        if (saleId !== undefined && String(saleId).trim() === "") {
+            return new NextResponse("Sale ID cannot be empty", { status: 400 });
+        }
+
         await db
             .update(property)
             .set({
@@ -143,16 +151,23 @@ export async function PATCH(
                 description,
                 address,
                 parcelId,
+                saleId,
                 city,
                 zipCode,
                 squareFeet: squareFeet ? parseInt(squareFeet) : null,
                 yearBuilt: yearBuilt ? parseInt(yearBuilt) : null,
                 lotSize,
+                owners,
                 auctionEnd: auctionEnd ? new Date(auctionEnd) : null,
                 minBid:
                     minBid === undefined || minBid === null || `${minBid}`.trim() === ""
                         ? null
                         : parseInt(`${minBid}`.replace(/[^0-9]/g, ""), 10),
+                winningBid:
+                    winningBid === undefined || winningBid === null || `${winningBid}`.trim() === ""
+                        ? null
+                        : parseInt(`${winningBid}`.replace(/[^0-9]/g, ""), 10),
+                winningBidderId,
                 visibilitySettings: normalizeVisibilitySettings(visibilitySettings),
                 status: nextStatus,
                 updatedAt: new Date(),

@@ -18,6 +18,14 @@ const PropertiesContent = () => {
     const endingSoon = searchParams.get("endingSoon") === "1";
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
+    // Sorting & Filtering State
+    const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+
+    // Inline Status Editing State
+    const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
+    const [updatingStatus, setUpdatingStatus] = useState(false);
+
     const buildQueryString = () => {
         const params = new URLSearchParams();
         const q = search.trim();
@@ -35,6 +43,15 @@ const PropertiesContent = () => {
     const [bidAmount, setBidAmount] = useState<string>("");
     const [loadingBidData, setLoadingBidData] = useState(false);
     const [submittingBid, setSubmittingBid] = useState(false);
+
+    // Alert Modal State
+    const [showAlertModal, setShowAlertModal] = useState(false);
+    const [alertProperty, setAlertProperty] = useState<any>(null);
+    const [alertSubject, setAlertSubject] = useState("");
+    const [alertMessage, setAlertMessage] = useState("");
+    const [sendingAlert, setSendingAlert] = useState(false);
+    const [alertBidderIds, setAlertBidderIds] = useState<string[]>([]);
+    const [loadingAlertBidders, setLoadingAlertBidders] = useState(false);
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -65,6 +82,76 @@ const PropertiesContent = () => {
             console.error("Error refreshing properties:", e);
         }
     };
+
+    const handleSort = (key: string) => {
+        setSortConfig((prev) => ({
+            key,
+            direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc',
+        }));
+    };
+
+    const handleStatusUpdate = async (id: string, newStatus: string) => {
+        if (!newStatus) return;
+        setUpdatingStatus(true);
+        try {
+            const res = await fetch(`/api/properties/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus }),
+            });
+            if (!res.ok) {
+                alert("Failed to update status");
+                return;
+            }
+            // Update local state
+            setProperties((prev) =>
+                prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
+            );
+            setEditingStatusId(null);
+        } catch (e) {
+            console.error("Status update error:", e);
+            alert("Failed to update status");
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const processedProperties = useMemo(() => {
+        let filtered = [...properties];
+
+        // Filter by status
+        if (statusFilter !== "all") {
+            filtered = filtered.filter((p) => p.status === statusFilter);
+        }
+
+        // Sort
+        if (sortConfig.key) {
+            filtered.sort((a, b) => {
+                let aVal = a[sortConfig.key!];
+                let bVal = b[sortConfig.key!];
+
+                // Handle dates
+                if (sortConfig.key === 'createdAt') {
+                    aVal = new Date(aVal).getTime();
+                    bVal = new Date(bVal).getTime();
+                }
+
+                // Handle numbers (stripping currency symbols if needed, but data seems raw or numbers)
+                if (typeof aVal === 'string' && !isNaN(Number(aVal))) aVal = Number(aVal);
+                if (typeof bVal === 'string' && !isNaN(Number(bVal))) bVal = Number(bVal);
+
+                // Handle nulls
+                if (aVal === null || aVal === undefined) return 1;
+                if (bVal === null || bVal === undefined) return -1;
+
+                if (aVal < bVal) return sortConfig.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return sortConfig.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+
+        return filtered;
+    }, [properties, sortConfig, statusFilter]);
 
     const handleViewProperty = (id: string) => {
         router.push(`/property-details/${id}`);
@@ -153,6 +240,60 @@ const PropertiesContent = () => {
         }
     };
 
+    const openAlertModal = async (property: any) => {
+        setAlertProperty(property);
+        setAlertSubject(`Update: ${property.address}`);
+        setAlertMessage("");
+        setShowAlertModal(true);
+        setLoadingAlertBidders(true);
+        setLinkedBidders([]);
+        setAlertBidderIds([]);
+
+        try {
+            const res = await fetch(`/api/properties/${property.id}/linked-bidders`);
+            if (res.ok) {
+                const data = await res.json();
+                setLinkedBidders(data);
+                setAlertBidderIds(data.map((b: any) => b.bidderId));
+            }
+        } catch (e) {
+            console.error("Error loading linked bidders:", e);
+        } finally {
+            setLoadingAlertBidders(false);
+        }
+    };
+
+    const sendAlert = async () => {
+        if (!alertMessage.trim()) return alert("Message is required");
+        setSendingAlert(true);
+        try {
+            const subject = alertSubject.trim() || `Update: ${alertProperty?.address || "Property"}`;
+            const res = await fetch(`/api/properties/${alertProperty.id}/alerts`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    subject,
+                    message: alertMessage,
+                    bidderIds: alertBidderIds,
+                }),
+            });
+            if (!res.ok) {
+                const text = await res.text();
+                alert(text || "Failed to send alert");
+                return;
+            }
+            setShowAlertModal(false);
+            setAlertSubject("");
+            setAlertMessage("");
+            alert("Alert sent!");
+        } catch (e) {
+            console.error("Send alert error:", e);
+            alert("Failed to send alert");
+        } finally {
+            setSendingAlert(false);
+        }
+    };
+
     return (
         <div className="dashboard-wrapper">
             <DashboardNav activeTab="properties" />
@@ -169,6 +310,79 @@ const PropertiesContent = () => {
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                 />
+                            </div>
+                            <div className="filter-dropdown-wrapper" style={{ marginLeft: '12px' }}>
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    style={{
+                                        padding: '10px 24px 10px 14px',
+                                        borderRadius: '999px',
+                                        border: '1px solid rgba(17,24,39,0.12)',
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#fff',
+                                        outline: 'none',
+                                        paddingRight: '32px', // Space for arrow
+                                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                                        backgroundPosition: 'right 0.5rem center',
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundSize: '1.5em 1.5em',
+                                        appearance: 'none',
+                                        WebkitAppearance: 'none'
+                                    }}
+                                >
+                                    <option value="all">All Statuses</option>
+                                    <option value="active">Active</option>
+                                    <option value="sold">Sold</option>
+                                    <option value="withdrawn">Withdrawn</option>
+                                    <option value="on_list">On List</option>
+                                    <option value="sold_at_tax_sale">Sold At Tax Sale</option>
+                                    <option value="redeemed">Redeemed</option>
+                                    <option value="voided">Voided</option>
+                                    <option value="cancelled">Cancelled</option>
+                                    <option value="deed_in_progress">Deed in Progress</option>
+                                    <option value="deed_issued">Deed Issued</option>
+                                    <option value="redeemed_check_issued">Redeemed Check Issued</option>
+                                </select>
+                            </div>
+                            <div className="filter-dropdown-wrapper" style={{ marginLeft: '12px' }}>
+                                <select
+                                    value={sortConfig.key ? `${sortConfig.key}_${sortConfig.direction}` : ""}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        if (!val) {
+                                            setSortConfig({ key: null, direction: 'asc' });
+                                            return;
+                                        }
+                                        const [key, direction] = val.split('_');
+                                        setSortConfig({ key, direction: direction as 'asc' | 'desc' });
+                                    }}
+                                    style={{
+                                        padding: '10px 24px 10px 14px',
+                                        borderRadius: '999px',
+                                        border: '1px solid rgba(17,24,39,0.12)',
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#fff',
+                                        outline: 'none',
+                                        paddingRight: '32px', // Space for arrow
+                                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                                        backgroundPosition: 'right 0.5rem center',
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundSize: '1.5em 1.5em',
+                                        appearance: 'none',
+                                        WebkitAppearance: 'none'
+                                    }}
+                                >
+                                    <option value="">Sort By...</option>
+                                    <option value="createdAt_desc">Date Added (Newest)</option>
+                                    <option value="createdAt_asc">Date Added (Oldest)</option>
+                                    <option value="currentBid_desc">Current Bid (High to Low)</option>
+                                    <option value="currentBid_asc">Current Bid (Low to High)</option>
+                                    <option value="parcelId_asc">Parcel ID (A-Z)</option>
+                                    <option value="address_asc">Address (A-Z)</option>
+                                </select>
                             </div>
                         </div>
                         <Link href="/add-property" className="add-property-btn">
@@ -243,13 +457,26 @@ const PropertiesContent = () => {
                             <table className="properties-table">
                                 <thead>
                                     <tr>
-                                        <th>Parcel ID</th>
-                                        <th>Address</th>
-                                        <th>City</th>
-                                        <th>Added</th>
-                                        <th>Min Bid</th>
-                                        <th>Current Bid</th>
-                                        <th>Status</th>
+                                        {[
+                                            { label: 'Parcel ID', key: 'parcelId' },
+                                            { label: 'Address', key: 'address' },
+                                            { label: 'City', key: 'city' },
+                                            { label: 'Added', key: 'createdAt' },
+                                            { label: 'Min Bid', key: 'minBid' },
+                                            { label: 'Current Bid', key: 'currentBid' },
+                                            { label: 'Status', key: 'status' },
+                                        ].map((head) => (
+                                            <th
+                                                key={head.key}
+                                                onClick={() => handleSort(head.key)}
+                                                style={{ cursor: 'pointer', whiteSpace: 'nowrap' }}
+                                            >
+                                                {head.label}
+                                                {sortConfig.key === head.key && (
+                                                    <i className={`bi bi-sort-${sortConfig.direction === 'asc' ? 'down' : 'up'}`} style={{ marginLeft: '6px' }}></i>
+                                                )}
+                                            </th>
+                                        ))}
                                         <th>Actions</th>
                                     </tr>
                                 </thead>
@@ -260,25 +487,62 @@ const PropertiesContent = () => {
                                                 Loading properties...
                                             </td>
                                         </tr>
-                                    ) : properties.length === 0 ? (
+                                    ) : processedProperties.length === 0 ? (
                                         <tr>
                                             <td colSpan={8} style={{ textAlign: "center", padding: "20px" }}>
                                                 No properties found.
                                             </td>
                                         </tr>
                                     ) : (
-                                        properties.map((property) => (
+                                        processedProperties.map((property) => (
                                             <tr key={property.id}>
                                                 <td data-label="Parcel ID">{property.parcelId || "-"}</td>
-                                                <td data-label="Address">{property.address}</td>
+                                                <td data-label="Address">
+                                                    <div>{property.address}</div>
+                                                    <div style={{ fontSize: '11px', color: '#666' }}>ID: {property.saleId}</div>
+                                                </td>
                                                 <td data-label="City">{property.city || "-"}</td>
                                                 <td data-label="Added">{formatDateWithTime(property.createdAt) || "-"}</td>
-                                                <td data-label="Min Bid">{property.minBid || "-"}</td>
-                                                <td data-label="Current Bid">{property.currentBid || "-"}</td>
+                                                <td data-label="Min Bid">{property.minBid ? `$${Number(property.minBid).toLocaleString()}` : "-"}</td>
+                                                <td data-label="Current Bid">{property.currentBid ? `$${Number(property.currentBid).toLocaleString()}` : "-"}</td>
                                                 <td data-label="Status">
-                                                    <span className={`status-badge ${property.status?.toLowerCase()}`}>
-                                                        {property.status}
-                                                    </span>
+                                                    {editingStatusId === property.id && isCounty ? (
+                                                        <select
+                                                            value={property.status}
+                                                            onChange={(e) => handleStatusUpdate(property.id, e.target.value)}
+                                                            onBlur={() => setEditingStatusId(null)}
+                                                            autoFocus
+                                                            disabled={updatingStatus}
+                                                            style={{
+                                                                padding: '6px 10px',
+                                                                borderRadius: '6px',
+                                                                border: '1px solid #ddd',
+                                                                fontSize: '13px',
+                                                                width: '100%'
+                                                            }}
+                                                        >
+                                                            <option value="active">Active</option>
+                                                            <option value="sold">Sold</option>
+                                                            <option value="withdrawn">Withdrawn</option>
+                                                            <option value="on_list">On List</option>
+                                                            <option value="sold_at_tax_sale">Sold At Tax Sale</option>
+                                                            <option value="redeemed">Redeemed</option>
+                                                            <option value="voided">Voided</option>
+                                                            <option value="cancelled">Cancelled</option>
+                                                            <option value="deed_in_progress">Deed in Progress</option>
+                                                            <option value="deed_issued">Deed Issued</option>
+                                                            <option value="redeemed_check_issued">Redeemed Check Issued</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span
+                                                            className={`status-badge ${property.status?.toLowerCase()}`}
+                                                            onClick={isCounty ? () => setEditingStatusId(property.id) : undefined}
+                                                            style={isCounty ? { cursor: 'pointer', textDecoration: 'underline dotted' } : undefined}
+                                                            title={isCounty ? "Click to edit status" : undefined}
+                                                        >
+                                                            {property.status}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td data-label="Actions">
                                                     <div className="action-buttons">
@@ -303,6 +567,15 @@ const PropertiesContent = () => {
                                                                 onClick={() => openBidModal(property)}
                                                             >
                                                                 <i className="bi bi-hammer"></i>
+                                                            </button>
+                                                        )}
+                                                        {isCounty && (
+                                                            <button
+                                                                className="action-btn"
+                                                                title="Send Alert"
+                                                                onClick={() => openAlertModal(property)}
+                                                            >
+                                                                <i className="bi bi-bell"></i>
                                                             </button>
                                                         )}
                                                         {isCounty && (
@@ -333,24 +606,175 @@ const PropertiesContent = () => {
             </div>
             <Footer />
 
-            {showBidModal && (
+            {
+                showBidModal && (
+                    <div
+                        className="app-modal-overlay"
+                        onClick={() => setShowBidModal(false)}
+                    >
+                        <div
+                            className="app-modal app-modal--md"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="app-modal-header">
+                                <div style={{ minWidth: 0 }}>
+                                    <h2 className="app-modal-title">Add Bid</h2>
+                                    <div className="app-modal-subtitle" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                        {bidProperty?.address || "Property"}
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowBidModal(false)}
+                                    className="app-modal-close"
+                                    aria-label="Close"
+                                >
+                                    ×
+                                </button>
+                            </div>
+
+                            {loadingBidData ? (
+                                <div style={{ padding: "20px", color: "#6B7280" }}>Loading...</div>
+                            ) : (
+                                <>
+                                    <div style={{ marginTop: "16px" }}>
+                                        <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                                            Linked Bidder
+                                        </label>
+                                        {linkedBidders.length === 0 ? (
+                                            <div style={{ padding: "12px", background: "#F9FAFB", borderRadius: "10px", color: "#6B7280" }}>
+                                                No linked bidders. Link a bidder to this property first.
+                                            </div>
+                                        ) : (
+                                            <select
+                                                value={selectedBidderId}
+                                                onChange={(e) => setSelectedBidderId(e.target.value)}
+                                                style={{
+                                                    width: "100%",
+                                                    padding: "12px",
+                                                    border: "1px solid #E5E7EB",
+                                                    borderRadius: "10px",
+                                                }}
+                                            >
+                                                {linkedBidders.map((b) => (
+                                                    <option key={b.bidderId} value={b.bidderId}>
+                                                        {(b.name || "Unknown") + " — " + b.email}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        )}
+                                    </div>
+
+                                    <div style={{ marginTop: "16px" }}>
+                                        <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
+                                            Bid Amount
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="50000"
+                                            value={bidAmount}
+                                            onChange={(e) => setBidAmount(e.target.value)}
+                                            style={{
+                                                width: "100%",
+                                                padding: "12px",
+                                                border: "1px solid #E5E7EB",
+                                                borderRadius: "10px",
+                                            }}
+                                        />
+                                    </div>
+
+                                    <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+                                        <button
+                                            onClick={submitBid}
+                                            disabled={submittingBid || linkedBidders.length === 0}
+                                            style={{
+                                                padding: "12px 16px",
+                                                background: "#6EA500",
+                                                color: "#fff",
+                                                border: "none",
+                                                borderRadius: "10px",
+                                                cursor: "pointer",
+                                                fontWeight: 700,
+                                                flex: 1,
+                                            }}
+                                        >
+                                            {submittingBid ? "Adding..." : "Add Bid"}
+                                        </button>
+                                        <button
+                                            onClick={() => setShowBidModal(false)}
+                                            style={{
+                                                padding: "12px 16px",
+                                                background: "#F3F4F6",
+                                                color: "#111827",
+                                                border: "1px solid #E5E7EB",
+                                                borderRadius: "10px",
+                                                cursor: "pointer",
+                                                fontWeight: 700,
+                                            }}
+                                        >
+                                            Close
+                                        </button>
+                                    </div>
+
+                                    <div style={{ marginTop: "22px" }}>
+                                        <h3 style={{ margin: "0 0 10px 0" }}>Bid History</h3>
+                                        {bidHistory.length === 0 ? (
+                                            <div style={{ padding: "12px", color: "#6B7280" }}>No bids yet.</div>
+                                        ) : (
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                                {bidHistory.map((bid) => (
+                                                    <div
+                                                        key={bid.id}
+                                                        style={{
+                                                            display: "flex",
+                                                            justifyContent: "space-between",
+                                                            alignItems: "center",
+                                                            padding: "12px",
+                                                            border: "1px solid #E5E7EB",
+                                                            borderRadius: "12px",
+                                                        }}
+                                                    >
+                                                        <div>
+                                                            <div style={{ fontWeight: 700 }}>
+                                                                {bid.bidderName || bid.bidderEmail || bid.bidderId}
+                                                            </div>
+                                                            <div style={{ fontSize: "12px", color: "#6B7280" }}>
+                                                                {formatDateWithTime(bid.createdAt)}
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ fontWeight: 800, color: "#6EA500" }}>
+                                                            ${Number(bid.amount).toLocaleString()}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )
+            }
+
+            {showAlertModal && (
                 <div
                     className="app-modal-overlay"
-                    onClick={() => setShowBidModal(false)}
+                    onClick={() => setShowAlertModal(false)}
                 >
                     <div
-                        className="app-modal app-modal--md"
+                        className="app-modal"
                         onClick={(e) => e.stopPropagation()}
+                        style={{ maxWidth: '600px' }}
                     >
                         <div className="app-modal-header">
-                            <div style={{ minWidth: 0 }}>
-                                <h2 className="app-modal-title">Add Bid</h2>
-                                <div className="app-modal-subtitle" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                                    {bidProperty?.address || "Property"}
-                                </div>
+                            <div>
+                                <h2 className="app-modal-title">Send Alert</h2>
+                                <p style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
+                                    This will email all linked bidders and also send a copy to the county.
+                                </p>
                             </div>
                             <button
-                                onClick={() => setShowBidModal(false)}
+                                onClick={() => setShowAlertModal(false)}
                                 className="app-modal-close"
                                 aria-label="Close"
                             >
@@ -358,129 +782,167 @@ const PropertiesContent = () => {
                             </button>
                         </div>
 
-                        {loadingBidData ? (
-                            <div style={{ padding: "20px", color: "#6B7280" }}>Loading...</div>
-                        ) : (
-                            <>
-                                <div style={{ marginTop: "16px" }}>
-                                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
-                                        Linked Bidder
-                                    </label>
-                                    {linkedBidders.length === 0 ? (
-                                        <div style={{ padding: "12px", background: "#F9FAFB", borderRadius: "10px", color: "#6B7280" }}>
-                                            No linked bidders. Link a bidder to this property first.
-                                        </div>
-                                    ) : (
-                                        <select
-                                            value={selectedBidderId}
-                                            onChange={(e) => setSelectedBidderId(e.target.value)}
-                                            style={{
-                                                width: "100%",
-                                                padding: "12px",
-                                                border: "1px solid #E5E7EB",
-                                                borderRadius: "10px",
-                                            }}
-                                        >
-                                            {linkedBidders.map((b) => (
-                                                <option key={b.bidderId} value={b.bidderId}>
-                                                    {(b.name || "Unknown") + " — " + b.email}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    )}
-                                </div>
+                        <div style={{ marginTop: "16px" }}>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    marginBottom: "10px",
+                                }}
+                            >
+                                <label style={{ fontWeight: 700 }}>Recipients</label>
+                                <button
+                                    onClick={() => {
+                                        if (alertBidderIds.length === linkedBidders.length) {
+                                            setAlertBidderIds([]);
+                                        } else {
+                                            setAlertBidderIds(linkedBidders.map((b) => b.bidderId));
+                                        }
+                                    }}
+                                    style={{
+                                        background: "none",
+                                        border: "none",
+                                        color: "#6EA500",
+                                        cursor: "pointer",
+                                        fontWeight: 600,
+                                        fontSize: "12px",
+                                        padding: 0,
+                                    }}
+                                >
+                                    {alertBidderIds.length === linkedBidders.length ? "Uncheck all" : "Check all"}
+                                </button>
+                            </div>
 
-                                <div style={{ marginTop: "16px" }}>
-                                    <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>
-                                        Bid Amount
-                                    </label>
-                                    <input
-                                        type="text"
-                                        placeholder="50000"
-                                        value={bidAmount}
-                                        onChange={(e) => setBidAmount(e.target.value)}
-                                        style={{
-                                            width: "100%",
-                                            padding: "12px",
-                                            border: "1px solid #E5E7EB",
-                                            borderRadius: "10px",
-                                        }}
-                                    />
+                            {loadingAlertBidders ? (
+                                <div style={{ padding: "10px 0", color: "#6B7280" }}>Loading linked bidders...</div>
+                            ) : linkedBidders.length === 0 ? (
+                                <div style={{ padding: "10px 0", color: "#6B7280" }}>
+                                    No linked bidders to notify. County copy will still be sent.
                                 </div>
-
-                                <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
-                                    <button
-                                        onClick={submitBid}
-                                        disabled={submittingBid || linkedBidders.length === 0}
-                                        style={{
-                                            padding: "12px 16px",
-                                            background: "#6EA500",
-                                            color: "#fff",
-                                            border: "none",
-                                            borderRadius: "10px",
-                                            cursor: "pointer",
-                                            fontWeight: 700,
-                                            flex: 1,
-                                        }}
-                                    >
-                                        {submittingBid ? "Adding..." : "Add Bid"}
-                                    </button>
-                                    <button
-                                        onClick={() => setShowBidModal(false)}
-                                        style={{
-                                            padding: "12px 16px",
-                                            background: "#F3F4F6",
-                                            color: "#111827",
-                                            border: "1px solid #E5E7EB",
-                                            borderRadius: "10px",
-                                            cursor: "pointer",
-                                            fontWeight: 700,
-                                        }}
-                                    >
-                                        Close
-                                    </button>
-                                </div>
-
-                                <div style={{ marginTop: "22px" }}>
-                                    <h3 style={{ margin: "0 0 10px 0" }}>Bid History</h3>
-                                    {bidHistory.length === 0 ? (
-                                        <div style={{ padding: "12px", color: "#6B7280" }}>No bids yet.</div>
-                                    ) : (
-                                        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                                            {bidHistory.map((bid) => (
-                                                <div
-                                                    key={bid.id}
-                                                    style={{
-                                                        display: "flex",
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center",
-                                                        padding: "12px",
-                                                        border: "1px solid #E5E7EB",
-                                                        borderRadius: "12px",
+                            ) : (
+                                <div
+                                    style={{
+                                        marginTop: "10px",
+                                        border: "1px solid #E5E7EB",
+                                        borderRadius: "12px",
+                                        overflow: "hidden",
+                                        maxHeight: "180px",
+                                        overflowY: "auto",
+                                    }}
+                                >
+                                    {linkedBidders.map((b) => {
+                                        const checked = alertBidderIds.includes(b.bidderId);
+                                        return (
+                                            <label
+                                                key={b.bidderId}
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "10px",
+                                                    padding: "10px 12px",
+                                                    borderBottom: "1px solid rgba(17,24,39,0.06)",
+                                                    cursor: "pointer",
+                                                }}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    checked={checked}
+                                                    onChange={() => {
+                                                        setAlertBidderIds((prev) =>
+                                                            prev.includes(b.bidderId)
+                                                                ? prev.filter((id) => id !== b.bidderId)
+                                                                : [...prev, b.bidderId]
+                                                        );
                                                     }}
-                                                >
-                                                    <div>
-                                                        <div style={{ fontWeight: 700 }}>
-                                                            {bid.bidderName || bid.bidderEmail || bid.bidderId}
-                                                        </div>
-                                                        <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                                                            {formatDateWithTime(bid.createdAt)}
-                                                        </div>
+                                                />
+                                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                                    <div style={{ fontWeight: 700, fontSize: "13px", color: "#111827" }}>
+                                                        {b.name || "Unknown"}
                                                     </div>
-                                                    <div style={{ fontWeight: 800, color: "#6EA500" }}>
-                                                        ${Number(bid.amount).toLocaleString()}
-                                                    </div>
+                                                    <div style={{ fontSize: "12px", color: "#6B7280" }}>{b.email}</div>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    )}
+                                            </label>
+                                        );
+                                    })}
                                 </div>
-                            </>
-                        )}
+                            )}
+
+                            {linkedBidders.length > 0 && (
+                                <div style={{ marginTop: "8px", fontSize: "12px", color: "#6B7280" }}>
+                                    Selected: <strong>{alertBidderIds.length}</strong> / {linkedBidders.length} bidders
+                                </div>
+                            )}
+                        </div>
+
+                        <div style={{ marginTop: "16px" }}>
+                            <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>Subject</label>
+                            <input
+                                value={alertSubject}
+                                onChange={(e) => setAlertSubject(e.target.value)}
+                                placeholder={`Update: ${alertProperty?.address || "Property"}`}
+                                style={{
+                                    width: "100%",
+                                    padding: "12px",
+                                    border: "1px solid #E5E7EB",
+                                    borderRadius: "10px",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ marginTop: "14px" }}>
+                            <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>Message</label>
+                            <textarea
+                                value={alertMessage}
+                                onChange={(e) => setAlertMessage(e.target.value)}
+                                rows={5}
+                                placeholder="Write your alert..."
+                                style={{
+                                    width: "100%",
+                                    padding: "12px",
+                                    border: "1px solid #E5E7EB",
+                                    borderRadius: "10px",
+                                }}
+                            />
+                        </div>
+
+                        <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+                            <button
+                                disabled={sendingAlert}
+                                onClick={sendAlert}
+                                style={{
+                                    flex: 1,
+                                    padding: "12px 16px",
+                                    background: "#6EA500",
+                                    color: "#fff",
+                                    border: "none",
+                                    borderRadius: "10px",
+                                    cursor: "pointer",
+                                    fontWeight: 800,
+                                }}
+                            >
+                                {sendingAlert ? "Sending..." : "Send Alert"}
+                            </button>
+                            <button
+                                onClick={() => setShowAlertModal(false)}
+                                style={{
+                                    padding: "12px 16px",
+                                    background: "#F3F4F6",
+                                    color: "#111827",
+                                    border: "1px solid #E5E7EB",
+                                    borderRadius: "10px",
+                                    cursor: "pointer",
+                                    fontWeight: 800,
+                                }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
-        </div>
+
+        </div >
     );
 };
 

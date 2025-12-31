@@ -277,97 +277,83 @@ const DashboardOverviewSection = ({
   const displayName = userData?.name || session?.user?.name || "User";
   const displayEmail = userData?.email || session?.user?.email || "No Email";
   const isCounty = role === "county";
-  
+
   return (
     <div className="dashboard-content">
       <div className="container">
         {/* User Profile Section */}
-        
 
-      {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card stat-card-purple">
-          <div className="stat-content">
-            <h3>Total Properties</h3>
-            <h2>{stats.totalProperties}</h2>
+
+        {/* Stats Cards */}
+        <div className="stats-grid">
+          <div className="stat-card stat-card-purple">
+            <div className="stat-content">
+              <h3>Total Properties</h3>
+              <h2>{stats.totalProperties}</h2>
+            </div>
+            <div className="stat-mask">
+              <img src="/assets/img/stat-card-mask.svg" alt="" aria-hidden="true" />
+            </div>
           </div>
-          <div className="stat-mask">
-            <img src="/assets/img/stat-card-mask.svg" alt="" aria-hidden="true" />
+
+          <div className="stat-card stat-card-green">
+            <div className="stat-content">
+              <h3>Active Bidders</h3>
+              <h2>{stats.activeBidders}</h2>
+            </div>
+            <div className="stat-mask">
+              <img src="/assets/img/stat-card-mask.svg" alt="" aria-hidden="true" />
+            </div>
+          </div>
+
+          <div className="stat-card stat-card-red">
+            <div className="stat-content">
+              <h3>Won Auctions</h3>
+              <h2>{stats.wonAuctions}</h2>
+            </div>
+            <div className="stat-mask">
+              <img src="/assets/img/stat-card-mask.svg" alt="" aria-hidden="true" />
+            </div>
           </div>
         </div>
 
-        <div className="stat-card stat-card-green">
-          <div className="stat-content">
-            <h3>Active Bidders</h3>
-            <h2>{stats.activeBidders}</h2>
-          </div>
-          <div className="stat-mask">
-            <img src="/assets/img/stat-card-mask.svg" alt="" aria-hidden="true" />
-          </div>
-        </div>
+        {/* Action Buttons */}
+        <DashboardQuickActions isCounty={isCounty} />
 
-        <div className="stat-card stat-card-red">
-          <div className="stat-content">
-            <h3>Won Auctions</h3>
-            <h2>{stats.wonAuctions}</h2>
-          </div>
-          <div className="stat-mask">
-            <img src="/assets/img/stat-card-mask.svg" alt="" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Activity */}
-      <div className="recent-activity-section">
-        <h2>Recent Activity</h2>
-        <div className="activity-table-container">
-          <table className="activity-table">
-            <thead>
-              <tr>
-                <th>Activity</th>
-                <th>Property/Name</th>
-                <th>Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentActivity.length === 0 ? (
+        {/* Recent Activity */}
+        <div className="recent-activity-section">
+          <h2>Recent Activity</h2>
+          <div className="activity-table-container">
+            <table className="activity-table">
+              <thead>
                 <tr>
-                  <td colSpan={3} style={{ padding: "16px", color: "#6B7280" }}>
-                    No recent activity yet.
-                  </td>
+                  <th>Activity</th>
+                  <th>Property/Name</th>
+                  <th>Time</th>
                 </tr>
-              ) : (
-                recentActivity.map((r, idx) => (
-                  <tr key={idx}>
-                    <td data-label="Activity">{r.activity}</td>
-                    <td data-label="Property/Name">{r.subject}</td>
-                    <td data-label="Time">{r.time}</td>
+              </thead>
+              <tbody>
+                {recentActivity.length === 0 ? (
+                  <tr>
+                    <td colSpan={3} style={{ padding: "16px", color: "#6B7280" }}>
+                      No recent activity yet.
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  recentActivity.map((r, idx) => (
+                    <tr key={idx}>
+                      <td data-label="Activity">{r.activity}</td>
+                      <td data-label="Property/Name">{r.subject}</td>
+                      <td data-label="Time">{r.time}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <DashboardQuickActions isCounty={isCounty} />
-
-      {/* Notification Banner */}
-      <div className="notification-banner">
-        <div className="notification-icon">
-          <i className="bi bi-exclamation-triangle-fill"></i>
-        </div>
-        <div className="notification-content">
-          <h4>{upcomingDeadlines} Upcoming Auction Deadlines</h4>
-          <p>Properties closing in the next 10 days require your attention</p>
-        </div>
-        <Link href="/properties?endingSoon=1" className="notification-btn">
-          View All
-        </Link>
       </div>
     </div>
-  </div>
   );
 };
 

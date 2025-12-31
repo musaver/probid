@@ -87,15 +87,31 @@ export const property = mysqlTable('property', {
   description: text('description'),
   address: text('address'),
   parcelId: varchar('parcel_id', { length: 255 }),
+  saleId: varchar('sale_id', { length: 255 }).notNull(), // User requested "Sale ID" to be required
   city: varchar('city', { length: 255 }),
   zipCode: varchar('zip_code', { length: 20 }),
   squareFeet: int('square_feet'),
   yearBuilt: int('year_built'),
   lotSize: varchar('lot_size', { length: 50 }),
+  owners: json('owners'), // List of owner names ["Smith, John", ...]
   auctionEnd: datetime('auction_end'),
   minBid: int('min_bid'),
+  winningBid: int('winning_bid'), // Manual override or record
+  winningBidderId: varchar('winning_bidder_id', { length: 255 }), // Linked to user.id
   visibilitySettings: json('visibility_settings'),
-  status: mysqlEnum('status', ['active', 'sold', 'withdrawn']).default('active'),
+  status: mysqlEnum('status', [
+    'active',
+    'sold',
+    'withdrawn',
+    'on_list',
+    'sold_at_tax_sale',
+    'redeemed',
+    'voided',
+    'cancelled',
+    'deed_in_progress',
+    'deed_issued',
+    'redeemed_check_issued',
+  ]).default('active'),
   createdBy: varchar('created_by', { length: 255 }).notNull(), // FK to user.id
   createdAt: datetime('created_at').notNull(),
   updatedAt: datetime('updated_at').notNull(),

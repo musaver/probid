@@ -11799,7 +11799,6 @@ footer .footer-wrapper .footer-menu-wrap .footer-widget .widget-title h4 {
 }
 
 footer .footer-wrapper .footer-menu-wrap .footer-widget .widget-title h4::after {
-  content: "";
   position: absolute;
   bottom: 0;
   left: 0;
@@ -11879,7 +11878,6 @@ footer .footer-wrapper .footer-menu-wrap .footer-widget .menu-container .widget-
 }
 
 footer .footer-wrapper .footer-menu-wrap .footer-widget .menu-container .widget-list li::after {
-  content: "";
   width: 10px;
   height: 1px;
   background-color: var(--primary-color);
@@ -11934,7 +11932,7 @@ footer .footer-wrapper .footer-menu-wrap .footer-logo-area {
 }
 
 footer .footer-wrapper .footer-menu-wrap .footer-logo-area::before {
-  content: "";
+
   width: 1px;
   height: 240px;
   background-color: rgba(255, 255, 255, 0.4);
@@ -11951,7 +11949,7 @@ footer .footer-wrapper .footer-menu-wrap .footer-logo-area::before {
 }
 
 footer .footer-wrapper .footer-menu-wrap .footer-logo-area::after {
-  content: "";
+
   width: 1px;
   height: 240px;
   background-color: rgba(255, 255, 255, 0.4);
