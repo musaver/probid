@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 
-export default function InviteLoginPage() {
+function InviteLoginContent() {
     const searchParams = useSearchParams();
     const email = searchParams.get("email");
 
@@ -34,5 +34,22 @@ export default function InviteLoginPage() {
                 Please wait while we authenticate your account.
             </div>
         </div>
+    );
+}
+
+export default function InviteLoginPage() {
+    return (
+        <Suspense fallback={
+            <div style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                minHeight: "100vh"
+            }}>
+                Loading...
+            </div>
+        }>
+            <InviteLoginContent />
+        </Suspense>
     );
 }
