@@ -8,6 +8,7 @@ import {
   int,
   json,
   index,
+  decimal
 } from 'drizzle-orm/mysql-core';
 
 // ✅ User table (required)
@@ -29,6 +30,7 @@ export const user = mysqlTable('user', {
   state: varchar('state', { length: 100 }),
   aboutMe: text('about_me'),
   phone: varchar('phone', { length: 20 }),
+  countyId: varchar('county_id', { length: 255 }), // FK to user.id (county who invited this bidder)
   // Visibility Control (user-level defaults)
   visibilityMinBid: int('visibility_min_bid').default(1).notNull(),
   visibilityCurrentBid: int('visibility_current_bid').default(1).notNull(),
@@ -95,8 +97,8 @@ export const property = mysqlTable('property', {
   lotSize: varchar('lot_size', { length: 50 }),
   owners: json('owners'), // List of owner names ["Smith, John", ...]
   auctionEnd: datetime('auction_end'),
-  minBid: int('min_bid'),
-  winningBid: int('winning_bid'), // Manual override or record
+  minBid: decimal('min_bid', { precision: 12, scale: 2 }),
+  winningBid: decimal('winning_bid', { precision: 12, scale: 2 }), // Manual override or record
   winningBidderId: varchar('winning_bidder_id', { length: 255 }), // Linked to user.id
   visibilitySettings: json('visibility_settings'),
   status: mysqlEnum('status', [
@@ -124,7 +126,7 @@ export const propertyBids = mysqlTable(
     id: varchar('id', { length: 255 }).primaryKey(),
     propertyId: varchar('property_id', { length: 255 }).notNull(), // FK to property.id
     bidderId: varchar('bidder_id', { length: 255 }).notNull(), // FK to user.id
-    amount: int('amount').notNull(),
+    amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
     createdAt: datetime('created_at').notNull(),
   },
   (table) => ({
@@ -234,3 +236,14 @@ export const notifications = mysqlTable(
     createdAtIdx: index('notifications_created_at_idx').on(table.createdAt),
   })
 );
+
+// ✅ Invite Tokens (for magic link authentication)
+export const invite_tokens = mysqlTable('invite_tokens', {
+  id: varchar('id', { length: 255 }).primaryKey(),
+  email: varchar('email', { length: 255 }).notNull(),
+  token: varchar('token', { length: 255 }).notNull().unique(),
+  userId: varchar('user_id', { length: 255 }).notNull(), // FK to user.id
+  expires: datetime('expires').notNull(),
+  createdAt: datetime('created_at').notNull(),
+});
+

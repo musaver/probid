@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination, Mousewheel, FreeMode } from "swiper/modules";
 import "swiper/css";
@@ -14,6 +14,9 @@ interface DashboardNavProps {
 }
 
 const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab }) => {
+    const { data: session } = useSession();
+    const isCounty = session?.user?.type === "county";
+
     const handleLogout = () => {
         signOut({ callbackUrl: "/" });
     };
@@ -27,6 +30,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab }) => {
         */}
                 <div className="dashboard-menu position-relative" style={{ display: "block" }}>
                     <Swiper
+                        key={isCounty ? 'county' : 'bidder'}
                         modules={[Autoplay, Navigation, Pagination, Mousewheel, FreeMode]}
                         spaceBetween={0}
                         slidesPerView="auto"
@@ -53,35 +57,41 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab }) => {
                                 <span>Properties</span>
                             </Link>
                         </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link
-                                className={`nav-item ${activeTab === "bidders" ? "active" : ""}`}
-                                href="/bidders"
-                            >
-                                <i className="bi bi-people"></i>
-                                <span>Bidders</span>
-                            </Link>
-                        </SwiperSlide>
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link
-                                className={`nav-item ${activeTab === "visibility-control" ? "active" : ""}`}
-                                href="/visibility-control"
-                            >
-                                <i className="bi bi-eye"></i>
-                                <span>Visibility Control</span>
-                            </Link>
-                        </SwiperSlide>
-                        
-                        <SwiperSlide style={{ width: "auto" }}>
-                            <Link
-                                className={`nav-item ${activeTab === "reports" ? "active" : ""}`}
-                                href="/reports"
-                            >
-                                <i className="bi bi-file-text"></i>
-                                <span>Reports</span>
-                            </Link>
-                        </SwiperSlide>
-                        
+                        {isCounty && (
+                            <SwiperSlide style={{ width: "auto" }}>
+                                <Link
+                                    className={`nav-item ${activeTab === "bidders" ? "active" : ""}`}
+                                    href="/bidders"
+                                >
+                                    <i className="bi bi-people"></i>
+                                    <span>Bidders</span>
+                                </Link>
+                            </SwiperSlide>
+                        )}
+                        {isCounty && (
+                            <SwiperSlide style={{ width: "auto" }}>
+                                <Link
+                                    className={`nav-item ${activeTab === "visibility-control" ? "active" : ""}`}
+                                    href="/visibility-control"
+                                >
+                                    <i className="bi bi-eye"></i>
+                                    <span>Visibility Control</span>
+                                </Link>
+                            </SwiperSlide>
+                        )}
+
+                        {isCounty && (
+                            <SwiperSlide style={{ width: "auto" }}>
+                                <Link
+                                    className={`nav-item ${activeTab === "reports" ? "active" : ""}`}
+                                    href="/reports"
+                                >
+                                    <i className="bi bi-file-text"></i>
+                                    <span>Reports</span>
+                                </Link>
+                            </SwiperSlide>
+                        )}
+
                         <SwiperSlide style={{ width: "auto" }}>
                             <button className="nav-item" onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                                 <i className="bi bi-box-arrow-right"></i>

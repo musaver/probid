@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import Footer from "@/components/footer/Footer";
 import PropertyDocumentsManager, { type PropertyDocumentsManagerHandle } from "@/components/property/PropertyDocumentsManager";
+import { formatDateWithTime } from "@/lib/dateFormatter";
+import { formatCurrency } from "@/lib/format";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "@/app/datepicker-custom.css";
@@ -43,6 +45,7 @@ const AddPropertyContent = () => {
 
     const [auctionEndDate, setAuctionEndDate] = useState<Date | null>(null);
     const [owners, setOwners] = useState<string[]>([""]);
+    const [showMoreFields, setShowMoreFields] = useState(false);
 
     const docsRef = useRef<PropertyDocumentsManagerHandle | null>(null);
 
@@ -58,9 +61,21 @@ const AddPropertyContent = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+
+        let finalValue = value;
+        if (name === "minBid" || name === "winningBid") {
+            // Remove everything except numbers and decimal
+            const clean = value.replace(/[^0-9.]/g, "");
+            const parts = clean.split(".");
+            if (parts.length > 2) return; // ignore if more than one decimal
+
+            // Format for display
+            finalValue = formatCurrency(clean);
+        }
+
         setFormData((prev) => ({
             ...prev,
-            [name]: value,
+            [name]: finalValue,
         }));
     };
 
@@ -327,7 +342,7 @@ const AddPropertyContent = () => {
                                         <form id="add-property-form" onSubmit={handleSubmit}>
                                             {/* Section 1: Property & Ownership Info */}
                                             <div className="form-section">
-                                                <h4 style={{ marginBottom: '15px', color: '#111827', fontWeight: 600 }}>Property & Ownership Info</h4>
+                                                <h4 style={{ marginBottom: '5px', color: '#111827', fontWeight: 600 }}>Property & Ownership Info</h4>
 
                                                 <div className="form-row">
                                                     <div className="form-group">
@@ -362,14 +377,21 @@ const AddPropertyContent = () => {
                                                 <div className="form-group full-width">
                                                     <label htmlFor="owner-0" style={{ cursor: 'pointer' }}>Owner Name(s) <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal' }}>(Last name first)</span></label>
                                                     {owners.map((owner, index) => (
-                                                        <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                                        <div key={index} style={{ display: 'flex', gap: '10px', marginBottom: '5px' }}>
                                                             <input
                                                                 id={`owner-${index}`}
                                                                 type="text"
                                                                 placeholder="Doe, John"
                                                                 value={owner}
                                                                 onChange={(e) => handleOwnerChange(index, e.target.value)}
-                                                                style={{ flex: 1 }}
+                                                                style={{
+                                                                    flex: 1,
+                                                                    borderRadius: '23px',
+                                                                    border: '1px solid #ddd',
+                                                                    padding: '12px 15px',
+                                                                    fontSize: '14px',
+                                                                    outline: 'none'
+                                                                }}
                                                             />
                                                             {owners.length > 1 && (
                                                                 <button
@@ -391,47 +413,73 @@ const AddPropertyContent = () => {
                                                     </button>
                                                 </div>
 
-                                                <div className="form-row">
-                                                    <div className="form-group">
-                                                        <label htmlFor="address" style={{ cursor: 'pointer' }}>Property Address</label>
-                                                        <input
-                                                            id="address"
-                                                            type="text"
-                                                            name="address"
-                                                            placeholder="123 Main Street"
-                                                            value={formData.address}
-                                                            onChange={handleInputChange}
-                                                            required
-                                                        />
-                                                    </div>
-                                                    <div className="form-group">
-                                                        <label htmlFor="city" style={{ cursor: 'pointer' }}>City</label>
-                                                        <input
-                                                            id="city"
-                                                            type="text"
-                                                            name="city"
-                                                            placeholder="City Name"
-                                                            value={formData.city}
-                                                            onChange={handleInputChange}
-                                                        />
-                                                    </div>
-                                                    <div className="form-group">
-                                                        <label htmlFor="zipCode" style={{ cursor: 'pointer' }}>ZIP Code</label>
-                                                        <input
-                                                            id="zipCode"
-                                                            type="text"
-                                                            name="zipCode"
-                                                            placeholder="12345"
-                                                            value={formData.zipCode}
-                                                            onChange={handleInputChange}
-                                                        />
-                                                    </div>
+                                                <div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowMoreFields(!showMoreFields)}
+                                                        style={{
+                                                            color: '#2563EB',
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            padding: 0,
+                                                            fontSize: '14px',
+                                                            fontWeight: 600,
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '5px'
+                                                        }}
+                                                    >
+                                                        {showMoreFields ? (
+                                                            <>Less Property Details <i className="bi bi-chevron-up"></i></>
+                                                        ) : (
+                                                            <>More Property Details (Address, City, ZIP) <i className="bi bi-chevron-down"></i></>
+                                                        )}
+                                                    </button>
                                                 </div>
+
+                                                {showMoreFields && (
+                                                    <div className="form-row">
+                                                        <div className="form-group">
+                                                            <label htmlFor="address" style={{ cursor: 'pointer' }}>Property Address</label>
+                                                            <input
+                                                                id="address"
+                                                                type="text"
+                                                                name="address"
+                                                                placeholder="123 Main Street"
+                                                                value={formData.address}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label htmlFor="city" style={{ cursor: 'pointer' }}>City</label>
+                                                            <input
+                                                                id="city"
+                                                                type="text"
+                                                                name="city"
+                                                                placeholder="City Name"
+                                                                value={formData.city}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </div>
+                                                        <div className="form-group">
+                                                            <label htmlFor="zipCode" style={{ cursor: 'pointer' }}>ZIP Code</label>
+                                                            <input
+                                                                id="zipCode"
+                                                                type="text"
+                                                                name="zipCode"
+                                                                placeholder="12345"
+                                                                value={formData.zipCode}
+                                                                onChange={handleInputChange}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* Section 2: Auction Info */}
-                                            <div className="form-section" style={{ marginTop: '25px' }}>
-                                                <h4 style={{ marginBottom: '15px', color: '#111827', fontWeight: 600 }}>Auction Info</h4>
+                                            <div className="form-section">
+                                                <h4 style={{ marginBottom: '5px', color: '#111827', fontWeight: 600 }}>Auction Info</h4>
 
                                                 <div className="form-row">
                                                     <div className="form-group">
@@ -523,7 +571,7 @@ const AddPropertyContent = () => {
 
                                                         {/* Selected Bidders List */}
                                                         {selectedBidderIds.length > 0 && (
-                                                            <div className="selected-bidders-list" style={{ marginTop: '10px' }}>
+                                                            <div className="selected-bidders-list" style={{ marginTop: '5px' }}>
                                                                 {selectedBidderIds.map((id) => {
                                                                     const bidder = selectedBidderById[id];
                                                                     return (
@@ -531,10 +579,10 @@ const AddPropertyContent = () => {
                                                                             display: 'flex',
                                                                             alignItems: 'center',
                                                                             justifyContent: 'space-between',
-                                                                            padding: '8px 12px',
+                                                                            padding: '6px 12px',
                                                                             backgroundColor: '#f3f4f6',
                                                                             borderRadius: '6px',
-                                                                            marginBottom: '6px'
+                                                                            marginBottom: '4px'
                                                                         }}>
                                                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                                                 <img
@@ -629,20 +677,40 @@ const AddPropertyContent = () => {
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            <div className="form-group full-width">
-                                                <label style={{ cursor: 'pointer' }}>Document Attachments</label>
-                                                <PropertyDocumentsManager ref={docsRef} />
-                                            </div>
                                         </form>
+                                    </div>
+
+                                    {/* Bottom Action Buttons */}
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <button type="submit" form="add-property-form" className="btn-submit">
+                                            Add Property
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="btn-cancel"
+                                            onClick={() => router.push("/properties")}
+                                        >
+                                            Cancel
+                                        </button>
                                     </div>
                                 </div>
                             )}
 
-                            <div className="visibility-settings">
+                        </div>
+
+                        <div className="dashboard-sidebar">
+
+                            {/* Document Attachments in Sidebar */}
+                            <div className="sidebar-widget" style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #E5E7EB', marginBottom: '20px' }}>
+                                <h3 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '15px' }}>Document Attachments</h3>
+                                <PropertyDocumentsManager ref={docsRef} />
+                            </div>
+
+                            {/* Visibility Settings in Sidebar */}
+                            <div className="visibility-settings" style={{ background: 'white', padding: '20px', borderRadius: '12px', border: '1px solid #E5E7EB' }}>
                                 <h3>Bidder Visibility Settings</h3>
                                 <p className="settings-subtitle">Control what information bidders can see for this property</p>
-                                <div className="settings-grid">
+                                <div className="settings-grid" style={{ gridTemplateColumns: '1fr' }}>
                                     {Object.entries(visibilitySettings).map(([key, value]) => (
                                         <div className="setting-item" key={key}>
                                             <div className="setting-info">
@@ -662,15 +730,11 @@ const AddPropertyContent = () => {
                                 </div>
                             </div>
                         </div>
-
-                        <div className="dashboard-sidebar">
-                            {/* Bidders section removed and moved to main form */}
-                        </div>
                     </div>
                 </div>
-            </div>
+            </div >
             <Footer />
-        </div>
+        </div >
     );
 };
 

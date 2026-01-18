@@ -298,9 +298,11 @@ const Header = () => {
                   <li className={pathName === "/dashboard" ? "active" : ""}>
                     <Link href="/dashboard">Dashboard</Link>
                   </li>
-                  <li className={pathName === "/add-property" ? "active" : ""}>
-                    <Link href="/add-property">Add Property</Link>
-                  </li>
+                  {session?.user?.type === "county" && (
+                    <li className={pathName === "/add-property" ? "active" : ""}>
+                      <Link href="/add-property">Add Property</Link>
+                    </li>
+                  )}
                   <li className={pathName === "/property-details" ? "active" : ""}>
                     <Link href="/property-details">Property Details</Link>
                   </li>

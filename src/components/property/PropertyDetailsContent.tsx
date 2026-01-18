@@ -6,7 +6,8 @@ import DashboardNav from "@/components/dashboard/DashboardNav";
 import Footer from "@/components/footer/Footer";
 import { useSession } from "next-auth/react";
 import PropertyDocumentsManager from "@/components/property/PropertyDocumentsManager";
-import { formatDateWithTime } from "@/lib/dateFormatter";
+import { formatDateWithTime, formatDateOnly } from "@/lib/dateFormatter";
+import { formatCurrency, formatDisplayCurrency } from "@/lib/format";
 
 const PropertyDetailsContent = ({ id }: { id: string }) => {
     const { data: session } = useSession();
@@ -162,6 +163,7 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
             }
             await Promise.all([refreshBids(), refreshProperty()]);
             setBidAmount("");
+            setShowBidModal(false); // Close on success
         } catch (e) {
             console.error("Error submitting bid:", e);
             alert("Failed to add bid");
@@ -291,7 +293,7 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
         const dt = new Date(raw);
         if (Number.isNaN(dt.getTime())) return { label: String(raw), relative: "" };
 
-        const label = formatDateWithTime(dt);
+        const label = formatDateOnly(dt);
 
         const diffMs = dt.getTime() - Date.now();
         if (!Number.isFinite(diffMs)) return { label, relative: "" };
@@ -330,9 +332,15 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 <i className="bi bi-building" style={{ fontSize: '32px' }}></i>
                             </div>
                             <div className="property-title-info">
-                                <h1>{property.title}</h1>
-                                <p className="property-location">{property.city}, {property.zipCode}</p>
-                                <p className="property-parcel">Parcel ID: {property.parcelId}</p>
+                                <h1>{property.title || property.saleId}</h1>
+                                <p className="property-location">{property.address}</p>
+                                <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '13px', color: '#6B7280' }}>
+                                    <span>Sale ID: {property.saleId}</span>
+                                    <span>Parcel ID: {property.parcelId}</span>
+                                </div>
+                                <p style={{ marginTop: '4px', fontSize: '13px', color: '#6B7280' }}>
+                                    Owners: {Array.isArray(property.owners) ? property.owners.join(", ") : property.owners}
+                                </p>
                             </div>
                             <span className="status-badge-large active">{property.status}</span>
                         </div>
@@ -363,9 +371,40 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 </div>
                                 <div>
                                     <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>MINIMUM BID</p>
-                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{property.minBid}</p>
+                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{formatDisplayCurrency(property.minBid)}</p>
                                 </div>
                             </div>
+
+                            {property.currentBid && Number(property.currentBid) > Number(property.minBid) && (
+                                <div className="stat-card-new" style={{
+                                    background: '#fff',
+                                    borderRadius: '16px',
+                                    padding: '24px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    border: '1px solid #E5E7EB',
+                                    boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
+                                }}>
+                                    <div className="stat-icon-wrapper" style={{
+                                        width: '56px',
+                                        height: '56px',
+                                        borderRadius: '50%',
+                                        background: '#EEF2FF',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        marginRight: '16px',
+                                        color: '#6EA500',
+                                        flexShrink: 0
+                                    }}>
+                                        <i className="bi bi-hammer" style={{ fontSize: '24px' }}></i>
+                                    </div>
+                                    <div>
+                                        <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>CURRENT BID</p>
+                                        <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{formatDisplayCurrency(property.currentBid)}</p>
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="stat-card-new" style={{
                                 background: '#fff',
@@ -388,42 +427,15 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     color: '#6EA500',
                                     flexShrink: 0
                                 }}>
-                                    <i className="bi bi-hammer" style={{ fontSize: '24px' }}></i>
+                                    <i className="bi bi-trophy" style={{ fontSize: '24px' }}></i>
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>CURRENT BID</p>
-                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{property.currentBid}</p>
+                                    <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>WINNING BID</p>
+                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{formatDisplayCurrency(property.winningBid) || "$0.00"}</p>
                                 </div>
                             </div>
 
-                            <div className="stat-card-new" style={{
-                                background: '#fff',
-                                borderRadius: '16px',
-                                padding: '24px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                border: '1px solid #E5E7EB',
-                                boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)'
-                            }}>
-                                <div className="stat-icon-wrapper" style={{
-                                    width: '56px',
-                                    height: '56px',
-                                    borderRadius: '50%',
-                                    background: '#EEF2FF',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    marginRight: '16px',
-                                    color: '#6EA500',
-                                    flexShrink: 0
-                                }}>
-                                    <i className="bi bi-building" style={{ fontSize: '24px' }}></i>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>SQUARE FEET</p>
-                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{property.squareFeet}</p>
-                                </div>
-                            </div>
+
 
                             <div className="stat-card-new" style={{
                                 background: '#fff',
@@ -449,9 +461,9 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     <i className="bi bi-calendar" style={{ fontSize: '24px' }}></i>
                                 </div>
                                 <div>
-                                    <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>AUCTION ENDS</p>
-                                    <p style={{ fontSize: '16px', fontWeight: '700', color: '#6EA500', margin: 0 }}>
-                                        {formatDateWithTime(property.auctionEnd)}
+                                    <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>AUCTION DATE</p>
+                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>
+                                        {formatDateOnly(property.auctionEnd)}
                                     </p>
                                 </div>
                             </div>
@@ -468,15 +480,17 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     <i className="bi bi-hammer"></i> Add Bid
                                 </button>
                             )}
-                            <button
-                                className="action-btn-1 secondary"
-                                onClick={() => {
-                                    setShowAlertModal(true);
-                                    setAlertSubject(`Update: ${property?.address || "Property"}`);
-                                }}
-                            >
-                                <i className="bi bi-bell"></i> Send Alert
-                            </button>
+                            {isCounty && (
+                                <button
+                                    className="action-btn-1 secondary"
+                                    onClick={() => {
+                                        setShowAlertModal(true);
+                                        setAlertSubject(`Update: ${property?.address || "Property"}`);
+                                    }}
+                                >
+                                    <i className="bi bi-bell"></i> Send Alert
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -487,18 +501,22 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                         >
                             Overview
                         </button>
-                        <button
-                            className={`tab-btn ${activeTab === "bidders" ? "active" : ""}`}
-                            onClick={() => setActiveTab("bidders")}
-                        >
-                            Linked Bidders
-                        </button>
-                        <button
-                            className={`tab-btn ${activeTab === "visibility" ? "active" : ""}`}
-                            onClick={() => setActiveTab("visibility")}
-                        >
-                            Visibility Control
-                        </button>
+                        {isCounty && (
+                            <button
+                                className={`tab-btn ${activeTab === "bidders" ? "active" : ""}`}
+                                onClick={() => setActiveTab("bidders")}
+                            >
+                                Linked Bidders
+                            </button>
+                        )}
+                        {isCounty && (
+                            <button
+                                className={`tab-btn ${activeTab === "visibility" ? "active" : ""}`}
+                                onClick={() => setActiveTab("visibility")}
+                            >
+                                Visibility Control
+                            </button>
+                        )}
                         <button
                             className={`tab-btn ${activeTab === "documents" ? "active" : ""}`}
                             onClick={() => setActiveTab("documents")}
@@ -517,10 +535,6 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                         <p>{property.description}</p>
                                     </div>
                                     <div className="detail-row">
-                                        <div className="detail-item">
-                                            <h4>Lot Size</h4>
-                                            <p>{property.lotSize}</p>
-                                        </div>
                                         <div className="detail-item">
                                             <h4>Year Built</h4>
                                             <p>{property.yearBuilt}</p>
@@ -557,22 +571,22 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                                 const isHigh = index === 0;
                                                 return (
                                                     <div key={bid.id || index} className="bid-item">
-                                                <div className="bid-left">
-                                                    <div className="bidder-dot"></div>
-                                                    <div className="bid-info">
+                                                        <div className="bid-left">
+                                                            <div className="bidder-dot"></div>
+                                                            <div className="bid-info">
                                                                 <h5>{bid.bidderName || bid.bidderEmail || bid.bidderId}</h5>
-                                                                <p className="bid-amount">${bid.amount?.toLocaleString?.() ?? bid.amount}</p>
+                                                                <p className="bid-amount">{formatDisplayCurrency(bid.amount)}</p>
                                                                 <p className="bid-date">
                                                                     {formatDateWithTime(bid.createdAt)}
                                                                 </p>
-                                                    </div>
-                                                </div>
-                                                <div className="bid-right">
+                                                            </div>
+                                                        </div>
+                                                        <div className="bid-right">
                                                             <span className={`bid-status ${isHigh ? "current" : "outbid"}`}>
                                                                 {isHigh ? "Current High" : "Outbid"}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                                            </span>
+                                                        </div>
+                                                    </div>
                                                 );
                                             })
                                         )}
@@ -873,9 +887,14 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     </label>
                                     <input
                                         type="text"
-                                        placeholder="50000"
+                                        placeholder="$50,000"
                                         value={bidAmount}
-                                        onChange={(e) => setBidAmount(e.target.value)}
+                                        onChange={(e) => {
+                                            const clean = e.target.value.replace(/[^0-9.]/g, "");
+                                            const parts = clean.split(".");
+                                            if (parts.length > 2) return;
+                                            setBidAmount(formatCurrency(clean));
+                                        }}
                                         style={{
                                             width: "100%",
                                             padding: "12px",
@@ -945,7 +964,7 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                                         </div>
                                                     </div>
                                                     <div style={{ fontWeight: 800, color: "#6EA500" }}>
-                                                        ${Number(bid.amount).toLocaleString()}
+                                                        {formatDisplayCurrency(bid.amount)}
                                                     </div>
                                                 </div>
                                             ))}

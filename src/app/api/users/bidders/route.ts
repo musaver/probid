@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { property, propertyLinkedBidders, user } from "@/lib/schema";
 import { and, eq, like, or, inArray, sql, desc } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { sendTextEmail } from "@/lib/email";
+import { sendBidderInviteEmail } from "@/lib/email";
 
 export async function GET(req: Request) {
   try {
@@ -31,9 +31,9 @@ export async function GET(req: Request) {
 
       const bidderWhere = q
         ? and(
-            eq(user.type, "bidder"),
-            or(like(user.name, q), like(user.email, q), like(user.phone, q))
-          )
+          eq(user.type, "bidder"),
+          or(like(user.name, q), like(user.email, q), like(user.phone, q))
+        )
         : eq(user.type, "bidder");
 
       const rows = await db
@@ -61,14 +61,14 @@ export async function GET(req: Request) {
         bidderIds.length === 0
           ? []
           : await db
-              .select({
-                bidderId: propertyLinkedBidders.bidderId,
-                count: sql<number>`count(*)`.as("count"),
-              })
-              .from(propertyLinkedBidders)
-              .innerJoin(property, eq(property.id, propertyLinkedBidders.propertyId))
-              .where(and(eq(property.createdBy, session.user.id), inArray(propertyLinkedBidders.bidderId, bidderIds)))
-              .groupBy(propertyLinkedBidders.bidderId);
+            .select({
+              bidderId: propertyLinkedBidders.bidderId,
+              count: sql<number>`count(*)`.as("count"),
+            })
+            .from(propertyLinkedBidders)
+            .innerJoin(property, eq(property.id, propertyLinkedBidders.propertyId))
+            .where(and(eq(property.createdBy, session.user.id), inArray(propertyLinkedBidders.bidderId, bidderIds)))
+            .groupBy(propertyLinkedBidders.bidderId);
 
       const countByBidderId = new Map<string, number>();
       for (const row of counts as any[]) {
@@ -86,9 +86,9 @@ export async function GET(req: Request) {
     // List all bidder-type users (excluding current user)
     const whereClause = q
       ? and(
-          eq(user.type, "bidder"),
-          or(like(user.name, q), like(user.email, q), like(user.phone, q))
-        )
+        eq(user.type, "bidder"),
+        or(like(user.name, q), like(user.email, q), like(user.phone, q))
+      )
       : eq(user.type, "bidder");
 
     const users = await db
@@ -113,13 +113,13 @@ export async function GET(req: Request) {
       bidderIds.length === 0
         ? []
         : await db
-            .select({
-              bidderId: propertyLinkedBidders.bidderId,
-              count: sql<number>`count(*)`.as("count"),
-            })
-            .from(propertyLinkedBidders)
-            .where(inArray(propertyLinkedBidders.bidderId, bidderIds))
-            .groupBy(propertyLinkedBidders.bidderId);
+          .select({
+            bidderId: propertyLinkedBidders.bidderId,
+            count: sql<number>`count(*)`.as("count"),
+          })
+          .from(propertyLinkedBidders)
+          .where(inArray(propertyLinkedBidders.bidderId, bidderIds))
+          .groupBy(propertyLinkedBidders.bidderId);
 
     const countByBidderId = new Map<string, number>();
     for (const row of counts as any[]) {
@@ -180,6 +180,7 @@ export async function POST(req: Request) {
         state: state || null,
         aboutMe: notes || null,
         type: "bidder",
+        countyId: session.user.id, // Save the county user who invited this bidder
       } as any);
     } catch (e: any) {
       // MySQL duplicate key → 409
@@ -190,16 +191,30 @@ export async function POST(req: Request) {
       throw e;
     }
 
-    // Invite email (best-effort)
+    // Generate invite token for magic link authentication
+    const inviteToken = `${uuidv4()}-${Date.now()}`;
+    const tokenExpires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    // Store the invite token
+    const { invite_tokens } = await import("@/lib/schema");
+    await db.insert(invite_tokens).values({
+      id: uuidv4(),
+      email,
+      token: inviteToken,
+      userId: bidderId,
+      expires: tokenExpires,
+      createdAt: new Date(),
+    } as any);
+
+    // Invite email using Brevo template (best-effort)
     const baseUrl = process.env.NEXTAUTH_URL || "";
     const registerUrl = baseUrl ? `${baseUrl}/register` : "/register";
-    const subject = "You're invited to ProBid";
-    const text = `Hello${name ? ` ${name}` : ""},\n\nA county administrator created a bidder account for you on ProBid.\n\nTo access your account:\n1) Go to: ${registerUrl}\n2) Enter this email: ${email}\n3) Request your OTP and verify\n\nThanks,\nProBid`;
+    const inviteLink = baseUrl ? `${baseUrl}/api/auth/invite?token=${inviteToken}` : `/api/auth/invite?token=${inviteToken}`;
 
     let inviteSent = false;
     let inviteError: string | null = null;
     try {
-      await sendTextEmail(email, subject, text);
+      await sendBidderInviteEmail(email, name, registerUrl, inviteLink);
       inviteSent = true;
     } catch (e: any) {
       inviteError = e instanceof Error ? e.message : "Failed to send invite";

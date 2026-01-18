@@ -34,6 +34,24 @@ export default function EditPropertyPage({
         return null;
     }
 
+    const isCounty = session?.user?.type === "county";
+    if (!isCounty) {
+        return (
+            <>
+                <Header />
+                <div className="dashboard-wrapper">
+                    <div className="dashboard-content" style={{ background: "#fff" }}>
+                        <div className="container" style={{ padding: "24px 0" }}>
+                            <div style={{ padding: "16px", border: "1px solid rgba(17,24,39,0.12)", borderRadius: "12px" }}>
+                                Only county users can edit properties.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
     return (
         <>
             <Header />

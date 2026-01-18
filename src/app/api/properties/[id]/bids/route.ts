@@ -49,7 +49,7 @@ export async function POST(
 
     const body = await req.json();
     const amountRaw = body?.amount;
-    const amount = parseInt(`${amountRaw}`.replace(/[^0-9]/g, ""), 10);
+    const amount = parseFloat(`${amountRaw}`.replace(/[^0-9.]/g, "")).toFixed(2);
     const bidderId = body?.bidderId as string | undefined;
 
     // County-only: only county users can create bid records
@@ -63,7 +63,8 @@ export async function POST(
       return new NextResponse("Only county users can add bids", { status: 403 });
     }
 
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const amountNum = parseFloat(amount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
       return new NextResponse("Valid bid amount is required", { status: 400 });
     }
 
@@ -107,7 +108,7 @@ export async function POST(
         ? Number(maxBidRows[0].maxAmount)
         : (p as any).minBid ?? 0;
 
-    if (amount <= currentBid) {
+    if (amountNum <= currentBid) {
       return new NextResponse("Bid must be greater than current bid", { status: 400 });
     }
 
@@ -116,13 +117,13 @@ export async function POST(
       id: bidId,
       propertyId: params.id,
       bidderId,
-      amount,
+      amount: amount,
       createdAt: new Date(),
     });
 
     // Create in-app notifications: bidder + property owner (county)
     const href = `/property-details/${params.id}`;
-    const title = `Bid recorded: $${amount.toLocaleString()}`;
+    const title = `Bid recorded: $${amountNum.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const msg = `A bid was recorded for ${p.address || "this property"}.`;
     const createdAt = new Date();
 

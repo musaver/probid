@@ -132,7 +132,7 @@ const AddBidderContent = () => {
       }
 
       if (bidderId) {
-        router.push(`/edit-bidder/${bidderId}`);
+        router.push("/bidders");
       } else {
         router.push("/bidders");
       }
@@ -280,7 +280,7 @@ const AddBidderContent = () => {
                 <div className="sidebar-card">
                   <h4>Link Properties</h4>
                   <p className="settings-subtitle">Select which properties this bidder can access and bid on</p>
-                  
+
                   {/* Linked Properties */}
                   <div className="linked-properties-section">
                     <h5>Linked Properties ({linkedProperties.length})</h5>
@@ -329,21 +329,21 @@ const AddBidderContent = () => {
                         <div style={{ padding: "10px", color: "#6B7280" }}>No properties found.</div>
                       ) : (
                         filteredAvailable.map((property, index) => (
-                        <div key={index} className="property-item">
-                          <div className="property-info">
-                            <h6>{property.address}</h6>
-                            <p>{property.parcelId}</p>
+                          <div key={index} className="property-item">
+                            <div className="property-info">
+                              <h6>{property.address}</h6>
+                              <p>{property.parcelId}</p>
+                            </div>
+                            <button
+                              className="link-btn available"
+                              onClick={() => handleLinkProperty(property)}
+                              type="button"
+                              disabled={linkedProperties.some((p) => p.id === property.id)}
+                            >
+                              <i className="bi bi-plus"></i>
+                            </button>
                           </div>
-                          <button
-                            className="link-btn available"
-                            onClick={() => handleLinkProperty(property)}
-                            type="button"
-                            disabled={linkedProperties.some((p) => p.id === property.id)}
-                          >
-                            <i className="bi bi-plus"></i>
-                          </button>
-                        </div>
-                      ))
+                        ))
                       )}
                     </div>
                   </div>

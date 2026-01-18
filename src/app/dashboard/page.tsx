@@ -127,14 +127,17 @@ const DashboardPage = async () => {
   }
 
   // ---- Recent Activity (role-aware) ----
+  // ---- Recent Activity (role-aware) ----
   const notifItems = await db
     .select()
     .from(notifications)
     .where(eq(notifications.userId, userId))
     .orderBy(desc(notifications.createdAt))
-    .limit(12);
+    .limit(10);
 
   const activity: ActivityRow[] = [];
+
+  // Add notifications to activity
   for (const n of notifItems as any[]) {
     const at = n.createdAt ? new Date(n.createdAt) : new Date();
     const md = n.metadata || {};
@@ -153,12 +156,14 @@ const DashboardPage = async () => {
   }
 
   if (role === "county") {
+    // 1. Properties Created
     const createdProps = await db
       .select({ id: property.id, address: property.address, createdAt: property.createdAt })
       .from(property)
       .where(eq(property.createdBy, userId))
       .orderBy(desc(property.createdAt))
       .limit(8);
+
     for (const p of createdProps as any[]) {
       const at = p.createdAt ? new Date(p.createdAt) : new Date();
       activity.push({
@@ -169,12 +174,14 @@ const DashboardPage = async () => {
       });
     }
 
+    // 2. Auctions Won (Sold Properties)
     const soldProps = await db
       .select({ id: property.id, address: property.address, updatedAt: property.updatedAt })
       .from(property)
       .where(and(eq(property.createdBy, userId), eq(property.status, "sold")))
       .orderBy(desc(property.updatedAt))
       .limit(8);
+
     for (const p of soldProps as any[]) {
       const at = p.updatedAt ? new Date(p.updatedAt) : new Date();
       activity.push({
@@ -184,25 +191,60 @@ const DashboardPage = async () => {
         at,
       });
     }
-  } else {
-    const recentBids = await db
-      .select({ propertyId: propertyBids.propertyId, amount: propertyBids.amount, createdAt: propertyBids.createdAt })
+
+    // 3. Received Bids (New: Bids on county's properties)
+    const receivedBids = await db
+      .select({
+        amount: propertyBids.amount,
+        createdAt: propertyBids.createdAt,
+        address: property.address,
+        parcelId: property.parcelId
+      })
       .from(propertyBids)
-      .where(eq(propertyBids.bidderId, userId))
+      .innerJoin(property, eq(propertyBids.propertyId, property.id))
+      .where(eq(property.createdBy, userId))
       .orderBy(desc(propertyBids.createdAt))
-      .limit(8);
-    for (const b of recentBids as any[]) {
+      .limit(10);
+
+    for (const b of receivedBids as any[]) {
       const at = b.createdAt ? new Date(b.createdAt) : new Date();
       activity.push({
-        activity: "Bid recorded",
-        subject: `Property ${b.propertyId} • $${b.amount}`,
+        activity: "Bid received",
+        subject: `${b.address} • $${Number(b.amount).toLocaleString()}`,
+        time: timeAgo(at),
+        at,
+      });
+    }
+
+  } else {
+    // BIDDER
+    // 1. My Bids -> Removed to avoid duplicate with Notification
+
+    // 2. Properties Assigned
+    const assignedProps = await db
+      .select({
+        address: property.address,
+        linkedAt: propertyLinkedBidders.linkedAt
+      })
+      .from(propertyLinkedBidders)
+      .innerJoin(property, eq(propertyLinkedBidders.propertyId, property.id))
+      .where(eq(propertyLinkedBidders.bidderId, userId))
+      .orderBy(desc(propertyLinkedBidders.linkedAt))
+      .limit(10);
+
+    for (const p of assignedProps as any[]) {
+      const at = p.linkedAt ? new Date(p.linkedAt) : new Date();
+      activity.push({
+        activity: "Assigned to property",
+        subject: p.address || "Property",
         time: timeAgo(at),
         at,
       });
     }
   }
 
-  const recentActivity = activity.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 8);
+  // Sort combined activity by date descending
+  const recentActivity = activity.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 15);
 
   // Upcoming deadlines (next 10 days)
   const now = new Date();

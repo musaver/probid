@@ -89,19 +89,17 @@ export async function POST(req: Request) {
             saleId,
             city,
             zipCode,
-            squareFeet: squareFeet ? parseInt(squareFeet) : null,
             yearBuilt: yearBuilt ? parseInt(yearBuilt) : null,
-            lotSize,
             owners,
             auctionEnd: auctionEnd ? new Date(auctionEnd) : null,
             minBid:
                 minBid === undefined || minBid === null || `${minBid}`.trim() === ""
                     ? null
-                    : parseInt(`${minBid}`.replace(/[^0-9]/g, ""), 10),
+                    : parseFloat(`${minBid}`.replace(/[^0-9.]/g, "")).toFixed(2),
             winningBid:
                 winningBid === undefined || winningBid === null || `${winningBid}`.trim() === ""
                     ? null
-                    : parseInt(`${winningBid}`.replace(/[^0-9]/g, ""), 10),
+                    : parseFloat(`${winningBid}`.replace(/[^0-9.]/g, "")).toFixed(2),
             winningBidderId,
             visibilitySettings: normalizeVisibilitySettings(visibilitySettings),
             status: status || "active",

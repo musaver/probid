@@ -6,6 +6,25 @@ import { useSession } from "next-auth/react";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import Footer from "@/components/footer/Footer";
 import { formatDateWithTime } from "@/lib/dateFormatter";
+import { formatCurrency, formatDisplayCurrency } from "@/lib/format";
+import BulkUploadModal from "./BulkUploadModal";
+
+const getStatusStyles = (status: string) => {
+    switch (status) {
+        case 'active': return { backgroundColor: '#dcfce7', color: '#166534', borderColor: '#bbf7d0' };
+        case 'sold': return { backgroundColor: '#dbeafe', color: '#1e40af', borderColor: '#bfdbfe' };
+        case 'withdrawn': return { backgroundColor: '#f3f4f6', color: '#1f2937', borderColor: '#e5e7eb' };
+        case 'on_list': return { backgroundColor: '#fef9c3', color: '#854d0e', borderColor: '#fde047' };
+        case 'sold_at_tax_sale': return { backgroundColor: '#f3e8ff', color: '#6b21a8', borderColor: '#e9d5ff' };
+        case 'redeemed': return { backgroundColor: '#e0e7ff', color: '#3730a3', borderColor: '#c7d2fe' };
+        case 'voided':
+        case 'cancelled': return { backgroundColor: '#fee2e2', color: '#991b1b', borderColor: '#fecaca' };
+        case 'deed_in_progress': return { backgroundColor: '#cffafe', color: '#155f75', borderColor: '#a5f3fc' };
+        case 'deed_issued': return { backgroundColor: '#ccfbf1', color: '#115e59', borderColor: '#99f6e4' };
+        case 'redeemed_check_issued': return { backgroundColor: '#e0e7ff', color: '#3730a3', borderColor: '#c7d2fe' };
+        default: return { backgroundColor: '#ffffff', color: '#374151', borderColor: '#d1d5db' };
+    }
+};
 
 const PropertiesContent = () => {
     const router = useRouter();
@@ -52,6 +71,9 @@ const PropertiesContent = () => {
     const [sendingAlert, setSendingAlert] = useState(false);
     const [alertBidderIds, setAlertBidderIds] = useState<string[]>([]);
     const [loadingAlertBidders, setLoadingAlertBidders] = useState(false);
+
+    // Bulk Upload State
+    const [showBulkUpload, setShowBulkUpload] = useState(false);
 
     useEffect(() => {
         const fetchProperties = async () => {
@@ -385,9 +407,20 @@ const PropertiesContent = () => {
                                 </select>
                             </div>
                         </div>
-                        <Link href="/add-property" className="add-property-btn">
-                            <i className="bi bi-plus-circle"></i> Add Property
-                        </Link>
+                        {isCounty && (
+                            <div style={{ display: "flex", gap: "10px" }}>
+                                <button
+                                    onClick={() => setShowBulkUpload(true)}
+                                    className="add-property-btn"
+                                    style={{ background: "#2563EB" }} // Different color for distinction
+                                >
+                                    <i className="bi bi-file-earmark-spreadsheet"></i> Import Properties
+                                </button>
+                                <Link href="/add-property" className="add-property-btn">
+                                    <i className="bi bi-plus-circle"></i> Add Property
+                                </Link>
+                            </div>
+                        )}
                     </div>
 
                     <div className="properties-table-section">
@@ -459,11 +492,11 @@ const PropertiesContent = () => {
                                     <tr>
                                         {[
                                             { label: 'Parcel ID', key: 'parcelId' },
-                                            { label: 'Address', key: 'address' },
-                                            { label: 'City', key: 'city' },
+                                            { label: 'Owner Name(s)', key: 'owners' },
                                             { label: 'Added', key: 'createdAt' },
                                             { label: 'Min Bid', key: 'minBid' },
                                             { label: 'Current Bid', key: 'currentBid' },
+                                            { label: 'Winning Bid', key: 'winningBid' },
                                             { label: 'Status', key: 'status' },
                                         ].map((head) => (
                                             <th
@@ -497,28 +530,31 @@ const PropertiesContent = () => {
                                         processedProperties.map((property) => (
                                             <tr key={property.id}>
                                                 <td data-label="Parcel ID">{property.parcelId || "-"}</td>
-                                                <td data-label="Address">
-                                                    <div>{property.address}</div>
+                                                <td data-label="Owner Name(s)">
+                                                    <div>{Array.isArray(property.owners) ? property.owners.join(", ") : property.owners || "-"}</div>
                                                     <div style={{ fontSize: '11px', color: '#666' }}>ID: {property.saleId}</div>
                                                 </td>
-                                                <td data-label="City">{property.city || "-"}</td>
                                                 <td data-label="Added">{formatDateWithTime(property.createdAt) || "-"}</td>
-                                                <td data-label="Min Bid">{property.minBid ? `$${Number(property.minBid).toLocaleString()}` : "-"}</td>
-                                                <td data-label="Current Bid">{property.currentBid ? `$${Number(property.currentBid).toLocaleString()}` : "-"}</td>
+                                                <td data-label="Min Bid">{formatDisplayCurrency(property.minBid) || "-"}</td>
+                                                <td data-label="Current Bid">
+                                                    {(property.currentBid && Number(property.currentBid) > Number(property.minBid))
+                                                        ? formatDisplayCurrency(property.currentBid)
+                                                        : "-"}
+                                                </td>
+                                                <td data-label="Winning Bid">{formatDisplayCurrency(property.winningBid) || "-"}</td>
                                                 <td data-label="Status">
-                                                    {editingStatusId === property.id && isCounty ? (
+                                                    {isCounty ? (
                                                         <select
                                                             value={property.status}
                                                             onChange={(e) => handleStatusUpdate(property.id, e.target.value)}
-                                                            onBlur={() => setEditingStatusId(null)}
-                                                            autoFocus
                                                             disabled={updatingStatus}
                                                             style={{
                                                                 padding: '6px 10px',
                                                                 borderRadius: '6px',
-                                                                border: '1px solid #ddd',
                                                                 fontSize: '13px',
-                                                                width: '100%'
+                                                                width: '100%',
+                                                                cursor: 'pointer',
+                                                                ...getStatusStyles(property.status)
                                                             }}
                                                         >
                                                             <option value="active">Active</option>
@@ -536,9 +572,6 @@ const PropertiesContent = () => {
                                                     ) : (
                                                         <span
                                                             className={`status-badge ${property.status?.toLowerCase()}`}
-                                                            onClick={isCounty ? () => setEditingStatusId(property.id) : undefined}
-                                                            style={isCounty ? { cursor: 'pointer', textDecoration: 'underline dotted' } : undefined}
-                                                            title={isCounty ? "Click to edit status" : undefined}
                                                         >
                                                             {property.status}
                                                         </span>
@@ -670,9 +703,14 @@ const PropertiesContent = () => {
                                         </label>
                                         <input
                                             type="text"
-                                            placeholder="50000"
+                                            placeholder="$50,000"
                                             value={bidAmount}
-                                            onChange={(e) => setBidAmount(e.target.value)}
+                                            onChange={(e) => {
+                                                const clean = e.target.value.replace(/[^0-9.]/g, "");
+                                                const parts = clean.split(".");
+                                                if (parts.length > 2) return;
+                                                setBidAmount(formatCurrency(clean));
+                                            }}
                                             style={{
                                                 width: "100%",
                                                 padding: "12px",
@@ -742,7 +780,7 @@ const PropertiesContent = () => {
                                                             </div>
                                                         </div>
                                                         <div style={{ fontWeight: 800, color: "#6EA500" }}>
-                                                            ${Number(bid.amount).toLocaleString()}
+                                                            {formatDisplayCurrency(bid.amount)}
                                                         </div>
                                                     </div>
                                                 ))}
@@ -755,6 +793,8 @@ const PropertiesContent = () => {
                     </div>
                 )
             }
+
+            {showBulkUpload && <BulkUploadModal onClose={() => setShowBulkUpload(false)} />}
 
             {showAlertModal && (
                 <div

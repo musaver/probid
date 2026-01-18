@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { propertyLinkedBidders, user } from "@/lib/schema";
+import { propertyLinkedBidders, user, property, notifications } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 
@@ -85,6 +85,41 @@ export async function POST(
             status,
             linkedAt: new Date(),
         });
+
+        // Create notification for the bidder
+        try {
+            // Fetch property details for the notification
+            const [propertyDetails] = await db
+                .select({
+                    title: property.title,
+                    address: property.address,
+                })
+                .from(property)
+                .where(eq(property.id, params.id))
+                .limit(1);
+
+            if (propertyDetails) {
+                const notificationId = uuidv4();
+                await db.insert(notifications).values({
+                    id: notificationId,
+                    userId: bidderId,
+                    type: "alert",
+                    title: "New Property Assigned",
+                    message: `You have been assigned to property: ${propertyDetails.title || propertyDetails.address || "Property"}`,
+                    href: `/property/${params.id}`,
+                    metadata: JSON.stringify({
+                        propertyId: params.id,
+                        propertyTitle: propertyDetails.title,
+                        propertyAddress: propertyDetails.address,
+                    }),
+                    isRead: 0,
+                    createdAt: new Date(),
+                });
+            }
+        } catch (notifError) {
+            // Log but don't fail the request if notification creation fails
+            console.error("[NOTIFICATION_CREATE_ERROR]", notifError);
+        }
 
         return NextResponse.json({ linkId }, { status: 201 });
     } catch (error) {

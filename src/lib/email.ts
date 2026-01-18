@@ -74,6 +74,27 @@ export async function sendOTPEmail(
   }
 }
 
+// Send bidder invitation email using template
+export async function sendBidderInviteEmail(
+  to: string,
+  name: string | null,
+  registerUrl: string,
+  inviteLink: string
+) {
+  const templateId = process.env.BREVO_INVITE_TEMPLATE_ID;
+
+  if (!templateId) {
+    throw new Error('BREVO_INVITE_TEMPLATE_ID is not configured');
+  }
+
+  return sendTemplateEmail(to, parseInt(templateId), {
+    NAME: name || 'there',
+    EMAIL: to,
+    REGISTER_URL: registerUrl,
+    INVITE_LINK: inviteLink,
+  });
+}
+
 export async function sendWelcomeEmail(to: string, name?: string) {
   const res = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
