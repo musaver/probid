@@ -50,7 +50,7 @@ export async function GET(req: Request) {
         .innerJoin(user, eq(user.id, propertyLinkedBidders.bidderId))
         .where(and(eq(property.createdBy, session.user.id), bidderWhere))
         .groupBy(user.id)
-        .orderBy(desc(user.email))
+        .orderBy(desc(user.createdAt))
         .limit(200);
 
       const filtered = rows.filter((u) => u.id !== session.user.id);
@@ -102,6 +102,7 @@ export async function GET(req: Request) {
       })
       .from(user)
       .where(whereClause)
+      .orderBy(desc(user.createdAt))
       .limit(200);
 
     const filtered = users.filter((u) => u.id !== session.user.id);
@@ -181,6 +182,8 @@ export async function POST(req: Request) {
         aboutMe: notes || null,
         type: "bidder",
         countyId: session.user.id, // Save the county user who invited this bidder
+        createdAt: new Date(),
+        updatedAt: new Date(),
       } as any);
     } catch (e: any) {
       // MySQL duplicate key → 409

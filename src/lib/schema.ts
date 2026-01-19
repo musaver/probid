@@ -38,6 +38,8 @@ export const user = mysqlTable('user', {
   visibilityPropertyStatus: int('visibility_property_status').default(1).notNull(),
   visibilityBidderList: int('visibility_bidder_list').default(0).notNull(),
   visibilityDocuments: int('visibility_documents').default(0).notNull(),
+  createdAt: datetime('created_at').notNull(),
+  updatedAt: datetime('updated_at').notNull(),
 });
 
 // ✅ Accounts table (OAuth support: Google, Facebook)

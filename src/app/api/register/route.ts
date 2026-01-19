@@ -43,7 +43,9 @@ export async function POST(req: Request) {
       email,
       name: name || null,
       type: 'bidder',
-    });
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
 
     await sendWelcomeEmail(email, name || undefined);
     return NextResponse.json({ success: true, message: 'User registered successfully.' });

@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const email = searchParams.get('email')!;
   const token = searchParams.get('token')!;
-  
+
   // Look up the OTP entry
   const tokenRow = await db.select().from(verification_tokens).where(eq(verification_tokens.identifier, email)).limit(1);
   if (!tokenRow.length) {
@@ -33,8 +33,8 @@ export async function GET(req: Request) {
   // Check if user already exists
   const [existingUser] = await db.select().from(user).where(eq(user.email, email));
   if (existingUser) {
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'User logged in successfully.',
       redirectUrl: '/dashboard'
     });
@@ -43,12 +43,14 @@ export async function GET(req: Request) {
     await db.insert(user).values({
       id: uuidv4(),
       email,
-    });
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as any);
 
-    await sendWelcomeEmail(email,  undefined);
+    await sendWelcomeEmail(email, undefined);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       message: 'User registered successfully.',
       redirectUrl: '/dashboard'
     });
