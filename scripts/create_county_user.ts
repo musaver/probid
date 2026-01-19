@@ -61,6 +61,8 @@ async function main() {
                 visibilityPropertyStatus: 1,
                 visibilityBidderList: 0,
                 visibilityDocuments: 0,
+                createdAt: new Date(),
+                updatedAt: new Date(),
             });
             console.log(`Creation Success! New ID: ${newId}`);
         }
