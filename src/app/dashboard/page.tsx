@@ -66,213 +66,89 @@ const DashboardPage = async () => {
   const userId = session.user.id;
   const role = (userData as any)?.type || session?.user?.type || "bidder";
 
-  // ---- Stats (role-aware) ----
+  // ---- Fetch all data in parallel ----
   let totalProperties = 0;
   let activeBidders = 0;
   let wonAuctions = 0;
+  let recentActivity: ActivityRow[] = [];
+  let upcomingDeadlines = 0;
 
-  if (role === "county") {
-    const totalRow = await db
-      .select({ c: count() })
-      .from(property)
-      .where(eq(property.createdBy, userId));
-    totalProperties = Number(totalRow?.[0]?.c || 0);
-
-    const activeBidderRow = await db
-      .select({ c: sql<number>`count(distinct ${propertyLinkedBidders.bidderId})` })
-      .from(propertyLinkedBidders)
-      .innerJoin(property, eq(property.id, propertyLinkedBidders.propertyId))
-      .where(eq(property.createdBy, userId));
-    activeBidders = Number((activeBidderRow as any)?.[0]?.c || 0);
-
-    const wonRow = await db
-      .select({ c: count() })
-      .from(property)
-      .where(and(eq(property.createdBy, userId), eq(property.status, "sold")));
-    wonAuctions = Number(wonRow?.[0]?.c || 0);
-  } else {
-    const totalRow = await db
-      .select({ c: sql<number>`count(distinct ${propertyLinkedBidders.propertyId})` })
-      .from(propertyLinkedBidders)
-      .where(eq(propertyLinkedBidders.bidderId, userId));
-    totalProperties = Number((totalRow as any)?.[0]?.c || 0);
-
-    // Count other bidders linked to the same properties (distinct), excluding self
-    const activeBidderRow = await db.execute(sql`
-      select count(distinct plb2.bidder_id) as c
-      from property_linked_bidders plb2
-      where plb2.bidder_id <> ${userId}
-        and plb2.property_id in (
-          select plb.property_id from property_linked_bidders plb
-          where plb.bidder_id = ${userId}
-        )
-    `);
-    activeBidders = Number((activeBidderRow as any)?.[0]?.c || 0);
-
-    // Won auctions for bidder: sold properties where bidder has the top bid
-    const wonRow = await db.execute(sql`
-      select count(distinct p.id) as c
-      from property p
-      join property_linked_bidders plb on plb.property_id = p.id and plb.bidder_id = ${userId}
-      where p.status = 'sold'
-        and exists (
-          select 1
-          from property_bids b
-          where b.property_id = p.id
-            and b.bidder_id = ${userId}
-            and b.amount = (select max(b2.amount) from property_bids b2 where b2.property_id = p.id)
-        )
-    `);
-    wonAuctions = Number((wonRow as any)?.[0]?.c || 0);
-  }
-
-  // ---- Recent Activity (role-aware) ----
-  // ---- Recent Activity (role-aware) ----
-  const notifItems = await db
-    .select()
-    .from(notifications)
-    .where(eq(notifications.userId, userId))
-    .orderBy(desc(notifications.createdAt))
-    .limit(10);
-
-  const activity: ActivityRow[] = [];
-
-  // Add notifications to activity
-  for (const n of notifItems as any[]) {
-    const at = n.createdAt ? new Date(n.createdAt) : new Date();
-    const md = n.metadata || {};
-    const subject =
-      md?.propertyAddress ||
-      md?.address ||
-      md?.propertyTitle ||
-      (n.message ? String(n.message).slice(0, 60) : "") ||
-      (n.href ? String(n.href) : "");
-    activity.push({
-      activity: n.title || (n.type === "bid" ? "Bid activity" : n.type === "alert" ? "Alert" : "Status update"),
-      subject,
-      time: timeAgo(at),
-      at,
-    });
-  }
-
-  if (role === "county") {
-    // 1. Properties Created
-    const createdProps = await db
-      .select({ id: property.id, address: property.address, createdAt: property.createdAt })
-      .from(property)
-      .where(eq(property.createdBy, userId))
-      .orderBy(desc(property.createdAt))
-      .limit(8);
-
-    for (const p of createdProps as any[]) {
-      const at = p.createdAt ? new Date(p.createdAt) : new Date();
-      activity.push({
-        activity: "New property added",
-        subject: p.address || p.id,
-        time: timeAgo(at),
-        at,
-      });
-    }
-
-    // 2. Auctions Won (Sold Properties)
-    const soldProps = await db
-      .select({ id: property.id, address: property.address, updatedAt: property.updatedAt })
-      .from(property)
-      .where(and(eq(property.createdBy, userId), eq(property.status, "sold")))
-      .orderBy(desc(property.updatedAt))
-      .limit(8);
-
-    for (const p of soldProps as any[]) {
-      const at = p.updatedAt ? new Date(p.updatedAt) : new Date();
-      activity.push({
-        activity: "Auction won",
-        subject: p.address || p.id,
-        time: timeAgo(at),
-        at,
-      });
-    }
-
-    // 3. Received Bids (New: Bids on county's properties)
-    const receivedBids = await db
-      .select({
-        amount: propertyBids.amount,
-        createdAt: propertyBids.createdAt,
-        address: property.address,
-        parcelId: property.parcelId
-      })
-      .from(propertyBids)
-      .innerJoin(property, eq(propertyBids.propertyId, property.id))
-      .where(eq(property.createdBy, userId))
-      .orderBy(desc(propertyBids.createdAt))
-      .limit(10);
-
-    for (const b of receivedBids as any[]) {
-      const at = b.createdAt ? new Date(b.createdAt) : new Date();
-      activity.push({
-        activity: "Bid received",
-        subject: `${b.address} • $${Number(b.amount).toLocaleString()}`,
-        time: timeAgo(at),
-        at,
-      });
-    }
-
-  } else {
-    // BIDDER
-    // 1. My Bids -> Removed to avoid duplicate with Notification
-
-    // 2. Properties Assigned
-    const assignedProps = await db
-      .select({
-        address: property.address,
-        linkedAt: propertyLinkedBidders.linkedAt
-      })
-      .from(propertyLinkedBidders)
-      .innerJoin(property, eq(propertyLinkedBidders.propertyId, property.id))
-      .where(eq(propertyLinkedBidders.bidderId, userId))
-      .orderBy(desc(propertyLinkedBidders.linkedAt))
-      .limit(10);
-
-    for (const p of assignedProps as any[]) {
-      const at = p.linkedAt ? new Date(p.linkedAt) : new Date();
-      activity.push({
-        activity: "Assigned to property",
-        subject: p.address || "Property",
-        time: timeAgo(at),
-        at,
-      });
-    }
-  }
-
-  // Sort combined activity by date descending
-  const recentActivity = activity.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 15);
-
-  // Upcoming deadlines (next 10 days)
   const now = new Date();
   const end = add10Days(now);
-  let upcomingDeadlines = 0;
+
   if (role === "county") {
-    const row = await db
-      .select({ c: count() })
-      .from(property)
-      .where(
-        and(
-          eq(property.createdBy, userId),
-          sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`
-        )
-      );
-    upcomingDeadlines = Number(row?.[0]?.c || 0);
+    const [totalRow, activeBidderRow, wonRow, notifItems, createdProps, soldProps, receivedBids, deadRow] = await Promise.all([
+      db.select({ c: count() }).from(property).where(eq(property.createdBy, userId)),
+      db.select({ c: sql<number>`count(distinct ${propertyLinkedBidders.bidderId})` }).from(propertyLinkedBidders).innerJoin(property, eq(property.id, propertyLinkedBidders.propertyId)).where(eq(property.createdBy, userId)),
+      db.select({ c: count() }).from(property).where(and(eq(property.createdBy, userId), eq(property.status, "sold"))),
+      db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt)).limit(10),
+      db.select({ id: property.id, address: property.address, createdAt: property.createdAt }).from(property).where(eq(property.createdBy, userId)).orderBy(desc(property.createdAt)).limit(8),
+      db.select({ id: property.id, address: property.address, updatedAt: property.updatedAt }).from(property).where(and(eq(property.createdBy, userId), eq(property.status, "sold"))).orderBy(desc(property.updatedAt)).limit(8),
+      db.select({ amount: propertyBids.amount, createdAt: propertyBids.createdAt, address: property.address }).from(propertyBids).innerJoin(property, eq(propertyBids.propertyId, property.id)).where(eq(property.createdBy, userId)).orderBy(desc(propertyBids.createdAt)).limit(10),
+      db.select({ c: count() }).from(property).where(and(eq(property.createdBy, userId), sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`))
+    ]);
+
+    totalProperties = Number(totalRow?.[0]?.c || 0);
+    activeBidders = Number((activeBidderRow as any)?.[0]?.c || 0);
+    wonAuctions = Number(wonRow?.[0]?.c || 0);
+    upcomingDeadlines = Number(deadRow?.[0]?.c || 0);
+
+    const activity: ActivityRow[] = [];
+    for (const n of notifItems as any[]) {
+      const at = n.createdAt ? new Date(n.createdAt) : new Date();
+      const md = n.metadata || {};
+      activity.push({
+        activity: n.title || (n.type === "bid" ? "Bid activity" : n.type === "alert" ? "Alert" : "Status update"),
+        subject: md?.propertyAddress || md?.address || md?.propertyTitle || (n.message ? String(n.message).slice(0, 60) : "") || (n.href ? String(n.href) : ""),
+        time: timeAgo(at),
+        at,
+      });
+    }
+    for (const p of createdProps as any[]) {
+      const at = p.createdAt ? new Date(p.createdAt) : new Date();
+      activity.push({ activity: "New property added", subject: p.address || p.id, time: timeAgo(at), at });
+    }
+    for (const p of soldProps as any[]) {
+      const at = p.updatedAt ? new Date(p.updatedAt) : new Date();
+      activity.push({ activity: "Auction won", subject: p.address || p.id, time: timeAgo(at), at });
+    }
+    for (const b of receivedBids as any[]) {
+      const at = b.createdAt ? new Date(b.createdAt) : new Date();
+      activity.push({ activity: "Bid received", subject: `${b.address} • $${Number(b.amount).toLocaleString()}`, time: timeAgo(at), at });
+    }
+    recentActivity = activity.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 15);
   } else {
-    const row = await db
-      .select({ c: sql<number>`count(distinct ${property.id})` })
-      .from(propertyLinkedBidders)
-      .innerJoin(property, eq(propertyLinkedBidders.propertyId, property.id))
-      .where(
-        and(
-          eq(propertyLinkedBidders.bidderId, userId),
-          sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`
-        )
-      );
-    upcomingDeadlines = Number((row as any)?.[0]?.c || 0);
+    // BIDDER
+    const [totalRow, activeBidderRow, wonRow, notifItems, assignedProps, deadRow] = await Promise.all([
+      db.select({ c: sql<number>`count(distinct ${propertyLinkedBidders.propertyId})` }).from(propertyLinkedBidders).where(eq(propertyLinkedBidders.bidderId, userId)),
+      db.execute(sql`select count(distinct plb2.bidder_id) as c from property_linked_bidders plb2 where plb2.bidder_id <> ${userId} and plb2.property_id in (select plb.property_id from property_linked_bidders plb where plb.bidder_id = ${userId})`),
+      db.execute(sql`select count(distinct p.id) as c from property p join property_linked_bidders plb on plb.property_id = p.id and plb.bidder_id = ${userId} where p.status = 'sold' and exists (select 1 from property_bids b where b.property_id = p.id and b.bidder_id = ${userId} and b.amount = (select max(b2.amount) from property_bids b2 where b2.property_id = p.id))`),
+      db.select().from(notifications).where(eq(notifications.userId, userId)).orderBy(desc(notifications.createdAt)).limit(10),
+      db.select({ address: property.address, linkedAt: propertyLinkedBidders.linkedAt }).from(propertyLinkedBidders).innerJoin(property, eq(propertyLinkedBidders.propertyId, property.id)).where(eq(propertyLinkedBidders.bidderId, userId)).orderBy(desc(propertyLinkedBidders.linkedAt)).limit(10),
+      db.select({ c: sql<number>`count(distinct ${property.id})` }).from(propertyLinkedBidders).innerJoin(property, eq(propertyLinkedBidders.propertyId, property.id)).where(and(eq(propertyLinkedBidders.bidderId, userId), sql`${property.auctionEnd} is not null and ${property.auctionEnd} >= ${now} and ${property.auctionEnd} <= ${end}`))
+    ]);
+
+    totalProperties = Number((totalRow as any)?.[0]?.c || 0);
+    activeBidders = Number((activeBidderRow as any)?.[0]?.c || 0);
+    wonAuctions = Number((wonRow as any)?.[0]?.c || 0);
+    upcomingDeadlines = Number((deadRow as any)?.[0]?.c || 0);
+
+    const activity: ActivityRow[] = [];
+    for (const n of notifItems as any[]) {
+      const at = n.createdAt ? new Date(n.createdAt) : new Date();
+      const md = n.metadata || {};
+      activity.push({
+        activity: n.title || (n.type === "bid" ? "Bid activity" : n.type === "alert" ? "Alert" : "Status update"),
+        subject: md?.propertyAddress || md?.address || md?.propertyTitle || (n.message ? String(n.message).slice(0, 60) : "") || (n.href ? String(n.href) : ""),
+        time: timeAgo(at),
+        at,
+      });
+    }
+    for (const p of assignedProps as any[]) {
+      const at = p.linkedAt ? new Date(p.linkedAt) : new Date();
+      activity.push({ activity: "Assigned to property", subject: p.address || "Property", time: timeAgo(at), at });
+    }
+    recentActivity = activity.sort((a, b) => b.at.getTime() - a.at.getTime()).slice(0, 15);
   }
 
   return (

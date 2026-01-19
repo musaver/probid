@@ -586,13 +586,15 @@ const PropertiesContent = () => {
                                                         >
                                                             <i className="bi bi-eye"></i>
                                                         </button>
-                                                        <button
-                                                            className="action-btn edit"
-                                                            title="Edit Property"
-                                                            onClick={() => handleEditProperty(property.id)}
-                                                        >
-                                                            <i className="bi bi-pencil"></i>
-                                                        </button>
+                                                        {isCounty && (
+                                                            <button
+                                                                className="action-btn edit"
+                                                                title="Edit Property"
+                                                                onClick={() => handleEditProperty(property.id)}
+                                                            >
+                                                                <i className="bi bi-pencil"></i>
+                                                            </button>
+                                                        )}
                                                         {isCounty && (
                                                             <button
                                                                 className="action-btn"
