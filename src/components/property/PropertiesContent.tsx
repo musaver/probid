@@ -407,7 +407,7 @@ const PropertiesContent = () => {
                                 </select>
                             </div>
                         </div>
-                        {/* 
+
                         {isCounty && (
                             <div style={{ display: "flex", gap: "10px" }}>
                                 <button
@@ -422,7 +422,7 @@ const PropertiesContent = () => {
                                 </Link>
                             </div>
                         )}
-                        */}
+
                     </div>
 
                     <div className="properties-table-section">
