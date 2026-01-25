@@ -407,6 +407,7 @@ const PropertiesContent = () => {
                                 </select>
                             </div>
                         </div>
+                        {/* 
                         {isCounty && (
                             <div style={{ display: "flex", gap: "10px" }}>
                                 <button
@@ -421,6 +422,7 @@ const PropertiesContent = () => {
                                 </Link>
                             </div>
                         )}
+                        */}
                     </div>
 
                     <div className="properties-table-section">
@@ -595,6 +597,7 @@ const PropertiesContent = () => {
                                                                 <i className="bi bi-pencil"></i>
                                                             </button>
                                                         )}
+                                                        {/* 
                                                         {isCounty && (
                                                             <button
                                                                 className="action-btn"
@@ -604,6 +607,7 @@ const PropertiesContent = () => {
                                                                 <i className="bi bi-hammer"></i>
                                                             </button>
                                                         )}
+                                                        */}
                                                         {isCounty && Number(property.linkedBiddersCount) > 0 && (
                                                             <button
                                                                 className="action-btn"

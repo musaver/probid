@@ -475,11 +475,13 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     <i className="bi bi-pencil-square"></i> Edit Property
                                 </Link>
                             )}
+                            {/* 
                             {isCounty && (
                                 <button className="action-btn-1 secondary" onClick={openBidModal}>
                                     <i className="bi bi-hammer"></i> Add Bid
                                 </button>
                             )}
+                            */}
                             {isCounty && (
                                 <button
                                     className="action-btn-1 secondary"

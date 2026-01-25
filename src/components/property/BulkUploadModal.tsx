@@ -7,14 +7,17 @@ import { useRouter } from "next/navigation";
 
 interface ImportedProperty {
     Title: string;
+    "Sale ID"?: string;
+    "Parcel ID"?: string;
     Address?: string;
     City?: string;
     "Zip Code"?: number | string;
-    "Parcel ID"?: string;
-    "Minimum Bid"?: number; // Now optional
-    Description?: string;
-    "Year Built"?: number;
+    "Minimum Bid"?: number;
+    "Winning Bid"?: number;
+    "Bidder Number"?: string;
     "Auction End Date"?: string; // YYYY-MM-DD
+    "Owners"?: string; // Comma or semicolon separated
+    "Status"?: string;
 }
 
 export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
@@ -29,37 +32,46 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
     const downloadTemplate = (ext: "xlsx" | "xls" | "csv") => {
         const headers = [
             "Title",
+            "Sale ID",
+            "Parcel ID",
             "Address",
             "City",
             "Zip Code",
-            "Parcel ID",
             "Minimum Bid",
-            "Description",
-            "Year Built",
+            "Winning Bid",
+            "Bidder Number",
             "Auction End Date",
+            "Owners",
+            "Status",
         ];
         const sampleData = [
             {
                 Title: "Example Property",
+                "Sale ID": "2024-001",
+                "Parcel ID": "12-34-567",
                 Address: "123 Main St",
                 City: "Anytown",
                 "Zip Code": "12345",
-                "Parcel ID": "12-34-567",
                 "Minimum Bid": 1000,
-                Description: "A beautiful starter home.",
-                "Year Built": 1990,
+                "Winning Bid": 1200,
+                "Bidder Number": "BID-789",
                 "Auction End Date": "2026-12-31",
+                "Owners": "Doe, John; Smith, Jane",
+                "Status": "active",
             },
             {
                 Title: "Vacant Lot",
+                "Sale ID": "2024-002",
+                "Parcel ID": "12-34-568",
                 Address: "0 Oak Ave",
                 City: "Anytown",
                 "Zip Code": "12345",
-                "Parcel ID": "12-34-568",
                 "Minimum Bid": 500,
-                Description: "Buildable lot.",
-                "Year Built": 0,
+                "Winning Bid": 0,
+                "Bidder Number": "",
                 "Auction End Date": "2026-12-31",
+                "Owners": "Brown, Bob",
+                "Status": "active",
             },
         ];
 
@@ -209,7 +221,8 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                                 <thead style={{ background: "#F9FAFB", position: "sticky", top: 0 }}>
                                     <tr>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Title</th>
-                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Address</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Sale ID</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Parcel ID</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Min Bid</th>
                                     </tr>
                                 </thead>
@@ -217,7 +230,8 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                                     {data.slice(0, 50).map((row, i) => (
                                         <tr key={i} style={{ borderBottom: "1px solid #F3F4F6" }}>
                                             <td style={{ padding: "8px" }}>{row.Title || <span style={{ color: "red" }}>Missing</span>}</td>
-                                            <td style={{ padding: "8px" }}>{row.Address}</td>
+                                            <td style={{ padding: "8px" }}>{row["Sale ID"]}</td>
+                                            <td style={{ padding: "8px" }}>{row["Parcel ID"]}</td>
                                             <td style={{ padding: "8px" }}>{row["Minimum Bid"]}</td>
                                         </tr>
                                     ))}
