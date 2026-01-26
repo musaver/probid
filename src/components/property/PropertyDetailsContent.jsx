@@ -204,8 +204,8 @@ const PropertyDetailsContent = () => {
                   <Image src="/images/brands/Icon.svg" alt="Property" width={32} height={32} />
                 </div>
                 <div className="property-title-info">
-                  <h1>123 Main Street</h1>
-                  <p className="property-location">Springfield, IL 62701</p>
+                  {/* <h1>123 Main Street</h1> */}
+                  {/* <p className="property-location">Springfield, IL 62701</p> */}
                   <p className="property-parcel">Parcel ID: 123-456-789</p>
                 </div>
                 <span className="status-badge-large active">Active</span>

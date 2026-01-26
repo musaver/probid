@@ -332,12 +332,14 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 <i className="bi bi-building" style={{ fontSize: '32px' }}></i>
                             </div>
                             <div className="property-title-info">
-                                <h1>{property.title || property.saleId}</h1>
-                                <p className="property-location">{property.address}</p>
-                                <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '13px', color: '#6B7280' }}>
+                                <h1>Sale ID: {property.saleId}</h1>
+
+                                {/* <h1>{property.title || property.saleId}</h1> */}
+                                {/* <p className="property-location">{property.address}</p> */}
+                                {/* <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '13px', color: '#6B7280' }}>
                                     <span>Sale ID: {property.saleId}</span>
                                     <span>Parcel ID: {property.parcelId}</span>
-                                </div>
+                                </div>*/}
                                 <p style={{ marginTop: '4px', fontSize: '13px', color: '#6B7280' }}>
                                     Owners: {Array.isArray(property.owners) ? property.owners.join(", ") : property.owners}
                                 </p>
