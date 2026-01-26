@@ -531,10 +531,13 @@ const PropertiesContent = () => {
                                     ) : (
                                         processedProperties.map((property) => (
                                             <tr key={property.id}>
-                                                <td data-label="Parcel ID">{property.parcelId || "-"}</td>
+                                                <td data-label="Parcel ID">
+                                                    <div>{property.parcelId || "-"}</div>
+                                                    <div style={{ fontSize: '11px', color: '#666' }}>Sale ID: {property.saleId}</div>
+                                                </td>
                                                 <td data-label="Owner Name(s)">
                                                     <div>{Array.isArray(property.owners) ? property.owners.join(", ") : property.owners || "-"}</div>
-                                                    <div style={{ fontSize: '11px', color: '#666' }}>ID: {property.saleId}</div>
+
                                                 </td>
                                                 <td data-label="Added">{formatDateWithTime(property.createdAt) || "-"}</td>
                                                 <td data-label="Min Bid">{formatDisplayCurrency(property.minBid) || "-"}</td>
