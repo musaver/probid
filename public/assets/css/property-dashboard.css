@@ -367,7 +367,7 @@ body {
 }
 
 .action-btn i {
-  font-size: 20px;
+  font-size: 16px;
   color: #d13550;
 }
 
@@ -1289,7 +1289,7 @@ input:checked+.slider:before {
 
 .action-buttons {
   display: flex;
-  gap: 10px;
+  gap: 5px;
 }
 
 .action-btn.table-action {
@@ -3550,13 +3550,14 @@ input:checked+.slider:before {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 24px;
+  padding: 6px 8px;
   border: none;
   border-radius: 25px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-height: initial;
 }
 
 .action-btn.primary {

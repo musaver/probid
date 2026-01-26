@@ -544,41 +544,7 @@ const PropertiesContent = () => {
                                                         : "-"}
                                                 </td>
                                                 <td data-label="Winning Bid">{formatDisplayCurrency(property.winningBid) || "-"}</td>
-                                                <td data-label="Status">
-                                                    {isCounty ? (
-                                                        <select
-                                                            value={property.status}
-                                                            onChange={(e) => handleStatusUpdate(property.id, e.target.value)}
-                                                            disabled={updatingStatus}
-                                                            style={{
-                                                                padding: '6px 10px',
-                                                                borderRadius: '6px',
-                                                                fontSize: '13px',
-                                                                width: '100%',
-                                                                cursor: 'pointer',
-                                                                ...getStatusStyles(property.status)
-                                                            }}
-                                                        >
-                                                            <option value="active">Active</option>
-                                                            <option value="sold">Sold</option>
-                                                            <option value="withdrawn">Withdrawn</option>
-                                                            <option value="on_list">On List</option>
-                                                            <option value="sold_at_tax_sale">Sold At Tax Sale</option>
-                                                            <option value="redeemed">Redeemed</option>
-                                                            <option value="voided">Voided</option>
-                                                            <option value="cancelled">Cancelled</option>
-                                                            <option value="deed_in_progress">Deed in Progress</option>
-                                                            <option value="deed_issued">Deed Issued</option>
-                                                            <option value="redeemed_check_issued">Redeemed Check Issued</option>
-                                                        </select>
-                                                    ) : (
-                                                        <span
-                                                            className={`status-badge ${property.status?.toLowerCase()}`}
-                                                        >
-                                                            {property.status}
-                                                        </span>
-                                                    )}
-                                                </td>
+
                                                 <td data-label="Actions">
                                                     <div className="action-buttons">
                                                         <button
@@ -633,6 +599,42 @@ const PropertiesContent = () => {
                                                             </button>
                                                         )}
                                                     </div>
+                                                </td>
+
+                                                <td data-label="Status">
+                                                    {isCounty ? (
+                                                        <select
+                                                            value={property.status}
+                                                            onChange={(e) => handleStatusUpdate(property.id, e.target.value)}
+                                                            disabled={updatingStatus}
+                                                            style={{
+                                                                padding: '6px 10px',
+                                                                borderRadius: '6px',
+                                                                fontSize: '13px',
+                                                                width: '100%',
+                                                                cursor: 'pointer',
+                                                                ...getStatusStyles(property.status)
+                                                            }}
+                                                        >
+                                                            <option value="active">Active</option>
+                                                            <option value="sold">Sold</option>
+                                                            <option value="withdrawn">Withdrawn</option>
+                                                            <option value="on_list">On List</option>
+                                                            <option value="sold_at_tax_sale">Sold At Tax Sale</option>
+                                                            <option value="redeemed">Redeemed</option>
+                                                            <option value="voided">Voided</option>
+                                                            <option value="cancelled">Cancelled</option>
+                                                            <option value="deed_in_progress">Deed in Progress</option>
+                                                            <option value="deed_issued">Deed Issued</option>
+                                                            <option value="redeemed_check_issued">Redeemed Check Issued</option>
+                                                        </select>
+                                                    ) : (
+                                                        <span
+                                                            className={`status-badge ${property.status?.toLowerCase()}`}
+                                                        >
+                                                            {property.status}
+                                                        </span>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))
