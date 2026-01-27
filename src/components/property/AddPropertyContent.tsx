@@ -186,7 +186,9 @@ const AddPropertyContent = () => {
                 const qLower = q.toLowerCase();
                 const filtered = list.filter(
                     (u: any) =>
+                        String(u?.name || "").toLowerCase().includes(qLower) ||
                         String(u?.email || "").toLowerCase().includes(qLower) ||
+                        String(u?.phone || "").toLowerCase().includes(qLower) ||
                         String(u?.bidderNumber || "").toLowerCase().includes(qLower)
                 );
                 setBidderResults(filtered.slice(0, 10)); // Show more than just 1 result if multiple matches
@@ -565,7 +567,7 @@ const AddPropertyContent = () => {
                                                                             <div>
                                                                                 <div style={{ fontWeight: 500, fontSize: '14px' }}>{bidder.name || "Unknown"}</div>
                                                                                 <div style={{ fontSize: '12px', color: '#666' }}>
-                                                                                    {bidder.email} {bidder.bidderNumber && `• #${bidder.bidderNumber}`}
+                                                                                    {bidder.email} {bidder.phone && `• ${bidder.phone}`} {bidder.bidderNumber && `• #${bidder.bidderNumber}`}
                                                                                 </div>
                                                                             </div>
                                                                         </div>
@@ -603,7 +605,7 @@ const AddPropertyContent = () => {
                                                                                 <div>
                                                                                     <div style={{ fontWeight: 500, fontSize: '13px' }}>{bidder?.name || "Unknown"}</div>
                                                                                     <div style={{ fontSize: '11px', color: '#666' }}>
-                                                                                        {bidder?.email} {bidder?.bidderNumber && `• #${bidder.bidderNumber}`}
+                                                                                        {bidder?.email} {bidder?.phone && `• ${bidder.phone}`} {bidder?.bidderNumber && `• #${bidder.bidderNumber}`}
                                                                                     </div>
                                                                                 </div>
                                                                             </div>
