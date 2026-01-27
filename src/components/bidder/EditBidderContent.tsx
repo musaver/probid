@@ -26,6 +26,7 @@ export default function EditBidderContent({ bidderId }: { bidderId: string }) {
     address: "",
     city: "",
     state: "",
+    bidderNumber: "",
     notes: "",
   });
 
@@ -56,6 +57,7 @@ export default function EditBidderContent({ bidderId }: { bidderId: string }) {
           address: bidder?.address || "",
           city: bidder?.city || "",
           state: bidder?.state || "",
+          bidderNumber: bidder?.bidderNumber || "",
           notes: bidder?.aboutMe || "",
         });
 
@@ -163,6 +165,7 @@ export default function EditBidderContent({ bidderId }: { bidderId: string }) {
           address: form.address,
           city: form.city,
           state: form.state,
+          bidderNumber: form.bidderNumber,
           notes: form.notes,
         }),
       });
@@ -284,6 +287,20 @@ export default function EditBidderContent({ bidderId }: { bidderId: string }) {
                           <label>ZIP Code</label>
                           {/* zip is not stored separately in current schema; keep UI consistent */}
                           <input type="text" placeholder="62701" disabled value={"—"} />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Bidder Number</label>
+                          <input
+                            type="text"
+                            placeholder="B-12345"
+                            value={form.bidderNumber}
+                            onChange={(e) => setForm((p) => ({ ...p, bidderNumber: e.target.value }))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          {/* Filler for layout */}
                         </div>
                       </div>
                       <div className="form-group full-width">

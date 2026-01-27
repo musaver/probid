@@ -32,7 +32,7 @@ export async function GET(req: Request) {
       const bidderWhere = q
         ? and(
           eq(user.type, "bidder"),
-          or(like(user.name, q), like(user.email, q), like(user.phone, q))
+          or(like(user.name, q), like(user.email, q), like(user.phone, q), like(user.bidderNumber, q))
         )
         : eq(user.type, "bidder");
 
@@ -43,6 +43,7 @@ export async function GET(req: Request) {
           email: user.email,
           phone: user.phone,
           image: user.image,
+          bidderNumber: user.bidderNumber,
           type: user.type,
         })
         .from(propertyLinkedBidders)
@@ -87,7 +88,7 @@ export async function GET(req: Request) {
     const whereClause = q
       ? and(
         eq(user.type, "bidder"),
-        or(like(user.name, q), like(user.email, q), like(user.phone, q))
+        or(like(user.name, q), like(user.email, q), like(user.phone, q), like(user.bidderNumber, q))
       )
       : eq(user.type, "bidder");
 
@@ -98,6 +99,7 @@ export async function GET(req: Request) {
         email: user.email,
         phone: user.phone,
         image: user.image,
+        bidderNumber: user.bidderNumber,
         type: user.type,
       })
       .from(user)
@@ -163,6 +165,7 @@ export async function POST(req: Request) {
     const city = `${body?.city || ""}`.trim();
     const state = `${body?.state || ""}`.trim();
     const zipCode = `${body?.zipCode || ""}`.trim();
+    const bidderNumber = `${body?.bidderNumber || ""}`.trim();
     const notes = `${body?.notes || ""}`.trim();
 
     if (!email) return new NextResponse("Email is required", { status: 400 });
@@ -180,6 +183,7 @@ export async function POST(req: Request) {
         city: city || null,
         state: state || null,
         aboutMe: notes || null,
+        bidderNumber: bidderNumber || null,
         type: "bidder",
         countyId: session.user.id, // Save the county user who invited this bidder
         createdAt: new Date(),

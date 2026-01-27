@@ -28,6 +28,7 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
         city: user.city,
         state: user.state,
         aboutMe: user.aboutMe,
+        bidderNumber: user.bidderNumber,
         type: user.type,
       })
       .from(user)
@@ -63,6 +64,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     const address = body?.address !== undefined ? `${body.address || ""}`.trim() : undefined;
     const city = body?.city !== undefined ? `${body.city || ""}`.trim() : undefined;
     const state = body?.state !== undefined ? `${body.state || ""}`.trim() : undefined;
+    const bidderNumber = body?.bidderNumber !== undefined ? `${body.bidderNumber || ""}`.trim() : undefined;
     const notes = body?.notes !== undefined ? `${body.notes || ""}`.trim() : undefined;
 
     const updateData: Record<string, any> = {};
@@ -76,6 +78,7 @@ export async function PATCH(req: Request, props: { params: Promise<{ id: string 
     if (address !== undefined) updateData.address = address || null;
     if (city !== undefined) updateData.city = city || null;
     if (state !== undefined) updateData.state = state || null;
+    if (bidderNumber !== undefined) updateData.bidderNumber = bidderNumber || null;
     if (notes !== undefined) updateData.aboutMe = notes || null;
 
     if (Object.keys(updateData).length === 0) {

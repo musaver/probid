@@ -23,6 +23,7 @@ const AddBidderContent = () => {
     city: "",
     state: "",
     zipCode: "",
+    bidderNumber: "",
     notes: "",
   });
   const [submitting, setSubmitting] = useState(false);
@@ -96,6 +97,7 @@ const AddBidderContent = () => {
           city: form.city,
           state: form.state,
           zipCode: form.zipCode,
+          bidderNumber: form.bidderNumber,
           notes: form.notes,
         }),
       });
@@ -247,6 +249,20 @@ const AddBidderContent = () => {
                             value={form.zipCode}
                             onChange={(e) => setForm((p) => ({ ...p, zipCode: e.target.value }))}
                           />
+                        </div>
+                      </div>
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Bidder Number</label>
+                          <input
+                            type="text"
+                            placeholder="B-12345"
+                            value={form.bidderNumber}
+                            onChange={(e) => setForm((p) => ({ ...p, bidderNumber: e.target.value }))}
+                          />
+                        </div>
+                        <div className="form-group">
+                          {/* Filler for layout */}
                         </div>
                       </div>
                       <div className="form-group full-width">

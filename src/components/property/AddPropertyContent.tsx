@@ -185,9 +185,11 @@ const AddPropertyContent = () => {
                 // Exact email match only (start-to-end)
                 const qLower = q.toLowerCase();
                 const filtered = list.filter(
-                    (u: any) => String(u?.email || "").toLowerCase() === qLower
+                    (u: any) =>
+                        String(u?.email || "").toLowerCase().includes(qLower) ||
+                        String(u?.bidderNumber || "").toLowerCase().includes(qLower)
                 );
-                setBidderResults(filtered.slice(0, 1));
+                setBidderResults(filtered.slice(0, 10)); // Show more than just 1 result if multiple matches
             } catch (e) {
                 console.error("Error searching bidders:", e);
                 setBidderResults([]);
@@ -508,7 +510,7 @@ const AddPropertyContent = () => {
 
                                                 <div className="form-row">
                                                     <div className="form-group" style={{ position: 'relative' }}>
-                                                        <label htmlFor="winningBidderSearch" style={{ cursor: 'pointer' }}>Bidder Number (Winning Bidder)</label>
+                                                        <label htmlFor="winningBidderSearch" style={{ cursor: 'pointer' }}>Winning Bidder <span style={{ fontSize: '12px', color: '#666', fontWeight: 'normal' }}>(Search by name, email, or bidder number)</span></label>
                                                         <input
                                                             id="winningBidderSearch"
                                                             type="text"
@@ -520,7 +522,7 @@ const AddPropertyContent = () => {
                                                         {loadingBidderSearch && <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>Searching...</div>}
 
                                                         {/* Search Results Dropdown */}
-                                                        {bidderQuery.trim() && bidderResults.length > 0 && (
+                                                        {bidderQuery.trim() && (
                                                             <div className="dropdown-results" style={{
                                                                 position: 'absolute',
                                                                 top: '100%',
@@ -562,10 +564,17 @@ const AddPropertyContent = () => {
                                                                             />
                                                                             <div>
                                                                                 <div style={{ fontWeight: 500, fontSize: '14px' }}>{bidder.name || "Unknown"}</div>
-                                                                                <div style={{ fontSize: '12px', color: '#666' }}>{bidder.email}</div>
+                                                                                <div style={{ fontSize: '12px', color: '#666' }}>
+                                                                                    {bidder.email} {bidder.bidderNumber && `• #${bidder.bidderNumber}`}
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     ))}
+                                                                {bidderResults.length === 0 && !loadingBidderSearch && (
+                                                                    <div style={{ padding: '10px', fontSize: '14px', color: '#666', textAlign: 'center' }}>
+                                                                        No bidder found
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
 
@@ -593,7 +602,9 @@ const AddPropertyContent = () => {
                                                                                 />
                                                                                 <div>
                                                                                     <div style={{ fontWeight: 500, fontSize: '13px' }}>{bidder?.name || "Unknown"}</div>
-                                                                                    <div style={{ fontSize: '11px', color: '#666' }}>{bidder?.email}</div>
+                                                                                    <div style={{ fontSize: '11px', color: '#666' }}>
+                                                                                        {bidder?.email} {bidder?.bidderNumber && `• #${bidder.bidderNumber}`}
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                             <button
