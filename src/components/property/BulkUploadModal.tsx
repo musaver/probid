@@ -216,23 +216,39 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                             </div>
                         )}
 
-                        <div style={{ maxHeight: "300px", overflowY: "auto", border: "1px solid #E5E7EB", borderRadius: "8px" }}>
+                        <div style={{ maxHeight: "300px", overflowY: "auto", overflowX: "auto", border: "1px solid #E5E7EB", borderRadius: "8px" }}>
                             <table style={{ width: "100%", fontSize: "14px", borderCollapse: "collapse" }}>
                                 <thead style={{ background: "#F9FAFB", position: "sticky", top: 0 }}>
                                     <tr>
-                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Title</th>
-                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Sale ID</th>
-                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Parcel ID</th>
-                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB" }}>Min Bid</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Title</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Sale ID</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Parcel ID</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Address</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>City</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Zip Code</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Min Bid</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Winning Bid</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Bidder Number</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Auction End</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Owners</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {data.slice(0, 50).map((row, i) => (
                                         <tr key={i} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                                            <td style={{ padding: "8px" }}>{row.Title || <span style={{ color: "red" }}>Missing</span>}</td>
-                                            <td style={{ padding: "8px" }}>{row["Sale ID"]}</td>
-                                            <td style={{ padding: "8px" }}>{row["Parcel ID"]}</td>
-                                            <td style={{ padding: "8px" }}>{row["Minimum Bid"]}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Title || <span style={{ color: "red" }}>Missing</span>}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Sale ID"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Parcel ID"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Address || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.City || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Zip Code"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Minimum Bid"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Winning Bid"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Bidder Number"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Auction End Date"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Owners || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Status || "-"}</td>
                                         </tr>
                                     ))}
                                 </tbody>

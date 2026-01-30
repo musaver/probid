@@ -30,13 +30,20 @@ export async function POST(req: Request) {
       return new NextResponse("propertyId is required", { status: 400 });
     }
 
+    // Verify property exists and user has permission
+    // County users can upload to any property, others must be the creator
+    const isCounty = session.user.type === "county";
     const [p] = await db
       .select()
       .from(property)
-      .where(and(eq(property.id, propertyId), eq(property.createdBy, session.user.id)))
+      .where(
+        isCounty
+          ? eq(property.id, propertyId)
+          : and(eq(property.id, propertyId), eq(property.createdBy, session.user.id))
+      )
       .limit(1);
 
-    if (!p) return new NextResponse("Property not found", { status: 404 });
+    if (!p) return new NextResponse("Property not found or access denied", { status: 404 });
 
     const files = formData.getAll("files") as File[];
     if (!files || files.length === 0) {

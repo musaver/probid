@@ -40,7 +40,10 @@ export async function POST(req: Request) {
             }
 
             // Use Sale ID if provided, otherwise fallback to Parcel ID or generate one
-            const saleId = p["Sale ID"]?.trim() || p["Parcel ID"]?.trim() || uuidv4().slice(0, 8).toUpperCase();
+            // Convert to string first in case Excel imported as number
+            const saleId = (p["Sale ID"] ? String(p["Sale ID"]).trim() : null)
+                || (p["Parcel ID"] ? String(p["Parcel ID"]).trim() : null)
+                || uuidv4().slice(0, 8).toUpperCase();
 
             // Handle Owners (split by comma or semicolon)
             let ownersArr: string[] = [];

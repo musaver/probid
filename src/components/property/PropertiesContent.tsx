@@ -41,6 +41,10 @@ const PropertiesContent = () => {
     const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
     const [statusFilter, setStatusFilter] = useState<string>("all");
 
+    // Pagination State
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(20);
+
     // Inline Status Editing State
     const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
     const [updatingStatus, setUpdatingStatus] = useState(false);
@@ -174,6 +178,18 @@ const PropertiesContent = () => {
 
         return filtered;
     }, [properties, sortConfig, statusFilter]);
+
+    // Reset page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, statusFilter, sortConfig]);
+
+    const paginatedProperties = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return processedProperties.slice(start, start + itemsPerPage);
+    }, [processedProperties, currentPage, itemsPerPage]);
+
+    const totalPages = Math.ceil(processedProperties.length / itemsPerPage);
 
     const handleViewProperty = (id: string) => {
         router.push(`/property-details/${id}`);
@@ -406,6 +422,36 @@ const PropertiesContent = () => {
                                     <option value="address_asc">Address (A-Z)</option>
                                 </select>
                             </div>
+                            <div className="filter-dropdown-wrapper" style={{ marginLeft: '12px' }}>
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                    style={{
+                                        padding: '10px 24px 10px 14px',
+                                        borderRadius: '999px',
+                                        border: '1px solid rgba(17,24,39,0.12)',
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#fff',
+                                        outline: 'none',
+                                        paddingRight: '32px', // Space for arrow
+                                        backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                                        backgroundPosition: 'right 0.5rem center',
+                                        backgroundRepeat: 'no-repeat',
+                                        backgroundSize: '1.5em 1.5em',
+                                        appearance: 'none',
+                                        WebkitAppearance: 'none'
+                                    }}
+                                >
+                                    <option value={10}>10 per page</option>
+                                    <option value={20}>20 per page</option>
+                                    <option value={50}>50 per page</option>
+                                    <option value={100}>100 per page</option>
+                                </select>
+                            </div>
                         </div>
 
                         {isCounty && (
@@ -426,7 +472,9 @@ const PropertiesContent = () => {
                     </div>
 
                     <div className="properties-table-section">
-                        <h3>All Properties</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <h3>All Properties <span style={{ fontSize: '14px', fontWeight: 'normal', color: '#6B7280', marginLeft: '8px' }}>({processedProperties.length} total)</span></h3>
+                        </div>
                         {endingSoon && (
                             <div
                                 style={{
@@ -522,14 +570,14 @@ const PropertiesContent = () => {
                                                 Loading properties...
                                             </td>
                                         </tr>
-                                    ) : processedProperties.length === 0 ? (
+                                    ) : paginatedProperties.length === 0 ? (
                                         <tr>
                                             <td colSpan={8} style={{ textAlign: "center", padding: "20px" }}>
                                                 No properties found.
                                             </td>
                                         </tr>
                                     ) : (
-                                        processedProperties.map((property) => (
+                                        paginatedProperties.map((property) => (
                                             <tr key={property.id}>
                                                 <td data-label="Parcel ID">
                                                     <div>{property.parcelId || "-"}</div>
@@ -645,6 +693,94 @@ const PropertiesContent = () => {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div style={{
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginTop: '24px',
+                                padding: '12px 0'
+                            }}>
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    style={{
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(17,24,39,0.12)',
+                                        background: '#fff',
+                                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                                        opacity: currentPage === 1 ? 0.5 : 1,
+                                        fontSize: '14px',
+                                        fontWeight: 600
+                                    }}
+                                >
+                                    Previous
+                                </button>
+
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    {[...Array(totalPages)].map((_, i) => {
+                                        const pageNum = i + 1;
+                                        // Show first, last, and pages around current page
+                                        if (
+                                            pageNum === 1 ||
+                                            pageNum === totalPages ||
+                                            (pageNum >= currentPage - 2 && pageNum <= currentPage + 2)
+                                        ) {
+                                            return (
+                                                <button
+                                                    key={pageNum}
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                    style={{
+                                                        width: '36px',
+                                                        height: '36px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        borderRadius: '8px',
+                                                        border: '1px solid',
+                                                        borderColor: currentPage === pageNum ? '#2563EB' : 'rgba(17,24,39,0.12)',
+                                                        background: currentPage === pageNum ? '#2563EB' : '#fff',
+                                                        color: currentPage === pageNum ? '#fff' : '#111827',
+                                                        cursor: 'pointer',
+                                                        fontSize: '14px',
+                                                        fontWeight: 600
+                                                    }}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        } else if (
+                                            (pageNum === currentPage - 3 && pageNum > 1) ||
+                                            (pageNum === currentPage + 3 && pageNum < totalPages)
+                                        ) {
+                                            return <span key={pageNum} style={{ padding: '0 4px', color: '#6B7280' }}>...</span>;
+                                        }
+                                        return null;
+                                    })}
+                                </div>
+
+                                <button
+                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    style={{
+                                        padding: '8px 16px',
+                                        borderRadius: '8px',
+                                        border: '1px solid rgba(17,24,39,0.12)',
+                                        background: '#fff',
+                                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                                        opacity: currentPage === totalPages ? 0.5 : 1,
+                                        fontSize: '14px',
+                                        fontWeight: 600
+                                    }}
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -993,7 +1129,7 @@ const PropertiesContent = () => {
                 </div>
             )}
 
-        </div >
+        </div>
     );
 };
 
