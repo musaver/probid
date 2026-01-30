@@ -106,7 +106,6 @@ export default forwardRef<
   const [docsError, setDocsError] = useState<string | null>(null);
 
   const uploadingAny = useMemo(() => queue.some((q) => q.status === "uploading"), [queue]);
-  const queuedCount = useMemo(() => queue.filter((q) => q.status === "queued").length, [queue]);
 
   const fetchDocs = async (pid: string) => {
     setDocsLoading(true);
@@ -220,37 +219,7 @@ export default forwardRef<
     }
   };
 
-  const removeQueued = (key: string) => {
-    setQueue((prev) => prev.filter((q) => q.key !== key));
-  };
 
-  const cancelUpload = (key: string) => {
-    setQueue((prev) =>
-      prev.map((q) => {
-        if (q.key !== key) return q;
-        try {
-          q.abort?.();
-        } catch { }
-        return { ...q, status: "cancelled", error: "Cancelled", abort: null };
-      })
-    );
-  };
-
-  const cancelAll = () => {
-    setQueue((prev) =>
-      prev.map((q) => {
-        if (q.status !== "uploading") return q;
-        try {
-          q.abort?.();
-        } catch { }
-        return { ...q, status: "cancelled", error: "Cancelled", abort: null };
-      })
-    );
-  };
-
-  const clearCompleted = () => {
-    setQueue((prev) => prev.filter((q) => !["done", "error", "cancelled"].includes(q.status)));
-  };
 
   const uploadQueuedFiles = async (pid: string) => {
     const uploaded: ExistingDoc[] = [];
@@ -324,13 +293,7 @@ export default forwardRef<
     clearQueue: () => setQueue([]),
   }));
 
-  const overall = useMemo(() => {
-    const active = queue.filter((q) => ["queued", "uploading", "done", "error", "cancelled"].includes(q.status));
-    if (!active.length) return { percent: 0, label: "" };
-    const sum = active.reduce((acc, q) => acc + (q.status === "done" ? 100 : q.progress || 0), 0);
-    const percent = Math.round(sum / active.length);
-    return { percent, label: `${active.filter((q) => q.status === "done").length}/${active.length} uploaded` };
-  }, [queue]);
+
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 

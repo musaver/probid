@@ -43,7 +43,7 @@ const PropertiesContent = () => {
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(20);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     // Inline Status Editing State
     const [editingStatusId, setEditingStatusId] = useState<string | null>(null);
