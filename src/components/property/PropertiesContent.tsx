@@ -38,7 +38,7 @@ const PropertiesContent = () => {
     const [deletingId, setDeletingId] = useState<string | null>(null);
 
     // Sorting & Filtering State
-    const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' }>({ key: null, direction: 'asc' });
+    const [sortConfig, setSortConfig] = useState<{ key: string | null; direction: 'asc' | 'desc' }>({ key: 'createdAt', direction: 'desc' });
     const [statusFilter, setStatusFilter] = useState<string>("all");
 
     // Pagination State

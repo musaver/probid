@@ -2,8 +2,6 @@
 
 import React, { useState } from "react";
 import * as XLSX from "xlsx";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
 
 interface ImportedProperty {
     Title: string;
@@ -21,8 +19,6 @@ interface ImportedProperty {
 }
 
 export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
-    const { data: session } = useSession();
-    const router = useRouter();
     const [file, setFile] = useState<File | null>(null);
     const [data, setData] = useState<ImportedProperty[]>([]);
     const [errors, setErrors] = useState<string[]>([]);
@@ -135,10 +131,8 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                 throw new Error(text || "Upload failed");
             }
 
-            const result = await res.json();
-            alert(`Successfully imported ${result.count} properties!`);
-            router.refresh(); // Refresh data
-            onClose(); // Close modal on success
+            // Reload the page to refresh the properties list
+            window.location.reload();
         } catch (err: any) {
             alert(`Error: ${err.message}`);
         } finally {
