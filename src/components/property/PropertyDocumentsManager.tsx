@@ -133,9 +133,9 @@ export default forwardRef<
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertyId]);
 
-  const addFiles = (files: File[]) => {
-    const next: QueueItem[] = [];
+  const addFiles = async (files: File[]) => {
     const errors: string[] = [];
+    const validFiles: File[] = [];
     const existingKeys = new Set(queue.map((q) => `${q.file.name}:${q.file.size}`));
 
     for (const f of files) {
@@ -152,20 +152,67 @@ export default forwardRef<
         continue;
       }
 
-      next.push({
+      validFiles.push(f);
+    }
+
+    if (errors.length) {
+      alert(errors.slice(0, 6).join("\n") + (errors.length > 6 ? `\n...and ${errors.length - 6} more` : ""));
+    }
+
+    if (validFiles.length === 0) return;
+
+    // If propertyId exists, upload immediately
+    if (propertyId) {
+      for (const f of validFiles) {
+        const key = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+
+        // Add to queue with uploading status
+        setQueue((prev) => [...prev, {
+          key,
+          file: f,
+          status: "uploading",
+          progress: 0,
+          error: null,
+          abort: null,
+        }]);
+
+        const { promise, abort } = uploadFileToBlobApi({
+          propertyId,
+          file: f,
+          onProgress: (p) => {
+            setQueue((prev) => prev.map((q) => (q.key === key ? { ...q, progress: p.percent } : q)));
+          },
+        });
+
+        setQueue((prev) => prev.map((q) => (q.key === key ? { ...q, abort } : q)));
+
+        try {
+          const res = await promise;
+          const created = (res?.documents || []) as any as ExistingDoc[];
+          setQueue((prev) =>
+            prev.map((q) =>
+              q.key === key ? { ...q, status: "done", progress: 100, abort: null, createdDocs: created } : q
+            )
+          );
+          // Refresh docs list
+          await fetchDocs(propertyId);
+        } catch (e) {
+          const msg = e instanceof Error ? e.message : "Upload failed";
+          setQueue((prev) => prev.map((q) => (q.key === key ? { ...q, status: "error", error: msg, abort: null } : q)));
+        }
+      }
+    } else {
+      // No propertyId yet (add property page), just queue for later
+      const next: QueueItem[] = validFiles.map(f => ({
         key: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         file: f,
         status: "queued",
         progress: 0,
         error: null,
         abort: null,
-      });
+      }));
+      setQueue((prev) => [...prev, ...next]);
     }
-
-    if (errors.length) {
-      alert(errors.slice(0, 6).join("\n") + (errors.length > 6 ? `\n...and ${errors.length - 6} more` : ""));
-    }
-    if (next.length) setQueue((prev) => [...prev, ...next]);
   };
 
   const removeQueued = (key: string) => {
@@ -300,7 +347,10 @@ export default forwardRef<
             ref={fileInputRef}
             type="file"
             multiple
-            onChange={(e) => addFiles(Array.from(e.target.files || []))}
+            onChange={(e) => {
+              addFiles(Array.from(e.target.files || []));
+              e.target.value = ''; // Reset to allow re-selecting same files
+            }}
             style={{ display: "none" }}
           />
 
@@ -314,20 +364,9 @@ export default forwardRef<
             <div style={{ marginTop: "14px" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
                 <div style={{ fontWeight: 800, color: "#111827" }}>
-                  Upload Queue ({queue.length})
+                  {uploadingAny ? "Uploading..." : propertyId ? "Upload Queue" : "Upload Queue"} ({queue.length})
                 </div>
                 <div style={{ display: "flex", gap: "8px" }}>
-                  {propertyId && (
-                    <button
-                      type="button"
-                      className="filter-btn"
-                      disabled={uploadingAny || queuedCount === 0}
-                      onClick={() => uploadQueuedFiles(propertyId)}
-                      style={{ padding: "10px 12px" }}
-                    >
-                      {uploadingAny ? "Uploading..." : "Upload all"}
-                    </button>
-                  )}
                   {uploadingAny && (
                     <button
                       type="button"
