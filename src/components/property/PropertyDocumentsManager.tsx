@@ -280,10 +280,16 @@ export default forwardRef<
     return { percent, label: `${active.filter((q) => q.status === "done").length}/${active.length} uploaded` };
   }, [queue]);
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <div>
       {!readOnly && (
-        <div className="file-upload-area" style={{ padding: "16px", borderRadius: "14px" }}>
+        <div
+          className="file-upload-area"
+          style={{ padding: "16px", borderRadius: "14px", cursor: "pointer" }}
+          onClick={() => fileInputRef.current?.click()}
+        >
           <div className="upload-icon">
             <i className="bi bi-upload"></i>
           </div>
@@ -291,10 +297,11 @@ export default forwardRef<
           <p className="upload-info">PDF, DOC, DOCX, JPG, PNG (Max 10MB each)</p>
 
           <input
+            ref={fileInputRef}
             type="file"
             multiple
             onChange={(e) => addFiles(Array.from(e.target.files || []))}
-            style={{ marginTop: "10px" }}
+            style={{ display: "none" }}
           />
 
           {!propertyId && (
