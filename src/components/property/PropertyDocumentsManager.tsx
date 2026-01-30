@@ -196,6 +196,11 @@ export default forwardRef<
           );
           // Refresh docs list
           await fetchDocs(propertyId);
+
+          // Auto-remove from queue after 2 seconds
+          setTimeout(() => {
+            setQueue((prev) => prev.filter((q) => q.key !== key));
+          }, 2000);
         } catch (e) {
           const msg = e instanceof Error ? e.message : "Upload failed";
           setQueue((prev) => prev.map((q) => (q.key === key ? { ...q, status: "error", error: msg, abort: null } : q)));
@@ -360,107 +365,6 @@ export default forwardRef<
             </div>
           )}
 
-          {queue.length > 0 && (
-            <div style={{ marginTop: "14px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "10px" }}>
-                <div style={{ fontWeight: 800, color: "#111827" }}>
-                  {uploadingAny ? "Uploading..." : propertyId ? "Upload Queue" : "Upload Queue"} ({queue.length})
-                </div>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {uploadingAny && (
-                    <button
-                      type="button"
-                      className="filter-btn"
-                      onClick={cancelAll}
-                      style={{ padding: "10px 12px" }}
-                    >
-                      Cancel uploads
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="filter-btn"
-                    disabled={uploadingAny}
-                    onClick={clearCompleted}
-                    style={{ padding: "10px 12px" }}
-                  >
-                    Clear finished
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ marginTop: "10px" }}>
-                <div style={{ height: "8px", background: "rgba(17,24,39,0.08)", borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${overall.percent}%`, background: "#6EA500" }} />
-                </div>
-                {overall.label && (
-                  <div style={{ marginTop: "6px", fontSize: "12px", color: "#6B7280" }}>
-                    {overall.label} • {overall.percent}%
-                  </div>
-                )}
-              </div>
-
-              <div style={{ marginTop: "12px", display: "grid", gap: "10px" }}>
-                {queue.map((q) => (
-                  <div
-                    key={q.key}
-                    style={{
-                      border: "1px solid rgba(17,24,39,0.10)",
-                      borderRadius: "12px",
-                      padding: "10px 12px",
-                      background: "#fff",
-                      display: "flex",
-                      gap: "12px",
-                      alignItems: "center",
-                      minWidth: 0,
-                    }}
-                  >
-                    <i className={docIcon(q.file.type)} style={{ fontSize: "18px", color: "#111827" }} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", gap: "10px" }}>
-                        <div style={{ fontWeight: 800, fontSize: "13px", color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {truncateMiddle(q.file.name, 22)}
-                        </div>
-                        <div style={{ fontSize: "12px", color: "#6B7280" }}>
-                          {formatBytes(q.file.size)}
-                        </div>
-                      </div>
-
-                      <div style={{ marginTop: "6px" }}>
-                        <div style={{ height: "6px", background: "rgba(17,24,39,0.08)", borderRadius: "999px", overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${q.status === "done" ? 100 : q.progress}%`, background: q.status === "error" ? "#EF4444" : "#6EA500" }} />
-                        </div>
-                      </div>
-
-                      <div style={{ marginTop: "6px", fontSize: "12px", color: q.status === "error" ? "#B91C1C" : "#6B7280" }}>
-                        {q.status === "queued" && "Queued"}
-                        {q.status === "uploading" && `Uploading... ${q.progress}%`}
-                        {q.status === "done" && "Uploaded"}
-                        {q.status === "cancelled" && "Cancelled"}
-                        {q.status === "error" && (q.error || "Upload failed")}
-                      </div>
-                    </div>
-
-                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                      {q.status === "uploading" ? (
-                        <button type="button" className="link-btn linked" title="Cancel" onClick={() => cancelUpload(q.key)}>
-                          <i className="bi bi-x"></i>
-                        </button>
-                      ) : q.status === "queued" ? (
-                        <button type="button" className="link-btn linked" title="Remove" onClick={() => removeQueued(q.key)}>
-                          <i className="bi bi-x"></i>
-                        </button>
-                      ) : (
-                        <button type="button" className="link-btn linked" title="Remove" onClick={() => removeQueued(q.key)} disabled={uploadingAny}>
-                          <i className="bi bi-x"></i>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
