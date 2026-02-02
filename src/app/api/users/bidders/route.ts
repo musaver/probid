@@ -49,11 +49,19 @@ export async function GET(req: Request) {
           type: user.type,
           creatorName: creator.name,
         })
-        .from(propertyLinkedBidders)
-        .innerJoin(property, eq(property.id, propertyLinkedBidders.propertyId))
-        .innerJoin(user, eq(user.id, propertyLinkedBidders.bidderId))
+        .from(user)
+        .leftJoin(propertyLinkedBidders, eq(user.id, propertyLinkedBidders.bidderId))
+        .leftJoin(property, eq(property.id, propertyLinkedBidders.propertyId))
         .leftJoin(creator, eq(user.countyId, creator.id))
-        .where(and(eq(property.createdBy, session.user.id), bidderWhere))
+        .where(
+          and(
+            bidderWhere,
+            or(
+              eq(user.countyId, session.user.id),
+              eq(property.createdBy, session.user.id)
+            )
+          )
+        )
         .groupBy(user.id, creator.name)
         .orderBy(desc(user.createdAt))
         .limit(200);
