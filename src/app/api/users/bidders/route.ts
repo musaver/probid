@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { property, propertyLinkedBidders, user } from "@/lib/schema";
 import { and, eq, like, or, inArray, sql, desc } from "drizzle-orm";
+import { alias } from "drizzle-orm/mysql-core";
 import { v4 as uuidv4 } from "uuid";
 import { sendBidderInviteEmail } from "@/lib/email";
 
@@ -17,6 +18,7 @@ export async function GET(req: Request) {
     const qRaw = (searchParams.get("q") || "").trim();
     const q = qRaw.length ? `%${qRaw}%` : null;
     const linkedToMyProperties = searchParams.get("linkedToMyProperties") === "1";
+    const creator = alias(user, "creator");
 
     // If requested, scope bidders to those linked to this county's properties only
     if (linkedToMyProperties) {
@@ -45,12 +47,14 @@ export async function GET(req: Request) {
           image: user.image,
           bidderNumber: user.bidderNumber,
           type: user.type,
+          creatorName: creator.name,
         })
         .from(propertyLinkedBidders)
         .innerJoin(property, eq(property.id, propertyLinkedBidders.propertyId))
         .innerJoin(user, eq(user.id, propertyLinkedBidders.bidderId))
+        .leftJoin(creator, eq(user.countyId, creator.id))
         .where(and(eq(property.createdBy, session.user.id), bidderWhere))
-        .groupBy(user.id)
+        .groupBy(user.id, creator.name)
         .orderBy(desc(user.createdAt))
         .limit(200);
 
@@ -101,8 +105,10 @@ export async function GET(req: Request) {
         image: user.image,
         bidderNumber: user.bidderNumber,
         type: user.type,
+        creatorName: creator.name,
       })
       .from(user)
+      .leftJoin(creator, eq(user.countyId, creator.id))
       .where(whereClause)
       .orderBy(desc(user.createdAt))
       .limit(200);

@@ -429,6 +429,7 @@ const PropertiesContent = () => {
                                         setItemsPerPage(Number(e.target.value));
                                         setCurrentPage(1);
                                     }}
+                                    // Pagination controls
                                     style={{
                                         padding: '10px 24px 10px 14px',
                                         borderRadius: '999px',

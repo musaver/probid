@@ -13,6 +13,7 @@ type BidderRow = {
   phone?: string | null;
   image?: string | null;
   linkedPropertyCount?: number;
+  creatorName?: string | null;
 };
 
 type LinkedPropertyRow = {
@@ -137,6 +138,7 @@ export default function BiddersContent() {
                     <th>Name</th>
                     <th>Email</th>
                     <th>Phone</th>
+                    <th>Added By</th>
                     <th>Linked Properties</th>
                     <th>Actions</th>
                   </tr>
@@ -144,13 +146,13 @@ export default function BiddersContent() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: "16px", color: "#6B7280" }}>
+                      <td colSpan={7} style={{ padding: "16px", color: "#6B7280" }}>
                         Loading...
                       </td>
                     </tr>
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: "16px", color: "#6B7280" }}>
+                      <td colSpan={7} style={{ padding: "16px", color: "#6B7280" }}>
                         No bidders found.
                       </td>
                     </tr>
@@ -161,6 +163,7 @@ export default function BiddersContent() {
                         <td data-label="Name">{b.name || "—"}</td>
                         <td data-label="Email">{b.email}</td>
                         <td data-label="Phone">{b.phone || "—"}</td>
+                        <td data-label="Added By">{b.creatorName || "—"}</td>
                         <td data-label="Linked Properties" className="linked-properties">
                           {typeof b.linkedPropertyCount === "number" ? (
                             <button
