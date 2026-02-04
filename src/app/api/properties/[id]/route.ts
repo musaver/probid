@@ -121,63 +121,78 @@ export async function PATCH(
         }
 
         const body = await req.json();
-        const {
-            title,
-            description,
-            address,
-            parcelId,
-            saleId,
-            city,
-            zipCode,
-            squareFeet,
-            yearBuilt,
-            lotSize,
-            owners,
-            auctionEnd,
-            minBid,
-            winningBid,
-            winningBidderId,
-            status,
-            visibilitySettings,
-        } = body;
 
-        const nextStatus = status || "active";
-        const safeTitle =
-            String(title || "").trim() ||
-            String(address || "").trim() ||
-            String(existing.title || "").trim() ||
-            String(existing.address || "").trim();
+        // Helper to check if property exists in body
+        const has = (key: string) => Object.prototype.hasOwnProperty.call(body, key);
 
-        if (saleId !== undefined && String(saleId).trim() === "") {
-            return new NextResponse("Sale ID cannot be empty", { status: 400 });
+        const updateData: any = {
+            updatedAt: new Date(),
+        };
+
+        if (has("description")) updateData.description = body.description;
+        if (has("parcelId")) updateData.parcelId = body.parcelId;
+        if (has("city")) updateData.city = body.city;
+        if (has("zipCode")) updateData.zipCode = body.zipCode;
+        if (has("owners")) updateData.owners = body.owners;
+        if (has("winningBidderId")) updateData.winningBidderId = body.winningBidderId;
+
+        if (has("saleId")) {
+            if (String(body.saleId).trim() === "") {
+                return new NextResponse("Sale ID cannot be empty", { status: 400 });
+            }
+            updateData.saleId = body.saleId;
+        }
+
+        if (has("address")) updateData.address = body.address;
+
+        // Title update logic - preserve "safe title" behavior but only if relevant fields change
+        // or if title is explicitly cleared
+        if (has("title") || has("address")) {
+            const rawTitle = has("title") ? body.title : existing.title;
+            const rawAddress = has("address") ? body.address : existing.address;
+
+            updateData.title =
+                String(rawTitle || "").trim() ||
+                String(rawAddress || "").trim() ||
+                String(existing.title || "").trim() ||
+                String(existing.address || "").trim();
+        }
+
+        if (has("yearBuilt")) {
+            updateData.yearBuilt = body.yearBuilt ? parseInt(body.yearBuilt) : null;
+        }
+
+        if (has("auctionEnd")) {
+            updateData.auctionEnd = body.auctionEnd ? new Date(body.auctionEnd) : null;
+        }
+
+        if (has("minBid")) {
+            updateData.minBid =
+                body.minBid === undefined || body.minBid === null || `${body.minBid}`.trim() === ""
+                    ? null
+                    : parseFloat(`${body.minBid}`.replace(/[^0-9.]/g, "")).toFixed(2);
+        }
+
+        if (has("winningBid")) {
+            updateData.winningBid =
+                body.winningBid === undefined || body.winningBid === null || `${body.winningBid}`.trim() === ""
+                    ? null
+                    : parseFloat(`${body.winningBid}`.replace(/[^0-9.]/g, "")).toFixed(2);
+        }
+
+        if (has("visibilitySettings")) {
+            updateData.visibilitySettings = normalizeVisibilitySettings(body.visibilitySettings);
+        }
+
+        // Status logic
+        const nextStatus = has("status") && body.status ? body.status : existing.status;
+        if (has("status")) {
+            updateData.status = nextStatus;
         }
 
         await db
             .update(property)
-            .set({
-                title: safeTitle,
-                description,
-                address,
-                parcelId,
-                saleId,
-                city,
-                zipCode,
-                yearBuilt: yearBuilt ? parseInt(yearBuilt) : null,
-                owners,
-                auctionEnd: auctionEnd ? new Date(auctionEnd) : null,
-                minBid:
-                    minBid === undefined || minBid === null || `${minBid}`.trim() === ""
-                        ? null
-                        : parseFloat(`${minBid}`.replace(/[^0-9.]/g, "")).toFixed(2),
-                winningBid:
-                    winningBid === undefined || winningBid === null || `${winningBid}`.trim() === ""
-                        ? null
-                        : parseFloat(`${winningBid}`.replace(/[^0-9.]/g, "")).toFixed(2),
-                winningBidderId,
-                visibilitySettings: normalizeVisibilitySettings(visibilitySettings),
-                status: nextStatus,
-                updatedAt: new Date(),
-            })
+            .set(updateData)
             .where(eq(property.id, params.id));
 
         // Notify on status change (linked bidders + county)

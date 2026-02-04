@@ -159,7 +159,7 @@ const MessagingContent = () => {
                     <div className="conv-header">
                       <h4 className="conv-name">{conv.otherUser?.name || conv.otherUser?.email || "Unknown User"}</h4>
                       <span className="conv-time">
-                        {new Date(conv.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(conv.lastMessageAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                     <div className="conv-preview-row">

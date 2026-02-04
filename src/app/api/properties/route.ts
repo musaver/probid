@@ -190,6 +190,7 @@ export async function GET(req: Request) {
                     visibilitySettings: property.visibilitySettings,
                     status: property.status,
                     createdBy: property.createdBy,
+                    creatorName: sql<string>`(SELECT name FROM user WHERE id = ${property.createdBy} LIMIT 1)`,
                     createdAt: property.createdAt,
                     updatedAt: property.updatedAt,
                     linkedBiddersCount: sql<number>`count(distinct ${propertyLinkedBidders.id})`,
@@ -233,20 +234,21 @@ export async function GET(req: Request) {
                     description: property.description,
                     address: property.address,
                     parcelId: property.parcelId,
-                    saleId: property.saleId, // explicitly selecting saleId since it's used
+                    saleId: property.saleId,
                     city: property.city,
                     zipCode: property.zipCode,
                     squareFeet: property.squareFeet,
                     yearBuilt: property.yearBuilt,
                     lotSize: property.lotSize,
-                    owners: property.owners, // explicitly selecting owners
+                    owners: property.owners,
                     auctionEnd: property.auctionEnd,
                     minBid: property.minBid,
-                    winningBid: property.winningBid, // explicitly selecting winningBid
-                    winningBidderId: property.winningBidderId, // explicitly selecting
+                    winningBid: property.winningBid,
+                    winningBidderId: property.winningBidderId,
                     visibilitySettings: property.visibilitySettings,
                     status: property.status,
                     createdBy: property.createdBy,
+                    creatorName: sql<string>`(SELECT name FROM user WHERE id = ${property.createdBy} LIMIT 1)`,
                     createdAt: property.createdAt,
                     updatedAt: property.updatedAt,
                 })

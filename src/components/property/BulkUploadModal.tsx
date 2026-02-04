@@ -12,7 +12,7 @@ interface ImportedProperty {
     "Zip Code"?: number | string;
     "Minimum Bid"?: number;
     "Winning Bid"?: number;
-    "Bidder Number"?: string;
+    "Bidder Email"?: string;
     "Auction End Date"?: string; // YYYY-MM-DD
     "Owners"?: string; // Comma or semicolon separated
     "Status"?: string;
@@ -24,6 +24,8 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
     const [errors, setErrors] = useState<string[]>([]);
     const [uploading, setUploading] = useState(false);
     const [stage, setStage] = useState<"select" | "preview">("select");
+    const [bidders, setBidders] = useState<any[]>([]);
+    const [loadingBidders, setLoadingBidders] = useState(false);
 
     const downloadTemplate = (ext: "xlsx" | "xls" | "csv") => {
         const headers = [
@@ -35,7 +37,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
             "Zip Code",
             "Minimum Bid",
             "Winning Bid",
-            "Bidder Number",
+            "Bidder Email",
             "Auction End Date",
             "Owners",
             "Status",
@@ -50,7 +52,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                 "Zip Code": "12345",
                 "Minimum Bid": 1000,
                 "Winning Bid": 1200,
-                "Bidder Number": "BID-789",
+                "Bidder Email": "bidder@example.com",
                 "Auction End Date": "2026-12-31",
                 "Owners": "Doe, John; Smith, Jane",
                 "Status": "active",
@@ -64,7 +66,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                 "Zip Code": "12345",
                 "Minimum Bid": 500,
                 "Winning Bid": 0,
-                "Bidder Number": "",
+                "Bidder Email": "",
                 "Auction End Date": "2026-12-31",
                 "Owners": "Brown, Bob",
                 "Status": "active",
@@ -87,7 +89,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             const bstr = e.target?.result;
             const wb = XLSX.read(bstr, { type: "binary" });
             const wsname = wb.SheetNames[0];
@@ -95,6 +97,23 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
             const jsonData = XLSX.utils.sheet_to_json<ImportedProperty>(ws);
             setData(jsonData);
             validateData(jsonData);
+
+            // Fetch bidders if not already loaded
+            if (bidders.length === 0) {
+                setLoadingBidders(true);
+                try {
+                    const res = await fetch("/api/users/bidders");
+                    if (res.ok) {
+                        const list = await res.json();
+                        setBidders(list);
+                    }
+                } catch (err) {
+                    console.error("Failed to load bidders for check:", err);
+                } finally {
+                    setLoadingBidders(false);
+                }
+            }
+
             setStage("preview");
         };
         reader.readAsBinaryString(file);
@@ -138,6 +157,18 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
         } finally {
             setUploading(false);
         }
+    };
+
+    const updateRowEmail = (index: number, email: string) => {
+        const newData = [...data];
+        newData[index]["Bidder Email"] = email;
+        setData(newData);
+    };
+
+    const getBidderStatus = (email?: string) => {
+        if (!email) return null;
+        const found = bidders.find(b => b.email.toLowerCase() === email.toLowerCase());
+        return found ? { connected: true, name: found.name } : { connected: false };
     };
 
     return (
@@ -222,7 +253,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Zip Code</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Min Bid</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Winning Bid</th>
-                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Bidder Number</th>
+                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Bidder Email</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Auction End</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Owners</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Status</th>
@@ -239,7 +270,39 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Zip Code"] || "-"}</td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Minimum Bid"] || "-"}</td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Winning Bid"] || "-"}</td>
-                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Bidder Number"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>
+                                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                                    <input
+                                                        type="text"
+                                                        value={row["Bidder Email"] || ""}
+                                                        onChange={(e) => updateRowEmail(i, e.target.value)}
+                                                        placeholder="bidder@email.com"
+                                                        style={{
+                                                            fontSize: "12px",
+                                                            padding: "4px 8px",
+                                                            borderRadius: "4px",
+                                                            border: "1px solid #D1D5DB",
+                                                            width: "180px"
+                                                        }}
+                                                    />
+                                                    {loadingBidders ? (
+                                                        <span style={{ fontSize: "10px", color: "#6B7280" }}>Checking...</span>
+                                                    ) : row["Bidder Email"] ? (
+                                                        (() => {
+                                                            const status = getBidderStatus(row["Bidder Email"]);
+                                                            return status?.connected ? (
+                                                                <span style={{ fontSize: "10px", color: "#059669", fontWeight: 600 }}>
+                                                                    <i className="bi bi-person-check-fill"></i> Connected: {status.name || "User"}
+                                                                </span>
+                                                            ) : (
+                                                                <span style={{ fontSize: "10px", color: "#DC2626", fontWeight: 600 }}>
+                                                                    <i className="bi bi-person-x-fill"></i> Not Found (Will not link)
+                                                                </span>
+                                                            );
+                                                        })()
+                                                    ) : null}
+                                                </div>
+                                            </td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Auction End Date"] || "-"}</td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Owners || "-"}</td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Status || "-"}</td>

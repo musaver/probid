@@ -39,6 +39,16 @@ export default function BiddersContent() {
   const [propsRows, setPropsRows] = useState<LinkedPropertyRow[]>([]);
   const [propsError, setPropsError] = useState<string | null>(null);
 
+  // Message Modal State
+  const [showMsgModal, setShowMsgModal] = useState(false);
+  const [msgBidder, setMsgBidder] = useState<BidderRow | null>(null);
+  const [msgProperties, setMsgProperties] = useState<LinkedPropertyRow[]>([]);
+  const [msgLoadingProps, setMsgLoadingProps] = useState(false);
+  const [selectedPropertyId, setSelectedPropertyId] = useState("");
+  const [msgSubject, setMsgSubject] = useState("");
+  const [msgBody, setMsgBody] = useState("");
+  const [sendingMsg, setSendingMsg] = useState(false);
+
   const q = useMemo(() => search.trim(), [search]);
 
   useEffect(() => {
@@ -84,6 +94,62 @@ export default function BiddersContent() {
       setPropsRows([]);
     } finally {
       setPropsLoading(false);
+    }
+  };
+
+  const openMessageModal = async (bidder: BidderRow) => {
+    setMsgBidder(bidder);
+    setShowMsgModal(true);
+    setMsgLoadingProps(true);
+    setMsgProperties([]);
+    setSelectedPropertyId("");
+    setMsgSubject("");
+    setMsgBody("");
+
+    try {
+      const res = await fetch(`/api/users/bidders/${bidder.id}/linked-properties`);
+      if (res.ok) {
+        const data = await res.json();
+        const props = Array.isArray(data) ? data : [];
+        setMsgProperties(props);
+        if (props.length === 1) {
+          setSelectedPropertyId(props[0].id);
+          setMsgSubject(`Alert for ${props[0].address || "Property"}`);
+        }
+      }
+    } catch (e) {
+      console.error("Error loading linked properties for msg:", e);
+    } finally {
+      setMsgLoadingProps(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!selectedPropertyId) return alert("Please select a property");
+    if (!msgBody.trim()) return alert("Message is required");
+
+    setSendingMsg(true);
+    try {
+      const res = await fetch(`/api/properties/${selectedPropertyId}/alerts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: msgSubject || "Message",
+          message: msgBody,
+          bidderIds: [msgBidder?.id]
+        }),
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to send message");
+      }
+      alert("Message sent!");
+      setShowMsgModal(false);
+    } catch (e) {
+      console.error("Send message error:", e);
+      alert("Failed to send message");
+    } finally {
+      setSendingMsg(false);
     }
   };
 
@@ -199,6 +265,18 @@ export default function BiddersContent() {
                             >
                               <i className="bi bi-pencil" style={{ color: "#3B82F6" }}></i>
                             </button>
+                            {typeof b.linkedPropertyCount === "number" && b.linkedPropertyCount > 0 && (
+                              <button
+                                className="action-btn table-action"
+                                type="button"
+                                aria-label="Send Message"
+                                style={{ background: "transparent", border: "none" }}
+                                onClick={() => openMessageModal(b)}
+                                title="Send Message"
+                              >
+                                <i className="bi bi-chat-left-text" style={{ color: "#6EA500" }}></i>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -292,6 +370,153 @@ export default function BiddersContent() {
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMsgModal && msgBidder && (
+        <div
+          className="app-modal-overlay"
+          onClick={() => setShowMsgModal(false)}
+        >
+          <div
+            className="app-modal"
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: '600px' }}
+          >
+            <div className="app-modal-header">
+              <div>
+                <h2 className="app-modal-title">Send Message</h2>
+                <p style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
+                  To: <strong>{msgBidder.name || msgBidder.email}</strong>
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMsgModal(false)}
+                className="app-modal-close"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+
+            <div style={{ marginTop: "16px" }}>
+              {msgLoadingProps ? (
+                <div style={{ padding: "10px 0", color: "#6B7280" }}>Loading assigned properties...</div>
+              ) : msgProperties.length === 0 ? (
+                <div style={{ padding: "10px 0", color: "#B91C1C" }}>No linked properties found for this bidder. Cannot send message.</div>
+              ) : (
+                <>
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>About Property</label>
+                    {msgProperties.length === 1 ? (
+                      <div style={{
+                        padding: "12px",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "10px",
+                        background: "#F9FAFB",
+                        color: "#374151"
+                      }}>
+                        {msgProperties[0].address || "Property"} <span style={{ fontSize: "0.9em", color: "#6B7280" }}>({msgProperties[0].parcelId})</span>
+                      </div>
+                    ) : (
+                      <select
+                        value={selectedPropertyId}
+                        onChange={(e) => {
+                          const pid = e.target.value;
+                          setSelectedPropertyId(pid);
+                          const p = msgProperties.find(x => x.id === pid);
+                          if (p) setMsgSubject(`Alert for ${p.address || "Property"}`);
+                          else setMsgSubject("");
+                        }}
+                        style={{
+                          width: "100%",
+                          padding: "12px",
+                          border: "1px solid #E5E7EB",
+                          borderRadius: "10px",
+                          appearance: "none",
+                          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                          backgroundPosition: 'right 0.5rem center',
+                          backgroundRepeat: 'no-repeat',
+                          backgroundSize: '1.5em 1.5em'
+                        }}
+                      >
+                        <option value="">Select a property...</option>
+                        {msgProperties.map(p => (
+                          <option key={p.id} value={p.id}>{p.address || "Property"} ({p.parcelId || "No ID"})</option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Hidden Subject Field */}
+                  <div style={{ marginTop: "16px", display: "none" }}>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>Subject</label>
+                    <input
+                      value={msgSubject}
+                      onChange={(e) => setMsgSubject(e.target.value)}
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "10px",
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>Message</label>
+                    <textarea
+                      value={msgBody}
+                      onChange={(e) => setMsgBody(e.target.value)}
+                      rows={5}
+                      placeholder="Type your message here..."
+                      style={{
+                        width: "100%",
+                        padding: "12px",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "10px",
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
+                    <button
+                      disabled={sendingMsg || !selectedPropertyId}
+                      onClick={sendMessage}
+                      style={{
+                        flex: 1,
+                        padding: "12px 16px",
+                        background: "#6EA500",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "10px",
+                        cursor: (sendingMsg || !selectedPropertyId) ? "not-allowed" : "pointer",
+                        fontWeight: 800,
+                        opacity: (sendingMsg || !selectedPropertyId) ? 0.7 : 1
+                      }}
+                    >
+                      {sendingMsg ? "Sending..." : "Send Message"}
+                    </button>
+                    <button
+                      onClick={() => setShowMsgModal(false)}
+                      style={{
+                        padding: "12px 16px",
+                        background: "#F3F4F6",
+                        color: "#111827",
+                        border: "1px solid #E5E7EB",
+                        borderRadius: "10px",
+                        cursor: "pointer",
+                        fontWeight: 800,
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -202,7 +202,7 @@ const DashboardOverviewSection = ({
         {/* User Profile Section */}
 
 
-        {/* Stats Cards */}
+        {/* Stats Cards - Hidden for now
         <div className="stats-grid">
           <div className="stat-card stat-card-purple">
             <div className="stat-content">
@@ -234,6 +234,7 @@ const DashboardOverviewSection = ({
             </div>
           </div>
         </div>
+        */}
 
         {/* Action Buttons */}
         <DashboardQuickActions isCounty={isCounty} />

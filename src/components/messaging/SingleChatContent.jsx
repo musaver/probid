@@ -180,7 +180,7 @@ const SingleChatContent = ({ conversationId }) => {
                                         <div className="message-content">
                                             <p className="message-text">{message.text}</p>
                                             <span className="message-time">
-                                                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                {new Date(message.createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                             </span>
                                         </div>
                                     </div>

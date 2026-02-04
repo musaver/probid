@@ -119,6 +119,8 @@ const PropertiesContent = () => {
     const handleStatusUpdate = async (id: string, newStatus: string) => {
         if (!newStatus) return;
         setUpdatingStatus(true);
+        const property = properties.find((p) => p.id === id);
+
         try {
             const res = await fetch(`/api/properties/${id}`, {
                 method: "PATCH",
@@ -134,6 +136,12 @@ const PropertiesContent = () => {
                 prev.map((p) => (p.id === id ? { ...p, status: newStatus } : p))
             );
             setEditingStatusId(null);
+
+            if (property && Number(property.linkedBiddersCount) > 0) {
+                const formatStatus = (s: string) => s.replace(/_/g, " ");
+                const msg = `${property.address || "Property"} status is changed from ${formatStatus(property.status)} status to ${formatStatus(newStatus)} status.`;
+                openAlertModal(property, msg);
+            }
         } catch (e) {
             console.error("Status update error:", e);
             alert("Failed to update status");
@@ -278,11 +286,28 @@ const PropertiesContent = () => {
         }
     };
 
-    const openAlertModal = async (property: any) => {
+    const openAlertModal = async (property: any, initialMessage: string = "") => {
         setAlertProperty(property);
-        setAlertSubject(`Update: ${property.address}`);
-        setAlertMessage("");
+        // Predefined subjects
+        if (initialMessage) {
+            // Status Change detected
+            const statusMatch = initialMessage.match(/changed from (.*) status to (.*) status/);
+            const oldStatus = statusMatch ? statusMatch[1] : "...";
+            const newStatus = statusMatch ? statusMatch[2] : property.status;
+            setAlertSubject(`${property.address || "Property"} status is changed from ${oldStatus} old status to ${newStatus} new status`);
+        } else {
+            // Normal alert
+            setAlertSubject(`Alert for ${property.address || "Property"}`);
+        }
+        setAlertMessage(initialMessage);
         setShowAlertModal(true);
+        if (!isCounty) {
+            setLoadingAlertBidders(false);
+            setLinkedBidders([]);
+            setAlertBidderIds([]);
+            return;
+        }
+
         setLoadingAlertBidders(true);
         setLinkedBidders([]);
         setAlertBidderIds([]);
@@ -305,7 +330,7 @@ const PropertiesContent = () => {
         if (!alertMessage.trim()) return alert("Message is required");
         setSendingAlert(true);
         try {
-            const subject = alertSubject.trim() || `Update: ${alertProperty?.address || "Property"}`;
+            const subject = alertSubject.trim();
             const res = await fetch(`/api/properties/${alertProperty.id}/alerts`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -451,6 +476,7 @@ const PropertiesContent = () => {
                                     <option value={20}>20 per page</option>
                                     <option value={50}>50 per page</option>
                                     <option value={100}>100 per page</option>
+                                    <option value={500}>500 per page</option>
                                 </select>
                             </div>
                         </div>
@@ -543,10 +569,11 @@ const PropertiesContent = () => {
                                     <tr>
                                         {[
                                             { label: 'Parcel ID', key: 'parcelId' },
+                                            ...(!isCounty ? [{ label: 'County', key: 'creatorName' }] : []),
                                             { label: 'Owner Name(s)', key: 'owners' },
                                             { label: 'Added', key: 'createdAt' },
                                             { label: 'Min Bid', key: 'minBid' },
-                                            { label: 'Current Bid', key: 'currentBid' },
+
                                             { label: 'Winning Bid', key: 'winningBid' },
                                             { label: 'Status', key: 'status' },
                                         ].map((head) => (
@@ -584,17 +611,18 @@ const PropertiesContent = () => {
                                                     <div>{property.parcelId || "-"}</div>
                                                     <div style={{ fontSize: '11px', color: '#666' }}>Sale ID: {property.saleId}</div>
                                                 </td>
+                                                {!isCounty && (
+                                                    <td data-label="County">
+                                                        <div style={{ fontWeight: 600 }}>{property.creatorName || "Unknown"}</div>
+                                                    </td>
+                                                )}
                                                 <td data-label="Owner Name(s)">
                                                     <div>{Array.isArray(property.owners) ? property.owners.join(", ") : property.owners || "-"}</div>
 
                                                 </td>
                                                 <td data-label="Added">{formatDateWithTime(property.createdAt) || "-"}</td>
                                                 <td data-label="Min Bid">{formatDisplayCurrency(property.minBid) || "-"}</td>
-                                                <td data-label="Current Bid">
-                                                    {(property.currentBid && Number(property.currentBid) > Number(property.minBid))
-                                                        ? formatDisplayCurrency(property.currentBid)
-                                                        : "-"}
-                                                </td>
+
                                                 <td data-label="Winning Bid">{formatDisplayCurrency(property.winningBid) || "-"}</td>
 
                                                 <td data-label="Actions">
@@ -629,10 +657,19 @@ const PropertiesContent = () => {
                                                         {isCounty && Number(property.linkedBiddersCount) > 0 && (
                                                             <button
                                                                 className="action-btn"
-                                                                title="Send Alert"
+                                                                title="Send Message"
                                                                 onClick={() => openAlertModal(property)}
                                                             >
-                                                                <i className="bi bi-bell"></i>
+                                                                <i className="bi bi-chat-left-text"></i>
+                                                            </button>
+                                                        )}
+                                                        {!isCounty && (
+                                                            <button
+                                                                className="action-btn"
+                                                                title="Send Message"
+                                                                onClick={() => openAlertModal(property)}
+                                                            >
+                                                                <i className="bi bi-chat-left-text"></i>
                                                             </button>
                                                         )}
                                                         {isCounty && (
@@ -956,9 +993,12 @@ const PropertiesContent = () => {
                     >
                         <div className="app-modal-header">
                             <div>
-                                <h2 className="app-modal-title">Send Alert</h2>
+                                <h2 className="app-modal-title">Send Message</h2>
                                 <p style={{ fontSize: "13px", color: "#6B7280", marginTop: "4px" }}>
-                                    This will email all linked bidders and also send a copy to the county.
+                                    {isCounty
+                                        ? "This will email all linked bidders and also send a copy to the county."
+                                        : `This will send a message to ${alertProperty?.creatorName || "the property owner"} (County).`
+                                    }
                                 </p>
                             </div>
                             <button
@@ -970,100 +1010,102 @@ const PropertiesContent = () => {
                             </button>
                         </div>
 
-                        <div style={{ marginTop: "16px" }}>
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    marginBottom: "10px",
-                                }}
-                            >
-                                <label style={{ fontWeight: 700 }}>Recipients</label>
-                                <button
-                                    onClick={() => {
-                                        if (alertBidderIds.length === linkedBidders.length) {
-                                            setAlertBidderIds([]);
-                                        } else {
-                                            setAlertBidderIds(linkedBidders.map((b) => b.bidderId));
-                                        }
-                                    }}
-                                    style={{
-                                        background: "none",
-                                        border: "none",
-                                        color: "#6EA500",
-                                        cursor: "pointer",
-                                        fontWeight: 600,
-                                        fontSize: "12px",
-                                        padding: 0,
-                                    }}
-                                >
-                                    {alertBidderIds.length === linkedBidders.length ? "Uncheck all" : "Check all"}
-                                </button>
-                            </div>
-
-                            {loadingAlertBidders ? (
-                                <div style={{ padding: "10px 0", color: "#6B7280" }}>Loading linked bidders...</div>
-                            ) : linkedBidders.length === 0 ? (
-                                <div style={{ padding: "10px 0", color: "#6B7280" }}>
-                                    No linked bidders to notify. County copy will still be sent.
-                                </div>
-                            ) : (
+                        {isCounty && (
+                            <div style={{ marginTop: "16px" }}>
                                 <div
                                     style={{
-                                        marginTop: "10px",
-                                        border: "1px solid #E5E7EB",
-                                        borderRadius: "12px",
-                                        overflow: "hidden",
-                                        maxHeight: "180px",
-                                        overflowY: "auto",
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                        marginBottom: "10px",
                                     }}
                                 >
-                                    {linkedBidders.map((b) => {
-                                        const checked = alertBidderIds.includes(b.bidderId);
-                                        return (
-                                            <label
-                                                key={b.bidderId}
-                                                style={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    gap: "10px",
-                                                    padding: "10px 12px",
-                                                    borderBottom: "1px solid rgba(17,24,39,0.06)",
-                                                    cursor: "pointer",
-                                                }}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    checked={checked}
-                                                    onChange={() => {
-                                                        setAlertBidderIds((prev) =>
-                                                            prev.includes(b.bidderId)
-                                                                ? prev.filter((id) => id !== b.bidderId)
-                                                                : [...prev, b.bidderId]
-                                                        );
+                                    <label style={{ fontWeight: 700 }}>Recipients</label>
+                                    <button
+                                        onClick={() => {
+                                            if (alertBidderIds.length === linkedBidders.length) {
+                                                setAlertBidderIds([]);
+                                            } else {
+                                                setAlertBidderIds(linkedBidders.map((b) => b.bidderId));
+                                            }
+                                        }}
+                                        style={{
+                                            background: "none",
+                                            border: "none",
+                                            color: "#6EA500",
+                                            cursor: "pointer",
+                                            fontWeight: 600,
+                                            fontSize: "12px",
+                                            padding: 0,
+                                        }}
+                                    >
+                                        {alertBidderIds.length === linkedBidders.length ? "Uncheck all" : "Check all"}
+                                    </button>
+                                </div>
+
+                                {loadingAlertBidders ? (
+                                    <div style={{ padding: "10px 0", color: "#6B7280" }}>Loading linked bidders...</div>
+                                ) : linkedBidders.length === 0 ? (
+                                    <div style={{ padding: "10px 0", color: "#6B7280" }}>
+                                        No linked bidders to notify. County copy will still be sent.
+                                    </div>
+                                ) : (
+                                    <div
+                                        style={{
+                                            marginTop: "10px",
+                                            border: "1px solid #E5E7EB",
+                                            borderRadius: "12px",
+                                            overflow: "hidden",
+                                            maxHeight: "180px",
+                                            overflowY: "auto",
+                                        }}
+                                    >
+                                        {linkedBidders.map((b) => {
+                                            const checked = alertBidderIds.includes(b.bidderId);
+                                            return (
+                                                <label
+                                                    key={b.bidderId}
+                                                    style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "10px",
+                                                        padding: "10px 12px",
+                                                        borderBottom: "1px solid rgba(17,24,39,0.06)",
+                                                        cursor: "pointer",
                                                     }}
-                                                />
-                                                <div style={{ display: "flex", flexDirection: "column" }}>
-                                                    <div style={{ fontWeight: 700, fontSize: "13px", color: "#111827" }}>
-                                                        {b.name || "Unknown"}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={checked}
+                                                        onChange={() => {
+                                                            setAlertBidderIds((prev) =>
+                                                                prev.includes(b.bidderId)
+                                                                    ? prev.filter((id) => id !== b.bidderId)
+                                                                    : [...prev, b.bidderId]
+                                                            );
+                                                        }}
+                                                    />
+                                                    <div style={{ display: "flex", flexDirection: "column" }}>
+                                                        <div style={{ fontWeight: 700, fontSize: "13px", color: "#111827" }}>
+                                                            {b.name || "Unknown"}
+                                                        </div>
+                                                        <div style={{ fontSize: "12px", color: "#6B7280" }}>{b.email}</div>
                                                     </div>
-                                                    <div style={{ fontSize: "12px", color: "#6B7280" }}>{b.email}</div>
-                                                </div>
-                                            </label>
-                                        );
-                                    })}
-                                </div>
-                            )}
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
-                            {linkedBidders.length > 0 && (
-                                <div style={{ marginTop: "8px", fontSize: "12px", color: "#6B7280" }}>
-                                    Selected: <strong>{alertBidderIds.length}</strong> / {linkedBidders.length} bidders
-                                </div>
-                            )}
-                        </div>
+                                {linkedBidders.length > 0 && (
+                                    <div style={{ marginTop: "8px", fontSize: "12px", color: "#6B7280" }}>
+                                        Selected: <strong>{alertBidderIds.length}</strong> / {linkedBidders.length} bidders
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
-                        <div style={{ marginTop: "16px" }}>
+                        <div style={{ marginTop: "16px", display: "none" }}>
                             <label style={{ display: "block", marginBottom: "6px", fontWeight: 700 }}>Subject</label>
                             <input
                                 value={alertSubject}
@@ -1096,7 +1138,7 @@ const PropertiesContent = () => {
 
                         <div style={{ display: "flex", gap: "10px", marginTop: "16px" }}>
                             <button
-                                disabled={sendingAlert}
+                                disabled={sendingAlert || (isCounty && alertBidderIds.length === 0 && linkedBidders.length > 0)}
                                 onClick={sendAlert}
                                 style={{
                                     flex: 1,
@@ -1105,11 +1147,12 @@ const PropertiesContent = () => {
                                     color: "#fff",
                                     border: "none",
                                     borderRadius: "10px",
-                                    cursor: "pointer",
+                                    cursor: (sendingAlert || (isCounty && alertBidderIds.length === 0 && linkedBidders.length > 0)) ? "not-allowed" : "pointer",
                                     fontWeight: 800,
+                                    opacity: (sendingAlert || (isCounty && alertBidderIds.length === 0 && linkedBidders.length > 0)) ? 0.7 : 1,
                                 }}
                             >
-                                {sendingAlert ? "Sending..." : "Send Alert"}
+                                {sendingAlert ? "Sending..." : "Send Message"}
                             </button>
                             <button
                                 onClick={() => setShowAlertModal(false)}
