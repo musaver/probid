@@ -150,15 +150,24 @@ const SingleChatContent = ({ conversationId }) => {
                     {/* Chat Header */}
                     <div className="chat-header">
                         <div className="chat-user-info">
-                            <img
-                                src={conversation.otherUser?.image || "/images/Image (John Doe).png"}
-                                alt={conversation.otherUser?.name}
-                                className="chat-avatar"
-                            />
-                            <div className="chat-user-details">
-                                <h3 className="chat-user-name">{conversation.otherUser?.name || conversation.otherUser?.email}</h3>
-                                <span className="chat-user-status">Encrypted Chat</span>
-                            </div>
+                            <Link
+                                href={`/bidder-details/${conversation.otherUser?.id}`}
+                                style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'inherit' }}
+                            >
+                                <img
+                                    src={conversation.otherUser?.image || "/assets/img/avatar-placeholder.svg"}
+                                    alt={conversation.otherUser?.name || "User"}
+                                    className="chat-avatar"
+                                    onError={(e) => { e.currentTarget.src = "/assets/img/avatar-placeholder.svg"; }}
+                                    style={{ cursor: 'pointer' }}
+                                />
+                                <div className="chat-user-details">
+                                    <h3 className="chat-user-name" style={{ cursor: 'pointer' }}>
+                                        {conversation.otherUser?.name || conversation.otherUser?.email}
+                                    </h3>
+                                    <span className="chat-user-status">Encrypted Chat</span>
+                                </div>
+                            </Link>
                         </div>
                         <button className="chat-menu-btn">
                             <i className="bi bi-three-dots-vertical"></i>

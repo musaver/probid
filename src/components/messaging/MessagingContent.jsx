@@ -116,11 +116,19 @@ const MessagingContent = () => {
                   <div
                     key={user.id}
                     className="search-result-item"
-                    style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
+                    style={{ padding: '10px', cursor: 'pointer', borderBottom: '1px solid #eee', display: 'flex', alignItems: 'center', gap: '10px' }}
                     onClick={() => startConversation(user.id)}
                   >
-                    <div style={{ fontWeight: 'bold' }}>{user.name || user.email}</div>
-                    <div style={{ fontSize: '0.8em', color: '#666' }}>{user.email}</div>
+                    <img
+                      src={user.image || "/assets/img/avatar-placeholder.svg"}
+                      alt={user.name || user.email}
+                      onError={(e) => { e.currentTarget.src = "/assets/img/avatar-placeholder.svg"; }}
+                      style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 'bold' }}>{user.name || user.email}</div>
+                      <div style={{ fontSize: '0.8em', color: '#666' }}>{user.email}</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -150,9 +158,10 @@ const MessagingContent = () => {
                 >
                   <div className="conv-avatar-wrapper">
                     <img
-                      src={conv.otherUser?.image || "/images/Image (John Doe).png"}
-                      alt={conv.otherUser?.name}
+                      src={conv.otherUser?.image || "/assets/img/avatar-placeholder.svg"}
+                      alt={conv.otherUser?.name || "User"}
                       className="conv-avatar"
+                      onError={(e) => { e.currentTarget.src = "/assets/img/avatar-placeholder.svg"; }}
                     />
                   </div>
                   <div className="conv-details">

@@ -34,7 +34,7 @@ const ReportsContent = () => {
       {
         id: "auction",
         title: "Auction Report",
-        description: "Export auction results and bids",
+        description: "Export auction results",
         buttonText: "Download PDF",
         format: "pdf",
       },

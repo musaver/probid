@@ -1166,7 +1166,7 @@ const PropertiesContent = () => {
                                     fontWeight: 800,
                                 }}
                             >
-                                Cancel
+                                Don't Send
                             </button>
                         </div>
                     </div>

@@ -397,7 +397,7 @@ const BidderProfile = () => {
               className={`bp-tab ${activeTab === "properties" ? "active" : ""}`}
               onClick={() => setActiveTab("properties")}
             >
-              Properties & Bids
+              Properties
             </button>
             <button
               className={`bp-tab ${activeTab === "communication" ? "active" : ""}`}
@@ -467,7 +467,7 @@ const BidderProfile = () => {
           {activeTab === "properties" && (
             <div>
               <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#1A1A1A', marginBottom: '20px' }}>
-                Associated Properties & Bids
+                Associated Properties
               </h3>
               <div className="bp-properties-table-wrapper">
                 <table className="bp-properties-table">

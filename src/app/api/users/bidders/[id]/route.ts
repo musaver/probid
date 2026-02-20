@@ -29,7 +29,9 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
         state: user.state,
         aboutMe: user.aboutMe,
         bidderNumber: user.bidderNumber,
+        image: user.image,
         type: user.type,
+        createdAt: user.createdAt,
       })
       .from(user)
       .where(eq(user.id, params.id))

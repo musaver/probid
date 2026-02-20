@@ -274,11 +274,7 @@ const Header = () => {
               </div>
             </div>
             <ul className="menu-list">
-              <li className={pathName === "/" ? "active" : ""}>
-                <Link href="/" className="drop-down">
-                  Home
-                </Link>
-              </li>
+              
               <li className="menu-item-has-children">
                 <a href="#" className="drop-down">
                   Pages
@@ -310,11 +306,6 @@ const Header = () => {
                     <Link href="/faq">Faqs</Link>
                   </li>
                 </ul>
-              </li>
-              <li className={pathName === "/contact" ? "active" : ""}>
-                <Link href="/contact" className="drop-down">
-                  Contact
-                </Link>
               </li>
             </ul>
             <ul className="contact-area d-lg-none d-flex">

@@ -340,9 +340,9 @@ body {
 
 /* Action Buttons Section */
 .action-buttons-section {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 30px;
 }
 
@@ -527,7 +527,7 @@ body {
   }
 
   .action-buttons-section {
-    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .notification-banner {
@@ -657,7 +657,11 @@ body {
   }
 
   .action-buttons-section {
-    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .action-buttons-section .action-btn {
+    min-width: 110px;
   }
 
   .stat-content h2 {
@@ -4942,12 +4946,13 @@ button.xs {
 .action-buttons-section .action-btn {
   border-radius: 16px !important;
   border: 1px solid #ccd1cc;
-  padding: 20px;
+  padding: 12px 20px;
+  min-width: 130px;
+  flex: 0 0 auto;
 }
 
 .action-buttons-section .action-btn:hover {
   border-color: #9db531;
-  /* bright green */
 }
 
 

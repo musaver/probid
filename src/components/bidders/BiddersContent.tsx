@@ -200,7 +200,6 @@ export default function BiddersContent() {
               <table className="properties-table">
                 <thead>
                   <tr>
-                    <th>Bidder ID</th>
                     <th>Name</th>
                     <th>Email</th>
                     <th>Phone</th>
@@ -212,20 +211,19 @@ export default function BiddersContent() {
                 <tbody>
                   {loading ? (
                     <tr>
-                      <td colSpan={7} style={{ padding: "16px", color: "#6B7280" }}>
+                      <td colSpan={6} style={{ padding: "16px", color: "#6B7280" }}>
                         Loading...
                       </td>
                     </tr>
                   ) : filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} style={{ padding: "16px", color: "#6B7280" }}>
+                      <td colSpan={6} style={{ padding: "16px", color: "#6B7280" }}>
                         No bidders found.
                       </td>
                     </tr>
                   ) : (
                     filtered.map((b) => (
                       <tr key={b.id}>
-                        <td data-label="Bidder ID">{b.id}</td>
                         <td data-label="Name">{b.name || "—"}</td>
                         <td data-label="Email">{b.email}</td>
                         <td data-label="Phone">{b.phone || "—"}</td>
@@ -255,6 +253,16 @@ export default function BiddersContent() {
                         </td>
                         <td data-label="Actions">
                           <div className="action-buttons">
+                            <button
+                              className="action-btn table-action"
+                              type="button"
+                              aria-label="View bidder"
+                              style={{ background: "transparent", border: "none" }}
+                              onClick={() => router.push(`/user-details/${b.id}`)}
+                              title="View Bidder"
+                            >
+                              <i className="bi bi-eye" style={{ color: "#6EA500" }}></i>
+                            </button>
                             <button
                               className="action-btn table-action"
                               type="button"
