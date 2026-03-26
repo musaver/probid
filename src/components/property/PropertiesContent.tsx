@@ -575,7 +575,7 @@ const PropertiesContent = () => {
                                             { label: 'Min Bid', key: 'minBid' },
 
                                             { label: 'Winning Bid', key: 'winningBid' },
-                                            { label: 'Status', key: 'status' },
+                                            { label: 'Actions', key: 'actions' },
                                         ].map((head) => (
                                             <th
                                                 key={head.key}
@@ -588,7 +588,7 @@ const PropertiesContent = () => {
                                                 )}
                                             </th>
                                         ))}
-                                        <th>Actions</th>
+                                        <th>Property Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>

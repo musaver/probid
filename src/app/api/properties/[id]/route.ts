@@ -10,9 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 const defaultVisibilitySettings = {
     minBid: true,
     currentBid: true,
-    bidHistory: false,
     propertyStatus: true,
-    bidderList: false,
     documents: false,
 };
 

@@ -11,9 +11,7 @@ const AddPropertyContent = () => {
   const [visibilitySettings, setVisibilitySettings] = useState({
     minBid: true,
     currentBid: true,
-    bidHistory: false,
     propertyStatus: true,
-    bidderList: false,
     documents: false,
   });
 
@@ -297,20 +295,6 @@ const AddPropertyContent = () => {
                     </div>
                     <div className="setting-item">
                       <div className="setting-info">
-                        <h5>Bid History</h5>
-                        <p>Show all previous bids</p>
-                      </div>
-                      <label className="toggle-switch">
-                        <input
-                          type="checkbox"
-                          checked={visibilitySettings.bidHistory}
-                          onChange={() => toggleSetting("bidHistory")}
-                        />
-                        <span className="slider"></span>
-                      </label>
-                    </div>
-                    <div className="setting-item">
-                      <div className="setting-info">
                         <h5>Property Status</h5>
                         <p>Show property status</p>
                       </div>
@@ -319,20 +303,6 @@ const AddPropertyContent = () => {
                           type="checkbox"
                           checked={visibilitySettings.propertyStatus}
                           onChange={() => toggleSetting("propertyStatus")}
-                        />
-                        <span className="slider"></span>
-                      </label>
-                    </div>
-                    <div className="setting-item">
-                      <div className="setting-info">
-                        <h5>Bidder List</h5>
-                        <p>Show list of other bidders</p>
-                      </div>
-                      <label className="toggle-switch">
-                        <input
-                          type="checkbox"
-                          checked={visibilitySettings.bidderList}
-                          onChange={() => toggleSetting("bidderList")}
                         />
                         <span className="slider"></span>
                       </label>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { conversations, user } from "@/lib/schema";
+import { conversations, user, property } from "@/lib/schema";
 import { eq, and, or } from "drizzle-orm";
 
 export async function GET(
@@ -16,7 +16,6 @@ export async function GET(
         const { conversationId } = await params;
         const userId = session.user.id;
 
-        // Fetch conversation
         const conversation = await db
             .select()
             .from(conversations)
@@ -37,7 +36,6 @@ export async function GET(
 
         const conv = conversation[0];
 
-        // Fetch other participant details
         const otherUserId =
             conv.participant1Id === userId
                 ? conv.participant2Id
@@ -54,9 +52,25 @@ export async function GET(
             .where(eq(user.id, otherUserId))
             .limit(1);
 
+        let propertyInfo = null;
+        if (conv.propertyId) {
+            const [prop] = await db
+                .select({
+                    id: property.id,
+                    title: property.title,
+                    address: property.address,
+                    saleId: property.saleId,
+                })
+                .from(property)
+                .where(eq(property.id, conv.propertyId))
+                .limit(1);
+            propertyInfo = prop || null;
+        }
+
         return NextResponse.json({
             ...conv,
             otherUser: otherUser[0],
+            property: propertyInfo,
         });
     } catch (error) {
         console.error("[CONVERSATION_GET]", error);

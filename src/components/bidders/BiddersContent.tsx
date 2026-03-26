@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import Footer from "@/components/footer/Footer";
+import { formatNumber, formatPhoneNumber } from "@/lib/format";
 
 type BidderRow = {
   id: string;
@@ -226,7 +227,7 @@ export default function BiddersContent() {
                       <tr key={b.id}>
                         <td data-label="Name">{b.name || "—"}</td>
                         <td data-label="Email">{b.email}</td>
-                        <td data-label="Phone">{b.phone || "—"}</td>
+                        <td data-label="Phone">{formatPhoneNumber(b.phone) || "—"}</td>
                         <td data-label="Added By">{b.creatorName || "—"}</td>
                         <td data-label="Linked Properties" className="linked-properties">
                           {typeof b.linkedPropertyCount === "number" ? (
@@ -245,7 +246,7 @@ export default function BiddersContent() {
                               }}
                               title="View linked properties"
                             >
-                              View properties ({b.linkedPropertyCount})
+                              View properties ({formatNumber(b.linkedPropertyCount)})
                             </button>
                           ) : (
                             <span style={{ color: "#6B7280" }}>—</span>

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import Footer from "@/components/footer/Footer";
+import { formatPhoneNumber } from "@/lib/format";
 
 const avatarFallback = "/assets/img/avatar-placeholder.svg";
 
@@ -204,7 +205,7 @@ export default function BidderDetailsContent({ id }: { id: string }) {
                                                 </div>
                                                 <div className="bp-icon-text">
                                                     <span className="bp-label">Phone</span>
-                                                    <span className="bp-value">{bidder.phone}</span>
+                                                    <span className="bp-value">{formatPhoneNumber(bidder.phone)}</span>
                                                 </div>
                                             </div>
                                         )}
@@ -337,7 +338,7 @@ export default function BidderDetailsContent({ id }: { id: string }) {
                                         </div>
                                         <div className="bp-info-details">
                                             <span className="bp-info-label">Phone Number</span>
-                                            <span className="bp-info-value">{bidder.phone || "—"}</span>
+                                            <span className="bp-info-value">{formatPhoneNumber(bidder.phone) || "—"}</span>
                                         </div>
                                     </div>
                                     <div className="bp-info-item">

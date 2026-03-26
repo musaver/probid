@@ -273,41 +273,7 @@ const Header = () => {
                 </Link>
               </div>
             </div>
-            <ul className="menu-list">
-              
-              <li className="menu-item-has-children">
-                <a href="#" className="drop-down">
-                  Pages
-                </a>
-                <i
-                  className={`dropdown-icon ${state.activeMenu === "page" ? "bi bi-dash" : "bi bi-plus"
-                    }`}
-                  onClick={() => collapseMenu("page")}
-                />
-                <ul
-                  className={`sub-menu ${state.activeMenu === "page" ? "d-block" : ""
-                    }`}
-                >
-                  <li className={pathName === "/category" ? "active" : ""}>
-                    <Link href="/category">Category</Link>
-                  </li>
-                  <li className={pathName === "/dashboard" ? "active" : ""}>
-                    <Link href="/dashboard">Dashboard</Link>
-                  </li>
-                  {session?.user?.type === "county" && (
-                    <li className={pathName === "/add-property" ? "active" : ""}>
-                      <Link href="/add-property">Add Property</Link>
-                    </li>
-                  )}
-                  <li className={pathName === "/property-details" ? "active" : ""}>
-                    <Link href="/property-details">Property Details</Link>
-                  </li>
-                  <li className={pathName === "/faq" ? "active" : ""}>
-                    <Link href="/faq">Faqs</Link>
-                  </li>
-                </ul>
-              </li>
-            </ul>
+
             <ul className="contact-area d-lg-none d-flex">
               <li>
                 <a href="mailto:info@example.com">

@@ -52,9 +52,7 @@ const PropertyDetailsContent = () => {
   const [visibilitySettings, setVisibilitySettings] = useState({
     minBid: true,
     currentBid: true,
-    bidHistory: false,
     propertyStatus: true,
-    bidderList: false,
     documents: true,
   });
 
@@ -446,25 +444,6 @@ const PropertyDetailsContent = () => {
                     </label>
                   </div>
 
-                  <div className="visibility-item">
-                    <div className="visibility-info">
-                      <div className="visibility-icon" style={{ color: '#8B5CF6' }}>
-                        <i className="bi bi-clock-history"></i>
-                      </div>
-                      <div className="visibility-text">
-                        <h4>Bid History</h4>
-                        <p>Show complete bidding history</p>
-                      </div>
-                    </div>
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={visibilitySettings.bidHistory}
-                        onChange={() => toggleVisibility('bidHistory')}
-                      />
-                      <span className="slider"></span>
-                    </label>
-                  </div>
 
                   <div className="visibility-item">
                     <div className="visibility-info">
@@ -486,25 +465,6 @@ const PropertyDetailsContent = () => {
                     </label>
                   </div>
 
-                  <div className="visibility-item">
-                    <div className="visibility-info">
-                      <div className="visibility-icon" style={{ color: '#EC4899' }}>
-                        <i className="bi bi-people"></i>
-                      </div>
-                      <div className="visibility-text">
-                        <h4>Bidder List</h4>
-                        <p>Show list of other bidders</p>
-                      </div>
-                    </div>
-                    <label className="toggle-switch">
-                      <input
-                        type="checkbox"
-                        checked={visibilitySettings.bidderList}
-                        onChange={() => toggleVisibility('bidderList')}
-                      />
-                      <span className="slider"></span>
-                    </label>
-                  </div>
 
                   <div className="visibility-item">
                     <div className="visibility-info">
@@ -532,7 +492,7 @@ const PropertyDetailsContent = () => {
                     <i className="bi bi-eye"></i>
                     Visibility Preview
                   </span>
-                  <p>Currently visible to bidders: <strong>{getVisibleCount()} of 6 items</strong></p>
+                  <p>Currently visible to bidders: <strong>{getVisibleCount()} of 4 items</strong></p>
                 </div>
               </div>
             )}

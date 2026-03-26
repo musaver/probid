@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import DashboardNav from "@/components/dashboard/DashboardNav";
+import { formatPhoneNumber } from "@/lib/format";
 
 const ProfileContent = () => {
   const { data: session } = useSession();
@@ -29,7 +30,7 @@ const ProfileContent = () => {
           setProfileData({
             fullName: data.user.name || "",
             email: data.user.email || "",
-            phone: data.user.phone || "",
+            phone: formatPhoneNumber(data.user.phone) || "",
             address: data.user.address || "",
             aboutMe: data.user.aboutMe || ""
           });
@@ -47,9 +48,10 @@ const ProfileContent = () => {
   }, [session]);
 
   const handleProfileChange = (e) => {
+    const { name, value } = e.target;
     setProfileData({
       ...profileData,
-      [e.target.name]: e.target.value
+      [name]: name === 'phone' ? formatPhoneNumber(value) : value
     });
   };
 
@@ -202,6 +204,7 @@ const ProfileContent = () => {
                     className="profile-input"
                     value={profileData.phone}
                     onChange={handleProfileChange}
+                    maxLength={22}
                   />
                 </div>
 

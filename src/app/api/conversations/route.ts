@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { conversations, user, messages } from "@/lib/schema";
-import { eq, or, and, desc } from "drizzle-orm";
+import { conversations, user, messages, property } from "@/lib/schema";
+import { eq, or, and, desc, isNotNull } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 
@@ -14,19 +14,20 @@ export async function GET(req: Request) {
 
         const userId = session.user.id;
 
-        // Fetch conversations where current user is participant
         const userConversations = await db
             .select()
             .from(conversations)
             .where(
-                or(
-                    eq(conversations.participant1Id, userId),
-                    eq(conversations.participant2Id, userId)
+                and(
+                    or(
+                        eq(conversations.participant1Id, userId),
+                        eq(conversations.participant2Id, userId)
+                    ),
+                    isNotNull(conversations.propertyId)
                 )
             )
             .orderBy(desc(conversations.lastMessageAt));
 
-        // Enrich with other participant details and unread count
         const enrichedConversations = await Promise.all(
             userConversations.map(async (conv) => {
                 const otherUserId =
@@ -45,7 +46,6 @@ export async function GET(req: Request) {
                     .where(eq(user.id, otherUserId))
                     .limit(1);
 
-                // Count unread messages (messages sent by other user that are not read)
                 const unreadMessages = await db
                     .select()
                     .from(messages)
@@ -57,10 +57,26 @@ export async function GET(req: Request) {
                         )
                     );
 
+                let propertyInfo = null;
+                if (conv.propertyId) {
+                    const [prop] = await db
+                        .select({
+                            id: property.id,
+                            title: property.title,
+                            address: property.address,
+                            saleId: property.saleId,
+                        })
+                        .from(property)
+                        .where(eq(property.id, conv.propertyId))
+                        .limit(1);
+                    propertyInfo = prop || null;
+                }
+
                 return {
                     ...conv,
                     otherUser: otherUser[0],
                     unreadCount: unreadMessages.length,
+                    property: propertyInfo,
                 };
             })
         );
@@ -77,26 +93,32 @@ export async function POST(req: Request) {
         const session = await getServerSession(authOptions);
         if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
-        const { otherUserId } = await req.json();
+        const { otherUserId, propertyId } = await req.json();
         const userId = session.user.id;
 
         if (!otherUserId) {
             return new NextResponse("Missing otherUserId", { status: 400 });
         }
+        if (!propertyId) {
+            return new NextResponse("Missing propertyId", { status: 400 });
+        }
 
-        // Check if conversation already exists
+        // Check if conversation already exists for this user pair + property
         const existingConv = await db
             .select()
             .from(conversations)
             .where(
-                or(
-                    and(
-                        eq(conversations.participant1Id, userId),
-                        eq(conversations.participant2Id, otherUserId)
-                    ),
-                    and(
-                        eq(conversations.participant1Id, otherUserId),
-                        eq(conversations.participant2Id, userId)
+                and(
+                    eq(conversations.propertyId, propertyId),
+                    or(
+                        and(
+                            eq(conversations.participant1Id, userId),
+                            eq(conversations.participant2Id, otherUserId)
+                        ),
+                        and(
+                            eq(conversations.participant1Id, otherUserId),
+                            eq(conversations.participant2Id, userId)
+                        )
                     )
                 )
             )
@@ -106,8 +128,6 @@ export async function POST(req: Request) {
             return NextResponse.json(existingConv[0]);
         }
 
-        // Create new conversation
-        // Generate a simple shared key (AES-256 compatible, 32 bytes hex)
         const sharedKey = crypto.randomBytes(32).toString("hex");
 
         const newConvId = uuidv4();
@@ -115,6 +135,7 @@ export async function POST(req: Request) {
             id: newConvId,
             participant1Id: userId,
             participant2Id: otherUserId,
+            propertyId,
             createdAt: new Date(),
             lastMessageAt: new Date(),
             sharedKey: sharedKey,

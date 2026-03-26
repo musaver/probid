@@ -28,9 +28,7 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
         () => ({
             minBid: true,
             currentBid: true,
-            bidHistory: false,
             propertyStatus: true,
-            bidderList: false,
             documents: false,
         }),
         []
@@ -62,9 +60,7 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
     const [visibilitySettings, setVisibilitySettings] = useState({
         minBid: true,
         currentBid: true,
-        bidHistory: false,
         propertyStatus: true,
-        bidderList: false,
         documents: false,
     });
 

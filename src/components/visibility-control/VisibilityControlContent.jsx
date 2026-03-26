@@ -7,9 +7,7 @@ const VisibilityControlContent = () => {
   const [visibilitySettings, setVisibilitySettings] = useState({
     minBid: true,
     currentBid: true,
-    bidHistory: false,
     propertyStatus: true,
-    bidderList: false,
     documents: false,
   });
   const [loading, setLoading] = useState(true);
@@ -28,9 +26,7 @@ const VisibilityControlContent = () => {
           setVisibilitySettings({
             minBid: !!vc.minBid,
             currentBid: !!vc.currentBid,
-            bidHistory: !!vc.bidHistory,
             propertyStatus: !!vc.propertyStatus,
-            bidderList: !!vc.bidderList,
             documents: !!vc.documents,
           });
         }
@@ -70,9 +66,7 @@ const VisibilityControlContent = () => {
               setVisibilitySettings({
                 minBid: !!vc.minBid,
                 currentBid: !!vc.currentBid,
-                bidHistory: !!vc.bidHistory,
                 propertyStatus: !!vc.propertyStatus,
-                bidderList: !!vc.bidderList,
                 documents: !!vc.documents,
               });
             }
@@ -142,21 +136,6 @@ const VisibilityControlContent = () => {
                   </label>
                 </div>
 
-                <div className="visibility-setting-item">
-                  <div className="visibility-setting-info">
-                    <h3 className="setting-name">Bid History</h3>
-                    <p className="setting-description">Show bid history</p>
-                  </div>
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={visibilitySettings.bidHistory}
-                      onChange={() => toggleSetting("bidHistory")}
-                      disabled={loading}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
 
                 <div className="visibility-setting-item">
                   <div className="visibility-setting-info">
@@ -174,21 +153,6 @@ const VisibilityControlContent = () => {
                   </label>
                 </div>
 
-                <div className="visibility-setting-item">
-                  <div className="visibility-setting-info">
-                    <h3 className="setting-name">Bidder List</h3>
-                    <p className="setting-description">Show bidder list</p>
-                  </div>
-                  <label className="toggle-switch">
-                    <input
-                      type="checkbox"
-                      checked={visibilitySettings.bidderList}
-                      onChange={() => toggleSetting("bidderList")}
-                      disabled={loading}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
 
                 <div className="visibility-setting-item">
                   <div className="visibility-setting-info">

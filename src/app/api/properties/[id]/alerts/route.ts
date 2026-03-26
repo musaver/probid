@@ -185,14 +185,17 @@ export async function POST(
           .select()
           .from(conversations)
           .where(
-            or(
-              and(
-                eq(conversations.participant1Id, senderId),
-                eq(conversations.participant2Id, bidderId)
-              ),
-              and(
-                eq(conversations.participant1Id, bidderId),
-                eq(conversations.participant2Id, senderId)
+            and(
+              eq(conversations.propertyId, params.id),
+              or(
+                and(
+                  eq(conversations.participant1Id, senderId),
+                  eq(conversations.participant2Id, bidderId)
+                ),
+                and(
+                  eq(conversations.participant1Id, bidderId),
+                  eq(conversations.participant2Id, senderId)
+                )
               )
             )
           )
@@ -203,11 +206,12 @@ export async function POST(
 
         if (!conversationId) {
           conversationId = uuidv4();
-          sharedKey = uuidv4(); // Generate new key for new conv
+          sharedKey = uuidv4();
           await db.insert(conversations).values({
             id: conversationId,
             participant1Id: senderId,
             participant2Id: bidderId,
+            propertyId: params.id,
             createdAt: new Date(),
             lastMessageAt: new Date(),
             sharedKey,

@@ -40,9 +40,7 @@ export async function PATCH(req: NextRequest) {
 
             updateData.visibilityMinBid = toBool(vc.minBid) ? 1 : 0;
             updateData.visibilityCurrentBid = toBool(vc.currentBid) ? 1 : 0;
-            updateData.visibilityBidHistory = toBool(vc.bidHistory) ? 1 : 0;
             updateData.visibilityPropertyStatus = toBool(vc.propertyStatus) ? 1 : 0;
-            updateData.visibilityBidderList = toBool(vc.bidderList) ? 1 : 0;
             updateData.visibilityDocuments = toBool(vc.documents) ? 1 : 0;
         }
 
@@ -77,9 +75,7 @@ export async function PATCH(req: NextRequest) {
                 visibilityControl: {
                     minBid: (userData as any).visibilityMinBid === 1,
                     currentBid: (userData as any).visibilityCurrentBid === 1,
-                    bidHistory: (userData as any).visibilityBidHistory === 1,
                     propertyStatus: (userData as any).visibilityPropertyStatus === 1,
-                    bidderList: (userData as any).visibilityBidderList === 1,
                     documents: (userData as any).visibilityDocuments === 1,
                 },
             },
@@ -130,9 +126,7 @@ export async function GET(req: NextRequest) {
                 visibilityControl: {
                     minBid: (userData as any).visibilityMinBid === 1,
                     currentBid: (userData as any).visibilityCurrentBid === 1,
-                    bidHistory: (userData as any).visibilityBidHistory === 1,
                     propertyStatus: (userData as any).visibilityPropertyStatus === 1,
-                    bidderList: (userData as any).visibilityBidderList === 1,
                     documents: (userData as any).visibilityDocuments === 1,
                 },
             },

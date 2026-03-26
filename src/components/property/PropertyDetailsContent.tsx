@@ -270,9 +270,7 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
     const [visibilitySettings, setVisibilitySettings] = useState({
         minBid: true,
         currentBid: true,
-        bidHistory: false,
         propertyStatus: true,
-        bidderList: false,
         documents: true,
     });
 
@@ -807,7 +805,7 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     <i className="bi bi-eye"></i>
                                     Visibility Preview
                                 </span>
-                                <p>Currently visible to bidders: <strong>{getVisibleCount()} of 6 items</strong></p>
+                                <p>Currently visible to bidders: <strong>{getVisibleCount()} of 4 items</strong></p>
                             </div>
                         </div>
                     )}

@@ -150,24 +150,33 @@ const SingleChatContent = ({ conversationId }) => {
                     {/* Chat Header */}
                     <div className="chat-header">
                         <div className="chat-user-info">
-                            <Link
-                                href={`/bidder-details/${conversation.otherUser?.id}`}
-                                style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none', color: 'inherit' }}
-                            >
-                                <img
-                                    src={conversation.otherUser?.image || "/assets/img/avatar-placeholder.svg"}
-                                    alt={conversation.otherUser?.name || "User"}
-                                    className="chat-avatar"
-                                    onError={(e) => { e.currentTarget.src = "/assets/img/avatar-placeholder.svg"; }}
-                                    style={{ cursor: 'pointer' }}
-                                />
-                                <div className="chat-user-details">
-                                    <h3 className="chat-user-name" style={{ cursor: 'pointer' }}>
+                            <img
+                                src={conversation.otherUser?.image || "/assets/img/avatar-placeholder.svg"}
+                                alt={conversation.otherUser?.name || "User"}
+                                className="chat-avatar"
+                                onError={(e) => { e.currentTarget.src = "/assets/img/avatar-placeholder.svg"; }}
+                                style={{ cursor: 'pointer', flexShrink: 0 }}
+                            />
+                            <div className="chat-user-details">
+                                {conversation.property && (
+                                    <Link
+                                        href={`/property-details/${conversation.property.id}`}
+                                        style={{ fontSize: '11px', color: '#6EA500', fontWeight: '600', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '3px', marginBottom: '2px' }}
+                                    >
+                                        <i className="bi bi-building" style={{ fontSize: '10px' }}></i>
+                                        {conversation.property.title || conversation.property.address || `Sale #${conversation.property.saleId}`}
+                                    </Link>
+                                )}
+                                <Link
+                                    href={`/bidder-details/${conversation.otherUser?.id}`}
+                                    style={{ textDecoration: 'none', color: 'inherit' }}
+                                >
+                                    <h3 className="chat-user-name" style={{ cursor: 'pointer', margin: 0 }}>
                                         {conversation.otherUser?.name || conversation.otherUser?.email}
                                     </h3>
-                                    <span className="chat-user-status">Encrypted Chat</span>
-                                </div>
-                            </Link>
+                                </Link>
+                                <span className="chat-user-status">Encrypted Chat</span>
+                            </div>
                         </div>
                         <button className="chat-menu-btn">
                             <i className="bi bi-three-dots-vertical"></i>

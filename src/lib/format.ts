@@ -34,3 +34,28 @@ export const formatDisplayCurrency = (value: string | number | null | undefined)
 export const parseCurrency = (value: string): string => {
     return value.replace(/[^0-9.]/g, "");
 };
+
+export const formatPhoneNumber = (value: string | null | undefined): string => {
+    if (!value) return "";
+    // Limit to 15 digits (standard E.164 size)
+    const phoneNumber = value.replace(/[^\d]/g, "").slice(0, 15);
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength < 4) return phoneNumber;
+    if (phoneNumberLength < 7) {
+        return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    }
+    if (phoneNumberLength <= 10) {
+        return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6)}`;
+    }
+    // International format: +[country] (XXX) XXX-XXXX
+    return `+${phoneNumber.slice(0, phoneNumberLength - 10)} (${phoneNumber.slice(phoneNumberLength - 10, phoneNumberLength - 7)}) ${phoneNumber.slice(phoneNumberLength - 7, phoneNumberLength - 4)}-${phoneNumber.slice(phoneNumberLength - 4)}`;
+};
+
+export const formatNumber = (value: string | number | null | undefined): string => {
+    if (value === null || value === undefined || value === "") return "";
+    const str = String(value).replace(/[^0-9.]/g, "");
+    if (!str) return "";
+    const parts = str.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return parts.join(".");
+};

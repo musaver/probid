@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import Footer from "@/components/footer/Footer";
 import BidderDocumentsManager from "@/components/bidder/BidderDocumentsManager";
+import { formatPhoneNumber } from "@/lib/format";
 
 const AddBidderContent = () => {
   const router = useRouter();
@@ -207,7 +208,8 @@ const AddBidderContent = () => {
                             type="tel"
                             placeholder="+1 (555) 123-4567"
                             value={form.phone}
-                            onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value }))}
+                            onChange={(e) => setForm((p) => ({ ...p, phone: formatPhoneNumber(e.target.value) }))}
+                            maxLength={22}
                           />
                         </div>
                       </div>

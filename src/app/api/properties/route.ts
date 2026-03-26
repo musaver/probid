@@ -10,9 +10,7 @@ import { sql } from "drizzle-orm";
 const defaultVisibilitySettings = {
     minBid: true,
     currentBid: true,
-    bidHistory: false,
     propertyStatus: true,
-    bidderList: false,
     documents: false,
 };
 

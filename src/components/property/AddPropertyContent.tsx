@@ -24,9 +24,7 @@ const AddPropertyContent = () => {
     const [visibilitySettings, setVisibilitySettings] = useState({
         minBid: true,
         currentBid: true,
-        bidHistory: false,
         propertyStatus: true,
-        bidderList: false,
         documents: false,
     });
     const visibilityTouchedRef = useRef(false);
@@ -151,9 +149,7 @@ const AddPropertyContent = () => {
                 setVisibilitySettings({
                     minBid: !!vc.minBid,
                     currentBid: !!vc.currentBid,
-                    bidHistory: !!vc.bidHistory,
                     propertyStatus: !!vc.propertyStatus,
-                    bidderList: !!vc.bidderList,
                     documents: !!vc.documents,
                 });
             } catch (e) {
