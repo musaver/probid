@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   //}
   const valid = await bcrypt.compare(password, hashedOtp);
   if (!valid) {
-    return NextResponse.json({ error: hashedOtp }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid OTP. Please check and try again.' }, { status: 400 });
   }
   // OTP valid: clean up and sign in user
   await db.delete(verification_tokens).where(eq(email, verification_tokens.identifier));
