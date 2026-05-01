@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 import { verification_tokens } from '@/lib/schema';
 import { v4 as uuidv4 } from 'uuid';
 import { sendWelcomeEmail } from '@/lib/email';
+import { generateUniqueBidderNumber } from '@/lib/bidder-utils';
 
 export async function POST(req: Request) {
   const { email, password, name } = await req.json();
@@ -37,17 +38,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, message: 'User logged in successfully.' });
   } else {
 
+    const bidderNumber = await generateUniqueBidderNumber();
+
     // Insert new user
     await db.insert(user).values({
       id: uuidv4(),
       email,
       name: name || null,
       type: 'bidder',
+      bidderNumber,
       createdAt: new Date(),
       updatedAt: new Date(),
     } as any);
 
-    await sendWelcomeEmail(email, name || undefined);
+    try {
+      await sendWelcomeEmail(email, name || undefined);
+    } catch (emailErr) {
+      console.error('[REGISTER_WELCOME_EMAIL_FAILED]', emailErr);
+    }
     return NextResponse.json({ success: true, message: 'User registered successfully.' });
   }
 }

@@ -7,6 +7,7 @@ import { and, eq, like, or, inArray, sql, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 import { v4 as uuidv4 } from "uuid";
 import { sendBidderInviteEmail } from "@/lib/email";
+import { generateUniqueBidderNumber } from "@/lib/bidder-utils";
 
 export async function GET(req: Request) {
   try {
@@ -179,7 +180,7 @@ export async function POST(req: Request) {
     const city = `${body?.city || ""}`.trim();
     const state = `${body?.state || ""}`.trim();
     const zipCode = `${body?.zipCode || ""}`.trim();
-    const bidderNumber = `${body?.bidderNumber || ""}`.trim();
+    const bidderNumber = `${body?.bidderNumber || ""}`.trim() || await generateUniqueBidderNumber();
     const notes = `${body?.notes || ""}`.trim();
 
     if (!email) return new NextResponse("Email is required", { status: 400 });
@@ -197,7 +198,7 @@ export async function POST(req: Request) {
         city: city || null,
         state: state || null,
         aboutMe: notes || null,
-        bidderNumber: bidderNumber || null,
+        bidderNumber: bidderNumber,
         type: "bidder",
         countyId: session.user.id, // Save the county user who invited this bidder
         createdAt: new Date(),

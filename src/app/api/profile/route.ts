@@ -123,6 +123,8 @@ export async function GET(req: NextRequest) {
                 phone: userData.phone,
                 address: userData.address,
                 aboutMe: userData.aboutMe,
+                bidderNumber: userData.bidderNumber ?? null,
+                userType: userData.type,
                 visibilityControl: {
                     minBid: (userData as any).visibilityMinBid === 1,
                     currentBid: (userData as any).visibilityCurrentBid === 1,

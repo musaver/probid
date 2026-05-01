@@ -16,7 +16,9 @@ const ProfileContent = () => {
     email: "",
     phone: "",
     address: "",
-    aboutMe: ""
+    aboutMe: "",
+    bidderNumber: "",
+    userType: ""
   });
 
   // Fetch user profile data on mount
@@ -32,7 +34,9 @@ const ProfileContent = () => {
             email: data.user.email || "",
             phone: formatPhoneNumber(data.user.phone) || "",
             address: data.user.address || "",
-            aboutMe: data.user.aboutMe || ""
+            aboutMe: data.user.aboutMe || "",
+            bidderNumber: data.user.bidderNumber || "",
+            userType: data.user.userType || ""
           });
         }
       } catch (error) {
@@ -195,6 +199,20 @@ const ProfileContent = () => {
                       style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
                   />
                 </div>
+
+                {profileData.userType === 'bidder' && profileData.bidderNumber && (
+                  <div className="profile-form-group">
+                    <label className="profile-label">Bidder Number</label>
+                    <input
+                      type="text"
+                      name="bidderNumber"
+                      className="profile-input"
+                      value={profileData.bidderNumber}
+                      disabled
+                      style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
+                    />
+                  </div>
+                )}
 
                 <div className="profile-form-group">
                   <label className="profile-label">Phone</label>
