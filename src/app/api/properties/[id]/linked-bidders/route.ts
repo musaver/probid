@@ -28,6 +28,7 @@ export async function GET(
                 name: user.name,
                 email: user.email,
                 image: user.image,
+                bidderNumber: user.bidderNumber,
             })
             .from(propertyLinkedBidders)
             .leftJoin(user, eq(propertyLinkedBidders.bidderId, user.id))

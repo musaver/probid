@@ -633,6 +633,9 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                                 <div className="bidder-info-text">
                                                     <h3>{bidder.name || "Unknown"}</h3>
                                                     <p className="bidder-email">{bidder.email}</p>
+                                                    {bidder.bidderNumber && (
+                                                        <p className="bidder-id">Bidder #: {bidder.bidderNumber}</p>
+                                                    )}
                                                     <p className="bidder-id">Status: {bidder.status}</p>
                                                 </div>
                                             </div>
