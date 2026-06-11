@@ -4,9 +4,25 @@ import FacebookProvider from "next-auth/providers/facebook";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "@/lib/db";
-import { user as userTable, account as accountTable } from "@/lib/schema";
+import { user as userTable, account as accountTable, userActivityLog } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { v4 as uuidv4 } from "uuid";
 import { sendWelcomeEmail } from "@/lib/email";
+
+// Record a bidder/county activity event (logins etc.) — BidBridge backend only.
+async function logActivity(userId: string | undefined | null, eventType: "login" | "logout") {
+  if (!userId) return;
+  try {
+    await db.insert(userActivityLog).values({
+      id: uuidv4(),
+      userId,
+      eventType,
+      createdAt: new Date(),
+    });
+  } catch (err) {
+    console.error(`[activity] failed to log ${eventType} for ${userId}`, err);
+  }
+}
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -136,6 +152,12 @@ export const authOptions: AuthOptions = {
       } catch (err) {
         console.error(` Error sending welcome email to ${user.email}`, err);
       }
+    },
+    async signIn({ user }) {
+      await logActivity(user?.id, "login");
+    },
+    async signOut({ token }) {
+      await logActivity(token?.id as string | undefined, "logout");
     },
   },
 }; 
