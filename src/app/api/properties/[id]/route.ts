@@ -108,7 +108,7 @@ export async function PATCH(
 
         // Only property creator can edit; also capture old status/address for notifications
         const [existing] = await db
-            .select({ id: property.id, createdBy: property.createdBy, status: property.status, address: property.address, title: property.title })
+            .select({ id: property.id, createdBy: property.createdBy, status: property.status, countyStatus: property.countyStatus, address: property.address, title: property.title })
             .from(property)
             .where(eq(property.id, params.id))
             .limit(1);
@@ -188,13 +188,24 @@ export async function PATCH(
             updateData.status = nextStatus;
         }
 
+        // County-only status (set by county, shown to bidders, NOT synced to OwnMidwest).
+        // Empty string clears it back to null.
+        const nextCountyStatus = has("countyStatus")
+            ? (body.countyStatus || null)
+            : existing.countyStatus;
+        if (has("countyStatus")) {
+            updateData.countyStatus = nextCountyStatus;
+        }
+
         await db
             .update(property)
             .set(updateData)
             .where(eq(property.id, params.id));
 
-        // Notify on status change (linked bidders + county)
-        if (existing.status !== nextStatus) {
+        // Notify on status OR county-status change (linked bidders + county)
+        const statusChanged = existing.status !== nextStatus;
+        const countyStatusChanged = existing.countyStatus !== nextCountyStatus;
+        if (statusChanged || countyStatusChanged) {
             const linked = await db
                 .select({ bidderId: propertyLinkedBidders.bidderId })
                 .from(propertyLinkedBidders)
@@ -204,10 +215,16 @@ export async function PATCH(
             linked.forEach((l) => targetIds.add(l.bidderId));
             targetIds.add(existing.createdBy);
 
+            // "redemption_letter_sent" -> "Redemption Letter Sent"
+            const pretty = (v: string | null) =>
+                v ? v.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) : "none";
+
             const href = `/property-details/${params.id}`;
-            const title = `Property status updated`;
-            const msg = `${existing.address || "Property"} status changed to ${nextStatus}.`;
             const createdAt = new Date();
+            const msg = countyStatusChanged
+                ? `${existing.address || "Property"} county status changed to ${pretty(nextCountyStatus)}.`
+                : `${existing.address || "Property"} status changed to ${nextStatus}.`;
+            const title = countyStatusChanged ? `County status updated` : `Property status updated`;
 
             for (const userId of Array.from(targetIds)) {
                 await db.insert(notifications).values({
@@ -217,7 +234,7 @@ export async function PATCH(
                     title,
                     message: msg,
                     href,
-                    metadata: { propertyId: params.id, status: nextStatus },
+                    metadata: { propertyId: params.id, status: nextStatus, countyStatus: nextCountyStatus },
                     isRead: 0,
                     createdAt,
                 });

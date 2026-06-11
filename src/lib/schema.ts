@@ -117,6 +117,15 @@ export const property = mysqlTable('property', {
     'deed_issued',
     'redeemed_check_issued',
   ]).default('active'),
+  // County-only workflow status. Set by the county, shown to bidders. NOT synced to
+  // OwnMidwest (kept off the sync mapping deliberately). null = not set.
+  countyStatus: mysqlEnum('county_status', [
+    'redemption_letter_sent',
+    'processing_check',
+    'redemption_check_sent',
+    'processing_tax_deed',
+    'sale_item_cancelled',
+  ]),
   createdBy: varchar('created_by', { length: 255 }).notNull(), // FK to user.id
   createdAt: datetime('created_at').notNull(),
   updatedAt: datetime('updated_at').notNull(),

@@ -343,6 +343,17 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 </p>
                             </div>
                             <span className="status-badge-large active">{property.status}</span>
+                            {(property.county_status || property.countyStatus) && (
+                                <span
+                                    className="status-badge-large"
+                                    style={{ marginLeft: '8px', background: '#FEF3C7', color: '#92400E' }}
+                                    title="County status (set by the county)"
+                                >
+                                    {String(property.county_status || property.countyStatus)
+                                        .replace(/_/g, ' ')
+                                        .replace(/\b\w/g, (c: string) => c.toUpperCase())}
+                                </span>
+                            )}
                         </div>
 
                         <div className="property-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '24px' }}>

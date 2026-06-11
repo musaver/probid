@@ -74,6 +74,7 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
         winningBid: "",
         winningBidderId: "",
         status: "active",
+        countyStatus: "",
     });
 
     const [auctionEndDate, setAuctionEndDate] = useState<Date | null>(null);
@@ -156,6 +157,7 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
                     winningBid: formatCurrency(p.winningBid),
                     winningBidderId: p.winningBidderId || "",
                     status: p.status || "active",
+                    countyStatus: p.county_status || p.countyStatus || "",
                 });
 
                 if (Array.isArray(p.owners) && p.owners.length > 0) {
@@ -766,6 +768,32 @@ export default function EditPropertyContent({ propertyId }: { propertyId: string
                                                         <option value="deed_in_progress">Deed in Progress</option>
                                                         <option value="deed_issued">Deed Issued</option>
                                                         <option value="redeemed_check_issued">Redeemed Check Issued</option>
+                                                    </select>
+                                                </div>
+                                                <div className="form-group">
+                                                    <label htmlFor="countyStatus" style={{ cursor: 'pointer' }}>
+                                                        County Status
+                                                    </label>
+                                                    <select
+                                                        id="countyStatus"
+                                                        name="countyStatus"
+                                                        value={formData.countyStatus}
+                                                        onChange={handleInputChange}
+                                                        style={{
+                                                            padding: '12px 15px',
+                                                            border: '1px solid #ddd',
+                                                            borderRadius: '23px',
+                                                            fontSize: '14px',
+                                                            backgroundColor: '#FFFFFF',
+                                                            width: '100%'
+                                                        }}
+                                                    >
+                                                        <option value="">— None —</option>
+                                                        <option value="redemption_letter_sent">Redemption Letter Sent</option>
+                                                        <option value="processing_check">Processing Check</option>
+                                                        <option value="redemption_check_sent">Redemption Check Sent</option>
+                                                        <option value="processing_tax_deed">Processing Tax Deed</option>
+                                                        <option value="sale_item_cancelled">Sale Item Cancelled</option>
                                                     </select>
                                                 </div>
                                             </div>
