@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 import PropertyDocumentsManager from "@/components/property/PropertyDocumentsManager";
 import { formatDateWithTime, formatDateOnly } from "@/lib/dateFormatter";
 import { formatCurrency, formatDisplayCurrency } from "@/lib/format";
+import FieldValue from "@/components/property/FieldValue";
 
 const PropertyDetailsContent = ({ id }: { id: string }) => {
     const { data: session } = useSession();
@@ -25,6 +26,55 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
     const [selectedBidderId, setSelectedBidderId] = useState<string>("");
     const [loadingBidData, setLoadingBidData] = useState(false);
     const [submittingBid, setSubmittingBid] = useState(false);
+
+    // Request a change (bidder/county → admin review)
+    const [showChangeModal, setShowChangeModal] = useState(false);
+    const [crField, setCrField] = useState("minBid");
+    const [crNewValue, setCrNewValue] = useState("");
+    const [crReason, setCrReason] = useState("");
+    const [submittingChange, setSubmittingChange] = useState(false);
+
+    const CHANGE_FIELDS: { key: string; label: string }[] = [
+        { key: "parcelId", label: "Map Number" },
+        { key: "saleId", label: "Sale ID" },
+        { key: "minBid", label: "Minimum Bid" },
+        { key: "winningBid", label: "Maximum Bid" },
+        { key: "status", label: "Tax Sale Status" },
+        { key: "address", label: "Property Address" },
+        { key: "owners", label: "Owner Name" },
+        { key: "auctionEnd", label: "Tax Sale Date" },
+    ];
+
+    const currentChangeValue = () => {
+        if (!property) return "";
+        const v = property[crField];
+        if (v == null) return "";
+        if (Array.isArray(v)) return v.join(", ");
+        return String(v);
+    };
+
+    const submitChangeRequest = async () => {
+        if (!crNewValue.trim()) { alert("Enter a new value."); return; }
+        setSubmittingChange(true);
+        try {
+            const res = await fetch("/api/change-requests", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ propertyId: id, fieldName: crField, newValue: crNewValue, reason: crReason }),
+            });
+            if (!res.ok) {
+                const e = await res.json().catch(() => null);
+                alert((Array.isArray(e) ? e.join("\n") : e?.error) || "Failed to submit request");
+                return;
+            }
+            alert("Change request submitted for admin review.");
+            setShowChangeModal(false);
+            setCrNewValue("");
+            setCrReason("");
+        } finally {
+            setSubmittingChange(false);
+        }
+    };
 
     const [showAlertModal, setShowAlertModal] = useState(false);
     const [alertSubject, setAlertSubject] = useState("");
@@ -342,7 +392,14 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                     Owners: {Array.isArray(property.owners) ? property.owners.join(", ") : property.owners}
                                 </p>
                             </div>
-                            <span className="status-badge-large active">{property.status}</span>
+                            <span className="status-badge-large active">
+                                <FieldValue
+                                    value={property.status}
+                                    fieldName="status"
+                                    lastChangedAt={property.lastChangedAt ?? property.last_changed_at}
+                                    lastChangedFields={property.lastChangedFields ?? property.last_changed_fields}
+                                />
+                            </span>
                             {(property.county_status || property.countyStatus) && (
                                 <span
                                     className="status-badge-large"
@@ -354,6 +411,17 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                         .replace(/\b\w/g, (c: string) => c.toUpperCase())}
                                 </span>
                             )}
+                            <button
+                                onClick={() => { setCrField("minBid"); setCrNewValue(""); setCrReason(""); setShowChangeModal(true); }}
+                                style={{
+                                    marginLeft: 'auto', padding: '8px 14px', background: '#fff',
+                                    border: '1px solid #6EA500', color: '#4d7400', borderRadius: '10px',
+                                    cursor: 'pointer', fontWeight: 600, fontSize: '13px', whiteSpace: 'nowrap',
+                                }}
+                            >
+                                <i className="bi bi-pencil-square" style={{ marginRight: '6px' }}></i>
+                                Request a change
+                            </button>
                         </div>
 
                         <div className="property-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginTop: '24px' }}>
@@ -382,7 +450,14 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 </div>
                                 <div>
                                     <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>MINIMUM BID</p>
-                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{formatDisplayCurrency(property.minBid)}</p>
+                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>
+                                        <FieldValue
+                                            value={formatDisplayCurrency(property.minBid)}
+                                            fieldName="minBid"
+                                            lastChangedAt={property.lastChangedAt ?? property.last_changed_at}
+                                            lastChangedFields={property.lastChangedFields ?? property.last_changed_fields}
+                                        />
+                                    </p>
                                 </div>
                             </div>
 
@@ -442,7 +517,14 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                                 </div>
                                 <div>
                                     <p style={{ fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', color: '#111827', marginBottom: '4px', letterSpacing: '0.5px' }}>WINNING BID</p>
-                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>{formatDisplayCurrency(property.winningBid) || "$0.00"}</p>
+                                    <p style={{ fontSize: '24px', fontWeight: '700', color: '#6EA500', margin: 0 }}>
+                                        <FieldValue
+                                            value={formatDisplayCurrency(property.winningBid) || "$0.00"}
+                                            fieldName="winningBid"
+                                            lastChangedAt={property.lastChangedAt ?? property.last_changed_at}
+                                            lastChangedFields={property.lastChangedFields ?? property.last_changed_fields}
+                                        />
+                                    </p>
                                 </div>
                             </div>
 
@@ -839,6 +921,84 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
                 </div>
             </div>
             <Footer />
+
+            {showChangeModal && (
+                <div className="app-modal-overlay" onClick={() => setShowChangeModal(false)}>
+                    <div className="app-modal app-modal--md" onClick={(e) => e.stopPropagation()}>
+                        <div className="app-modal-header">
+                            <div style={{ minWidth: 0 }}>
+                                <h2 className="app-modal-title">Request a change</h2>
+                                <div className="app-modal-subtitle" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                    {property?.address || "Property"}
+                                </div>
+                            </div>
+                            <button onClick={() => setShowChangeModal(false)} className="app-modal-close" aria-label="Close">×</button>
+                        </div>
+
+                        <div style={{ marginTop: "16px" }}>
+                            <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>Field</label>
+                            <select
+                                value={crField}
+                                onChange={(e) => setCrField(e.target.value)}
+                                style={{ width: "100%", padding: "12px", border: "1px solid #E5E7EB", borderRadius: "10px" }}
+                            >
+                                {CHANGE_FIELDS.map((f) => (
+                                    <option key={f.key} value={f.key}>{f.label}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div style={{ marginTop: "16px" }}>
+                            <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>Current value</label>
+                            <div style={{ padding: "12px", background: "#F9FAFB", borderRadius: "10px", color: "#6B7280" }}>
+                                {currentChangeValue() || "—"}
+                            </div>
+                        </div>
+
+                        <div style={{ marginTop: "16px" }}>
+                            <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>New value</label>
+                            <input
+                                type="text"
+                                value={crNewValue}
+                                onChange={(e) => setCrNewValue(e.target.value)}
+                                placeholder="Enter the corrected value"
+                                style={{ width: "100%", padding: "12px", border: "1px solid #E5E7EB", borderRadius: "10px" }}
+                            />
+                        </div>
+
+                        <div style={{ marginTop: "16px" }}>
+                            <label style={{ display: "block", marginBottom: "8px", fontWeight: 600 }}>Reason (optional)</label>
+                            <textarea
+                                value={crReason}
+                                onChange={(e) => setCrReason(e.target.value)}
+                                rows={3}
+                                placeholder="Why this change is needed"
+                                style={{ width: "100%", padding: "12px", border: "1px solid #E5E7EB", borderRadius: "10px", resize: "vertical" }}
+                            />
+                        </div>
+
+                        <div style={{ marginTop: "8px", fontSize: "12px", color: "#6B7280" }}>
+                            This is submitted to the admin for review — it does not change the value immediately.
+                        </div>
+
+                        <div style={{ marginTop: "16px", display: "flex", gap: "10px" }}>
+                            <button
+                                onClick={submitChangeRequest}
+                                disabled={submittingChange}
+                                style={{ padding: "12px 16px", background: "#6EA500", color: "#fff", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: 700, flex: 1 }}
+                            >
+                                {submittingChange ? "Submitting..." : "Submit request"}
+                            </button>
+                            <button
+                                onClick={() => setShowChangeModal(false)}
+                                style={{ padding: "12px 16px", background: "#fff", color: "#374151", border: "1px solid #E5E7EB", borderRadius: "10px", cursor: "pointer", fontWeight: 600 }}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showBidModal && (
                 <div
