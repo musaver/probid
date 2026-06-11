@@ -12,6 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { property, propertyChangeRequests } from '@/lib/schema';
+import { logActivity } from '@/lib/activity';
 
 // The reviewable fields → human label. Keys are property columns so we can snapshot old value.
 const EDITABLE_FIELDS: Record<string, string> = {
@@ -83,6 +84,7 @@ export async function POST(req: Request) {
     createdAt: new Date(),
   };
   await db.insert(propertyChangeRequests).values(row);
+  await logActivity(session.user.id, 'suggestion_submitted', { propertyId, fieldName, role });
 
   return NextResponse.json({ success: true, request: { ...row, label: EDITABLE_FIELDS[fieldName] } }, { status: 201 });
 }

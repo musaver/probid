@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { notifications, property, propertyBids, propertyLinkedBidders, user } from "@/lib/schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(
   req: Request,
@@ -120,6 +121,7 @@ export async function POST(
       amount: amount,
       createdAt: new Date(),
     });
+    await logActivity(bidderId, "bid_submitted", { propertyId: params.id, amount, recordedBy: session.user.id });
 
     // Create in-app notifications: bidder + property owner (county)
     const href = `/property-details/${params.id}`;
