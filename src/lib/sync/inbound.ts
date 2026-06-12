@@ -101,8 +101,18 @@ export async function recordInbox(args: {
   }
 }
 
-/** Upsert the identity-map / echo-suppression row for a property. */
-export async function recordInboundHash(propertyId: string, omMapId: string, omCountyId: number, hash: string) {
+/**
+ * Upsert the identity-map / echo-suppression row for a property.
+ * omSaleId: OwnMidwest's saleID for this record (when known from the inbound payload).
+ * It's stored so outbound UpdateTaxSale can send the matching, immutable saleID.
+ */
+export async function recordInboundHash(
+  propertyId: string,
+  omMapId: string,
+  omCountyId: number,
+  hash: string,
+  omSaleId?: string | null,
+) {
   const existing = await db
     .select({ propertyId: syncStatusMap.propertyId })
     .from(syncStatusMap)
@@ -112,13 +122,18 @@ export async function recordInboundHash(propertyId: string, omMapId: string, omC
   if (existing.length > 0) {
     await db
       .update(syncStatusMap)
-      .set({ lastInboundHash: hash, lastSyncedAt: new Date() })
+      .set({
+        lastInboundHash: hash,
+        lastSyncedAt: new Date(),
+        ...(omSaleId ? { omSaleId } : {}),
+      })
       .where(eq(syncStatusMap.propertyId, propertyId));
   } else {
     await db.insert(syncStatusMap).values({
       propertyId,
       omMapId,
       omCountyId,
+      omSaleId: omSaleId ?? null,
       omExists: 1,
       lastInboundHash: hash,
       lastSyncedAt: new Date(),

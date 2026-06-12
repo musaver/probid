@@ -99,7 +99,8 @@ export async function POST(req: Request) {
 
     // 9. Record echo-suppression hash + the inbox event
     const hash = sha256(updates);
-    await recordInboundHash(prop.id, mapId, countyId, hash);
+    const omSaleId = typeof body.saleId === 'string' && body.saleId ? body.saleId : null;
+    await recordInboundHash(prop.id, mapId, countyId, hash, omSaleId);
     const { duplicate } = await recordInbox({
       eventId, operation: OPERATION, mapId, countyId, status: 'processed',
       payload: body, result: statusNote || 'applied',
