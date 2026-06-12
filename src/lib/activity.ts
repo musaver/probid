@@ -11,7 +11,8 @@ export type ActivityEvent =
   | "bid_submitted"
   | "suggestion_submitted"
   | "profile_updated"
-  | "property_viewed";
+  | "property_viewed"
+  | "property_edited";
 
 export async function logActivity(
   userId: string | null | undefined,

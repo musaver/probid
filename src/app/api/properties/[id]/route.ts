@@ -6,6 +6,12 @@ import { notifications, property, propertyBids, propertyDocuments, propertyLinke
 import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
+import { logActivity } from "@/lib/activity";
+
+// Fields whose county edits the admin should be notified about, + a normalizer for diffing.
+const COUNTY_TRACKED_FIELDS = ["parcelId", "saleId", "minBid", "winningBid", "status", "countyStatus", "address", "owners", "auctionEnd"];
+const normField = (v: unknown): string =>
+    v == null ? "" : v instanceof Date ? new Date(v).toISOString() : typeof v === "object" ? JSON.stringify(v) : String(v);
 
 const defaultVisibilitySettings = {
     minBid: true,
@@ -106,9 +112,9 @@ export async function PATCH(
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // Only property creator can edit; also capture old status/address for notifications
+        // Only property creator can edit; capture the full current row for change diffing + notifications.
         const [existing] = await db
-            .select({ id: property.id, createdBy: property.createdBy, status: property.status, countyStatus: property.countyStatus, address: property.address, title: property.title })
+            .select()
             .from(property)
             .where(eq(property.id, params.id))
             .limit(1);
@@ -201,6 +207,19 @@ export async function PATCH(
             .update(property)
             .set(updateData)
             .where(eq(property.id, params.id));
+
+        // Notify the Admin panel of county-related changes: log which tracked fields
+        // actually changed to the activity feed (admin reviews county changes there).
+        const countyChangedFields = COUNTY_TRACKED_FIELDS.filter(
+            (f) => f in updateData && normField(updateData[f]) !== normField((existing as Record<string, unknown>)[f])
+        );
+        if (countyChangedFields.length > 0) {
+            await logActivity(session.user.id, "property_edited", {
+                propertyId: params.id,
+                fields: countyChangedFields,
+                address: existing.address,
+            });
+        }
 
         // Notify on status OR county-status change (linked bidders + county)
         const statusChanged = existing.status !== nextStatus;
