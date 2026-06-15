@@ -76,6 +76,11 @@ export async function POST(req: Request) {
 
     if (body.minimumBid != null) updates.minBid = String(body.minimumBid);
     if (body.maximumBid != null) updates.winningBid = String(body.maximumBid);
+    // OwnMidwest's bidderInfo is the winning bidder's county-issued number — store it so
+    // we can verify bidder claims ("I'm #34 in Greenville and won this property").
+    if (body.bidderInfo != null && String(body.bidderInfo).trim() !== '') {
+      updates.winningBidderNumber = String(body.bidderInfo).trim();
+    }
     if (typeof body.notes === 'string') updates.description = body.notes;
     if (typeof body.saleId === 'string' && body.saleId) updates.saleId = body.saleId;
     if (body.taxSaleDate) {

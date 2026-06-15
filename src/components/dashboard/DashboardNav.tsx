@@ -57,6 +57,14 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab }) => {
                                 <span>Properties</span>
                             </Link>
                         </SwiperSlide>
+                        {!isCounty && (
+                            <SwiperSlide style={{ width: "auto" }}>
+                                <Link href="/my-claims" className={`nav-item ${activeTab === 'my-claims' ? 'active' : ''}`}>
+                                    <i className="bi bi-trophy"></i>
+                                    <span>My Bids</span>
+                                </Link>
+                            </SwiperSlide>
+                        )}
                         {isCounty && (
                             <SwiperSlide style={{ width: "auto" }}>
                                 <Link
