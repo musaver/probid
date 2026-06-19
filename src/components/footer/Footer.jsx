@@ -33,7 +33,9 @@ const Footer = () => {
                     <ul className="widget-list">
                       <li><Link href="/about">About us</Link></li>
                       <li><Link href="/faq">F.A.Q</Link></li>
+                      {/* Hidden for now — re-enable when "Our Brand" page is ready:
                       <li><a href="#">Our Brand</a></li>
+                      */}
                     </ul>
                   </div>
                 </div>
@@ -50,6 +52,7 @@ const Footer = () => {
                     </ul>
                   </div>
                 </div>
+                {/* Hidden for now — re-enable & wire to a mailing list when ready:
                 <div className="col-lg-3 col-md-6">
                   <div className="newletter-and-payment-wrap">
                     <div className="newletter-area">
@@ -64,6 +67,7 @@ const Footer = () => {
 
                   </div>
                 </div>
+                */}
               </div>
             </div>
             <div className="footer-bottom">
