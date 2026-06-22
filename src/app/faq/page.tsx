@@ -50,7 +50,15 @@ export default function FaqPage() {
             <p style={{ margin: "8px 0 0", color: "#4B5563" }}>{f.a}</p>
             {f.list && (
               <ul style={{ margin: "10px 0 0", paddingLeft: 20, color: "#4B5563" }}>
-                {f.list.map((item, j) => <li key={j} style={{ marginBottom: 4 }}>{item}</li>)}
+                {f.list.map((item, j) => {
+                  const [label, ...rest] = item.split(" — ");
+                  return (
+                    <li key={j} style={{ marginBottom: 6 }}>
+                      <strong style={{ color: "#1F2937" }}>{label}</strong>
+                      {rest.length > 0 && <> — {rest.join(" — ")}</>}
+                    </li>
+                  );
+                })}
               </ul>
             )}
             {f.after && <p style={{ margin: "10px 0 0", color: "#6B7280" }}>{f.after}</p>}
