@@ -67,6 +67,8 @@ const Header = () => {
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const pathName = usePathname()
+  // Hide the property search box on the login/register page
+  const isAuthPage = pathName === "/register";
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
@@ -304,6 +306,7 @@ const Header = () => {
                 </a>
               </li>
             </ul>
+            {!isAuthPage && (
             <form className="d-lg-none d-flex">
               <div className="form-inner">
                 <input type="text" placeholder="Search your product..." />
@@ -312,6 +315,7 @@ const Header = () => {
                 </button>
               </div>
             </form>
+            )}
             <div className="btn-area d-lg-none d-flex">
               <Link href={session ? "/dashboard" : "/register"} className="login-btn btn-hover">
                 <svg
@@ -329,6 +333,8 @@ const Header = () => {
           </div>
         </div>
         <div className="nav-right d-flex jsutify-content-end align-items-center">
+          {!isAuthPage && (
+          <>
           <form className="d-xl-flex d-none">
             <div ref={searchRef} className="form-inner" style={{ borderRadius: "25px", position: "relative" }}>
               <input
@@ -452,6 +458,8 @@ const Header = () => {
               </form>
             </div>
           </div>
+          </>
+          )}
           {session && (
             <div
               style={{

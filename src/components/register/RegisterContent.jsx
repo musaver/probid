@@ -186,6 +186,7 @@ const RegisterContent = () => {
                                     </form>
                                 )}
 
+                                {/* Social login (Google / Facebook) — hidden for now. Uncomment to re-enable.
                                 <div className="divider">
                                     <span>OR</span>
                                 </div>
@@ -208,6 +209,7 @@ const RegisterContent = () => {
                                         Continue with Facebook
                                     </button>
                                 </div>
+                                */}
 
                             </div>
                         </div>
