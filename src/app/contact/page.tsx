@@ -1,5 +1,6 @@
 import React from "react";
 import ContentPage from "@/components/content/ContentPage";
+import ContactForm from "@/components/content/ContactForm";
 import { SITE } from "@/lib/site";
 
 const h3 = { marginTop: 26, marginBottom: 8, fontSize: 18, fontWeight: 700, color: "#1F2937" } as React.CSSProperties;
@@ -29,6 +30,13 @@ export default function ContactPage() {
         <a href={`mailto:${SITE.supportEmail}`} style={{ color: "#4d7400", fontWeight: 600 }}>{SITE.supportEmail}</a>{" "}
         and we&apos;ll follow up with details on getting set up.
       </p>
+
+      <h3 style={h3}>Send us a message</h3>
+      <p style={{ margin: "0 0 18px", color: "#4B5563" }}>
+        Fill in the form below and we&apos;ll reply by email. Prefer your own mail app? Write to us at{" "}
+        <a href={`mailto:${SITE.supportEmail}`} style={{ color: "#4d7400", fontWeight: 600 }}>{SITE.supportEmail}</a>.
+      </p>
+      <ContactForm />
 
       <p style={{ marginTop: 24, color: "#6B7280" }}>
         We typically respond within {SITE.responseTime}. BidBridge is an independent service and is not a
