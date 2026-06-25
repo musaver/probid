@@ -67,8 +67,12 @@ const Header = () => {
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [state, dispatch] = useReducer(reducer, initialState);
   const pathName = usePathname()
-  // Hide the property search box on the login/register page
-  const isAuthPage = pathName === "/register";
+  // Hide the property search box on the register (auth) page. Match the
+  // trailing "/register" segment defensively so it still works with a trailing
+  // slash or when the app is served under a base path / reverse-proxy subpath
+  // (where usePathname() can return e.g. "/app/register").
+  const normalizedPath = (pathName || "").replace(/\/+$/, "");
+  const isAuthPage = normalizedPath.endsWith("/register");
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
