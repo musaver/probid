@@ -18,10 +18,6 @@ const Footer = () => {
                     <div className="footer-logo">
                       <Image src="/images/logo.png" alt="Bid Bridge logo" width={120} height={120} style={{ objectFit: "contain" }} />
                     </div>
-                    <div className="social-area">
-                      <h5>About Us!</h5>
-                      <p>A small about paragraph</p>
-                    </div>
                   </div>
                 </div>
 
@@ -98,51 +94,6 @@ const Footer = () => {
         :global(.footer-logo-area.simple .footer-logo) {
           text-align: left !important;
           margin-bottom: 20px;
-        }
-
-        /* Social Area Left Alignment */
-        :global(.footer-logo-area.simple .social-area) {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start !important;
-          text-align: left !important;
-          width: 100%;
-          max-width: 100%;
-        }
-
-        :global(.social-area h5) {
-          white-space: normal;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          max-width: 100%;
-          text-align: left !important;
-          margin: 0 0 8px 0;
-        }
-
-        :global(.social-area p) {
-          text-align: left !important;
-          margin: 0 0 12px 0;
-        }
-
-        /* Ensure Social Icons Stay Horizontal and Left-Aligned */
-        :global(.social-area .social-list) {
-          display: flex !important;
-          flex-direction: row !important;
-          align-items: center !important;
-          justify-content: flex-start !important;
-          flex-wrap: wrap;
-          gap: 20px;
-          padding: 0;
-          margin: 0;
-          list-style: none;
-          text-align: left !important;
-        }
-
-        :global(.social-area .social-list li) {
-          display: inline-flex;
-          flex-direction: column;
-          align-items: center;
-          text-align: center;
         }
 
         /* Ensure Footer Bottom Layout */
