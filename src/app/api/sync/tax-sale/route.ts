@@ -74,6 +74,10 @@ export async function POST(req: Request) {
     // 7. Build the update from whatever fields are present
     const updates: Partial<typeof property.$inferInsert> = { updatedAt: new Date() };
 
+    // Record the OwnMidwest county on the property itself so the admin can group/filter
+    // by real county (kept in sync with sync_status_map.om_county_id).
+    if (countyId || countyId === 0) updates.omCountyId = countyId;
+
     if (body.minimumBid != null) updates.minBid = String(body.minimumBid);
     if (body.maximumBid != null) updates.winningBid = String(body.maximumBid);
     // OwnMidwest's bidderInfo is the winning bidder's county-issued number — store it so
