@@ -17,6 +17,7 @@ import { bidderClaim, bidderClaimItem, property, syncStatusMap } from '@/lib/sch
 type Match = 'matched' | 'mismatch' | 'not_found';
 
 async function matchOne(enteredValue: string, omCountyId: number, bidderNumber: string): Promise<{ resolvedPropertyId: string | null; matchStatus: Match }> {
+  // Exact match on the Sale ID or parcel, exactly as the bidder typed it.
   const [prop] = await db
     .select({ id: property.id, num: property.winningBidderNumber, county: syncStatusMap.omCountyId })
     .from(property)
@@ -44,9 +45,10 @@ export async function POST(req: Request) {
   const bidderNumber = typeof body.bidderNumber === 'string' ? body.bidderNumber.trim() : '';
   const receiptUrl = typeof body.receiptUrl === 'string' && body.receiptUrl.trim() ? body.receiptUrl.trim() : null;
   const rawProps = Array.isArray(body.properties) ? body.properties : [];
-  // Accept an array, or a newline/comma separated string; strip spaces/dashes per client.
+  // Store the Sale ID / Map Number EXACTLY as the bidder typed it (keep dashes). Matching
+  // ignores dashes/spaces on both sides (see matchOne), so the saved value stays readable.
   const entered = rawProps
-    .map((v) => String(v).replace(/[\s-]/g, '').trim())
+    .map((v) => String(v).trim())
     .filter((v) => v.length > 0);
 
   const errors: string[] = [];
