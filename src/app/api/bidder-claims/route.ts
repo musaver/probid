@@ -42,6 +42,7 @@ export async function POST(req: Request) {
 
   const omCountyId = Number(body.omCountyId);
   const bidderNumber = typeof body.bidderNumber === 'string' ? body.bidderNumber.trim() : '';
+  const receiptUrl = typeof body.receiptUrl === 'string' && body.receiptUrl.trim() ? body.receiptUrl.trim() : null;
   const rawProps = Array.isArray(body.properties) ? body.properties : [];
   // Accept an array, or a newline/comma separated string; strip spaces/dashes per client.
   const entered = rawProps
@@ -62,6 +63,7 @@ export async function POST(req: Request) {
     omCountyId,
     bidderNumber,
     status: 'pending',
+    receiptUrl,
     createdAt: now,
   });
 

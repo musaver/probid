@@ -11,7 +11,7 @@ type County = { omId: number; name: string };
 type ClaimItem = { id: string; enteredValue: string; matchStatus: string };
 type Claim = {
   id: string; omCountyId: number; bidderNumber: string; status: string;
-  note: string | null; createdAt: string; items: ClaimItem[];
+  note: string | null; receiptUrl: string | null; createdAt: string; items: ClaimItem[];
 };
 
 const statusStyle: Record<string, React.CSSProperties> = {
@@ -33,6 +33,7 @@ export default function MyClaimsPage() {
   const [countyId, setCountyId] = useState("");
   const [bidderNumber, setBidderNumber] = useState("");
   const [propsText, setPropsText] = useState("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
@@ -63,10 +64,24 @@ export default function MyClaimsPage() {
     }
     setSubmitting(true);
     try {
+      // Optional: upload the bid receipt first, then attach its URL to the claim.
+      let receiptUrl: string | null = null;
+      if (receiptFile) {
+        const fd = new FormData();
+        fd.append("file", receiptFile);
+        const up = await fetch("/api/bidder-claims/upload", { method: "POST", body: fd });
+        if (!up.ok) {
+          const e2 = await up.json().catch(() => null);
+          setMsg({ type: "err", text: e2?.error || "Receipt upload failed." });
+          return;
+        }
+        receiptUrl = (await up.json()).url;
+      }
+
       const res = await fetch("/api/bidder-claims", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ omCountyId: Number(countyId), bidderNumber: bidderNumber.trim(), properties }),
+        body: JSON.stringify({ omCountyId: Number(countyId), bidderNumber: bidderNumber.trim(), properties, receiptUrl }),
       });
       if (!res.ok) {
         const e2 = await res.json().catch(() => null);
@@ -74,7 +89,7 @@ export default function MyClaimsPage() {
         return;
       }
       setMsg({ type: "ok", text: "Claim submitted — your properties will appear once an admin verifies it." });
-      setBidderNumber(""); setPropsText(""); setCountyId("");
+      setBidderNumber(""); setPropsText(""); setCountyId(""); setReceiptFile(null);
       await load();
     } finally {
       setSubmitting(false);
@@ -141,6 +156,25 @@ export default function MyClaimsPage() {
                       placeholder={"SALE1001\n0604060101310"} style={{ resize: "vertical" }} />
                   </div>
 
+                  <div className="profile-form-group">
+                    <label className="profile-label">Bid Receipt (optional — PDF or photo, helps us verify faster)</label>
+                    <input
+                      type="file"
+                      className="profile-input"
+                      accept=".pdf,image/*"
+                      onChange={(e) => setReceiptFile(e.target.files?.[0] || null)}
+                    />
+                    {receiptFile && (
+                      <p style={{ color: "#6B7280", fontSize: 13, marginTop: 6 }}>
+                        Selected: {receiptFile.name}{" "}
+                        <button type="button" onClick={() => setReceiptFile(null)}
+                          style={{ background: "none", border: "none", color: "#991B1B", cursor: "pointer", textDecoration: "underline" }}>
+                          remove
+                        </button>
+                      </p>
+                    )}
+                  </div>
+
                   <button type="submit" className="profile-btn" disabled={submitting}>
                     {submitting ? "Submitting…" : "Submit Claim"}
                   </button>
@@ -164,6 +198,14 @@ export default function MyClaimsPage() {
                         </div>
                         {c.status === "rejected" && c.note && (
                           <div style={{ color: "#991B1B", fontSize: 13, marginBottom: 8 }}>Reason: {c.note}</div>
+                        )}
+                        {c.receiptUrl && (
+                          <div style={{ marginBottom: 8 }}>
+                            <a href={c.receiptUrl} target="_blank" rel="noopener noreferrer"
+                              style={{ color: "#4d7400", fontSize: 13, fontWeight: 600 }}>
+                              View attached receipt
+                            </a>
+                          </div>
                         )}
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {c.items.map((it) => {
