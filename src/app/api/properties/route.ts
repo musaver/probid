@@ -247,6 +247,7 @@ export async function GET(req: Request) {
                     status: property.status,
                     createdBy: property.createdBy,
                     creatorName: sql<string>`(SELECT name FROM user WHERE id = ${property.createdBy} LIMIT 1)`,
+                    countyName: sql<string | null>`(SELECT om_name FROM sync_lookup WHERE kind = 'county' AND om_id = ${property.omCountyId} LIMIT 1)`,
                     createdAt: property.createdAt,
                     updatedAt: property.updatedAt,
                 })

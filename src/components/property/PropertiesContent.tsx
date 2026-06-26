@@ -569,7 +569,7 @@ const PropertiesContent = () => {
                                     <tr>
                                         {[
                                             { label: 'Parcel ID', key: 'parcelId' },
-                                            ...(!isCounty ? [{ label: 'County', key: 'creatorName' }] : []),
+                                            ...(!isCounty ? [{ label: 'County', key: 'countyName' }] : []),
                                             { label: 'Owner Name(s)', key: 'owners' },
                                             { label: 'Added', key: 'createdAt' },
                                             { label: 'Min Bid', key: 'minBid' },
@@ -613,7 +613,7 @@ const PropertiesContent = () => {
                                                 </td>
                                                 {!isCounty && (
                                                     <td data-label="County">
-                                                        <div style={{ fontWeight: 600 }}>{property.creatorName || "Unknown"}</div>
+                                                        <div style={{ fontWeight: 600 }}>{property.countyName || "Unassigned"}</div>
                                                     </td>
                                                 )}
                                                 <td data-label="Owner Name(s)">
