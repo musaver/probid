@@ -121,6 +121,16 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab }) => {
                         </SwiperSlide>
 
                         <SwiperSlide style={{ width: "auto" }}>
+                            <Link
+                                className={`nav-item ${activeTab === "support" ? "active" : ""}`}
+                                href="/support"
+                            >
+                                <i className="bi bi-headset"></i>
+                                <span>Contact Admin</span>
+                            </Link>
+                        </SwiperSlide>
+
+                        <SwiperSlide style={{ width: "auto" }}>
                             <button className="nav-item" onClick={handleLogout} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                                 <i className="bi bi-box-arrow-right"></i>
                                 <span>Logout</span>
