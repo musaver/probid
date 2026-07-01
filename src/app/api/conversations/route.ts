@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { conversations, user, messages, property } from "@/lib/schema";
-import { eq, or, and, desc, isNotNull } from "drizzle-orm";
+import { eq, or, and, desc, isNotNull, inArray, sql } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "crypto";
 
@@ -28,58 +28,56 @@ export async function GET(req: Request) {
             )
             .orderBy(desc(conversations.lastMessageAt));
 
-        const enrichedConversations = await Promise.all(
-            userConversations.map(async (conv) => {
-                const otherUserId =
-                    conv.participant1Id === userId
-                        ? conv.participant2Id
-                        : conv.participant1Id;
+        if (userConversations.length === 0) {
+            return NextResponse.json([]);
+        }
 
-                const otherUser = await db
-                    .select({
-                        id: user.id,
-                        name: user.name,
-                        image: user.image,
-                        email: user.email,
-                    })
-                    .from(user)
-                    .where(eq(user.id, otherUserId))
-                    .limit(1);
+        // Batch-load everything in a fixed number of queries (no per-conversation N+1):
+        const otherUserIds = Array.from(new Set(
+            userConversations.map((c) => (c.participant1Id === userId ? c.participant2Id : c.participant1Id))
+        ));
+        const propertyIds = Array.from(new Set(
+            userConversations.map((c) => c.propertyId).filter((id): id is string => !!id)
+        ));
+        const conversationIds = userConversations.map((c) => c.id);
 
-                const unreadMessages = await db
-                    .select()
-                    .from(messages)
-                    .where(
-                        and(
-                            eq(messages.conversationId, conv.id),
-                            eq(messages.senderId, otherUserId),
-                            eq(messages.isRead, 0)
-                        )
-                    );
-
-                let propertyInfo = null;
-                if (conv.propertyId) {
-                    const [prop] = await db
-                        .select({
-                            id: property.id,
-                            title: property.title,
-                            address: property.address,
-                            saleId: property.saleId,
-                        })
-                        .from(property)
-                        .where(eq(property.id, conv.propertyId))
-                        .limit(1);
-                    propertyInfo = prop || null;
-                }
-
-                return {
-                    ...conv,
-                    otherUser: otherUser[0],
-                    unreadCount: unreadMessages.length,
-                    property: propertyInfo,
-                };
+        const [otherUsers, props, unreadRows] = await Promise.all([
+            otherUserIds.length
+                ? db.select({ id: user.id, name: user.name, image: user.image, email: user.email })
+                    .from(user).where(inArray(user.id, otherUserIds))
+                : Promise.resolve([] as { id: string; name: string | null; image: string | null; email: string }[]),
+            propertyIds.length
+                ? db.select({ id: property.id, title: property.title, address: property.address, saleId: property.saleId })
+                    .from(property).where(inArray(property.id, propertyIds))
+                : Promise.resolve([] as { id: string; title: string | null; address: string | null; saleId: string }[]),
+            // Unread counts per conversation (messages the OTHER side sent that I haven't read).
+            db.select({
+                conversationId: messages.conversationId,
+                senderId: messages.senderId,
+                count: sql<number>`count(*)`,
             })
-        );
+                .from(messages)
+                .where(and(inArray(messages.conversationId, conversationIds), eq(messages.isRead, 0)))
+                .groupBy(messages.conversationId, messages.senderId),
+        ]);
+
+        const userMap = new Map(otherUsers.map((u) => [u.id, u]));
+        const propMap = new Map(props.map((p) => [p.id, p]));
+
+        const enrichedConversations = userConversations.map((conv) => {
+            const otherUserId = conv.participant1Id === userId ? conv.participant2Id : conv.participant1Id;
+            // Unread = messages in this conversation, sent by the other user, that are unread.
+            const unreadCount = unreadRows
+                .filter((r) => r.conversationId === conv.id && r.senderId === otherUserId)
+                .reduce((sum, r) => sum + Number(r.count), 0);
+
+            return {
+                ...conv,
+                otherUser: userMap.get(otherUserId) || null,
+                unreadCount,
+                property: conv.propertyId ? (propMap.get(conv.propertyId) || null) : null,
+            };
+        });
 
         return NextResponse.json(enrichedConversations);
     } catch (error) {

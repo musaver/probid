@@ -121,11 +121,21 @@ const Header = () => {
     if (!session) return;
     fetchNotifications();
     fetchMessages();
-    const t = setInterval(fetchNotifications, 30000);
-    const t2 = setInterval(fetchMessages, 30000);
+    // Poll every 30s, but SKIP while the tab is in the background (saves DB load on idle
+    // tabs). Refresh immediately when the user comes back to the tab.
+    const tick = () => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      fetchNotifications();
+      fetchMessages();
+    };
+    const t = setInterval(tick, 30000);
+    const onVisible = () => {
+      if (!document.hidden) { fetchNotifications(); fetchMessages(); }
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       clearInterval(t);
-      clearInterval(t2);
+      document.removeEventListener("visibilitychange", onVisible);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
