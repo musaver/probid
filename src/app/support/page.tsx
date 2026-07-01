@@ -15,7 +15,7 @@ export default function SupportPage() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
-  const endRef = useRef<HTMLDivElement>(null);
+  const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/register");
@@ -37,8 +37,9 @@ export default function SupportPage() {
     return () => clearInterval(t);
   }, [session, load]);
 
+  // Scroll only the chat box to its bottom — NOT the whole page (which would jump to the footer).
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (boxRef.current) boxRef.current.scrollTop = boxRef.current.scrollHeight;
   }, [messages]);
 
   const send = async (e: React.FormEvent) => {
@@ -82,7 +83,7 @@ export default function SupportPage() {
                   Message the BidBridge team directly. We&apos;ll reply here, and you&apos;ll also get any updates in this thread.
                 </p>
 
-                <div style={{ border: "1px solid #E5E7EB", borderRadius: 10, padding: 16, height: 380, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, background: "#FAFAFA" }}>
+                <div ref={boxRef} style={{ border: "1px solid #E5E7EB", borderRadius: 10, padding: 16, height: 380, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10, background: "#FAFAFA" }}>
                   {messages.length === 0 ? (
                     <p style={{ color: "#9CA3AF", margin: "auto" }}>No messages yet — send us a message below.</p>
                   ) : (
@@ -105,7 +106,6 @@ export default function SupportPage() {
                       );
                     })
                   )}
-                  <div ref={endRef} />
                 </div>
 
                 <form onSubmit={send} style={{ display: "flex", gap: 8, marginTop: 12 }}>
