@@ -184,6 +184,18 @@ export default function MyClaimsPage() {
               {/* Your claims */}
               <div className="profile-card">
                 <h2 className="profile-card-title">Your Claims</h2>
+
+                <div style={{ background: "#F3F7EC", border: "1px solid #E2ECD0", borderRadius: 10, padding: "12px 16px", marginBottom: 16, fontSize: 13, color: "#4B5563" }}>
+                  <strong style={{ color: "#1F2937" }}>How verification works:</strong> You submit a claim → a county admin reviews it → once approved, your properties appear in your{" "}
+                  <strong style={{ color: "#1F2937" }}>Properties</strong> page and you get an email.
+                  <div style={{ marginTop: 8, display: "flex", flexDirection: "column", gap: 3 }}>
+                    <span><strong style={{ color: "#92400E" }}>Pending</strong> — waiting for an admin to review your claim.</span>
+                    <span><strong style={{ color: "#166534" }}>Verified</strong> — approved; your properties are now in your account.</span>
+                    <span><strong style={{ color: "#991B1B" }}>Rejected</strong> — not approved (the reason is shown on the claim).</span>
+                    <span><strong>&quot;Awaiting results&quot;</strong> next to a property means the county hasn&apos;t recorded the winning bidder number yet — an admin will still review your claim.</span>
+                  </div>
+                </div>
+
                 {claims.length === 0 ? (
                   <p style={{ color: "#6B7280" }}>You haven&apos;t submitted any claims yet.</p>
                 ) : (
@@ -209,7 +221,13 @@ export default function MyClaimsPage() {
                         )}
                         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                           {c.items.map((it) => {
-                            const m = matchLabel[it.matchStatus] || { text: it.matchStatus, color: "#6B7280" };
+                            // Once the claim is verified, the per-item auto-match label ("Awaiting
+                            // results" etc.) is no longer relevant — show it as in the bidder's account.
+                            const m = c.status === "verified"
+                              ? { text: "✓ In your account", color: "#166534" }
+                              : c.status === "rejected"
+                                ? { text: "—", color: "#9CA3AF" }
+                                : (matchLabel[it.matchStatus] || { text: it.matchStatus, color: "#6B7280" });
                             return (
                               <div key={it.id} style={{ display: "flex", justifyContent: "space-between", fontSize: 14 }}>
                                 <span style={{ fontFamily: "monospace" }}>{it.enteredValue}</span>
