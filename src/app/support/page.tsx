@@ -29,12 +29,15 @@ export default function SupportPage() {
     } catch { /* ignore */ }
   }, []);
 
-  // Load + poll every 5s for admin replies.
+  // Load + poll every 30s for admin replies (support is async). Skip while the tab is
+  // hidden, and refresh immediately when the user returns to it.
   useEffect(() => {
     if (!session) return;
     load();
-    const t = setInterval(load, 5000);
-    return () => clearInterval(t);
+    const t = setInterval(() => { if (!document.hidden) load(); }, 30000);
+    const onVisible = () => { if (!document.hidden) load(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", onVisible); };
   }, [session, load]);
 
   // Scroll only the chat box to its bottom — NOT the whole page (which would jump to the footer).
