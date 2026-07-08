@@ -5,11 +5,7 @@ import { db } from "@/lib/db";
 import { bidderDocuments, user } from "@/lib/schema";
 import { and, desc, eq } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { put, del } from "@vercel/blob";
-
-function getBlobToken() {
-  return process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
-}
+import { uploadToSpaces, deleteFromSpaces, isSpacesConfigured } from "@/lib/spaces";
 
 async function assertCounty(sessionUserId: string) {
   const [acting] = await db.select({ type: user.type }).from(user).where(eq(user.id, sessionUserId)).limit(1);
@@ -43,9 +39,8 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     if (!session) return new NextResponse("Unauthorized", { status: 401 });
     if (!(await assertCounty(session.user.id))) return new NextResponse("Forbidden", { status: 403 });
 
-    const token = getBlobToken();
-    if (!token) {
-      return new NextResponse("Missing BLOB_READ_WRITE_TOKEN (or VERCEL_BLOB_READ_WRITE_TOKEN)", { status: 500 });
+    if (!isSpacesConfigured()) {
+      return new NextResponse("File storage (Spaces) is not configured", { status: 500 });
     }
 
     const [b] = await db.select({ id: user.id, type: user.type }).from(user).where(eq(user.id, params.id)).limit(1);
@@ -61,11 +56,9 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     for (const file of files) {
       if (!file || typeof (file as any).arrayBuffer !== "function") continue;
       const arrayBuffer = await file.arrayBuffer();
-      const uploaded = await put(`bidders/${params.id}/${file.name}`, arrayBuffer, {
-        access: "public",
+      const uploaded = await uploadToSpaces(`bidders/${params.id}/${file.name}`, arrayBuffer, {
         addRandomSuffix: true,
         contentType: file.type || undefined,
-        token,
       });
 
       const docId = uuidv4();
@@ -106,11 +99,6 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
     if (!session) return new NextResponse("Unauthorized", { status: 401 });
     if (!(await assertCounty(session.user.id))) return new NextResponse("Forbidden", { status: 403 });
 
-    const token = getBlobToken();
-    if (!token) {
-      return new NextResponse("Missing BLOB_READ_WRITE_TOKEN (or VERCEL_BLOB_READ_WRITE_TOKEN)", { status: 500 });
-    }
-
     const { searchParams } = new URL(req.url);
     const documentId = searchParams.get("documentId");
     if (!documentId) return new NextResponse("documentId is required", { status: 400 });
@@ -122,8 +110,9 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
       .limit(1);
     if (!doc) return new NextResponse("Document not found", { status: 404 });
 
-    if ((doc as any).url) {
-      await del((doc as any).url as string, { token });
+    const ref = (doc as any).pathname || (doc as any).url;
+    if (ref) {
+      await deleteFromSpaces(ref as string);
     }
 
     await db

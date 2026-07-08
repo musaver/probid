@@ -5,23 +5,15 @@ import { db } from "@/lib/db";
 import { property, propertyDocuments } from "@/lib/schema";
 import { eq, and } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
-import { put } from "@vercel/blob";
-
-function getBlobToken() {
-  return process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
-}
+import { uploadToSpaces, isSpacesConfigured } from "@/lib/spaces";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
-    const token = getBlobToken();
-    if (!token) {
-      return new NextResponse(
-        "Missing BLOB_READ_WRITE_TOKEN (or VERCEL_BLOB_READ_WRITE_TOKEN)",
-        { status: 500 }
-      );
+    if (!isSpacesConfigured()) {
+      return new NextResponse("File storage (Spaces) is not configured", { status: 500 });
     }
 
     const formData = await req.formData();
@@ -65,14 +57,12 @@ export async function POST(req: Request) {
       if (!file || typeof file.arrayBuffer !== "function") continue;
 
       const arrayBuffer = await file.arrayBuffer();
-      const uploaded = await put(
+      const uploaded = await uploadToSpaces(
         `properties/${propertyId}/${file.name}`,
         arrayBuffer,
         {
-          access: "public",
           addRandomSuffix: true,
           contentType: file.type || undefined,
-          token,
         }
       );
 

@@ -4,11 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { property, propertyDocuments } from "@/lib/schema";
 import { and, desc, eq } from "drizzle-orm";
-import { del } from "@vercel/blob";
-
-function getBlobToken() {
-  return process.env.BLOB_READ_WRITE_TOKEN || process.env.VERCEL_BLOB_READ_WRITE_TOKEN;
-}
+import { deleteFromSpaces } from "@/lib/spaces";
 
 export async function GET(
   req: Request,
@@ -41,14 +37,6 @@ export async function DELETE(
     const session = await getServerSession(authOptions);
     if (!session) return new NextResponse("Unauthorized", { status: 401 });
 
-    const token = getBlobToken();
-    if (!token) {
-      return new NextResponse(
-        "Missing BLOB_READ_WRITE_TOKEN (or VERCEL_BLOB_READ_WRITE_TOKEN)",
-        { status: 500 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     const documentId = searchParams.get("documentId");
     if (!documentId) {
@@ -77,9 +65,10 @@ export async function DELETE(
 
     if (!doc) return new NextResponse("Document not found", { status: 404 });
 
-    // Delete from Blob first (best-effort), then DB record
-    if ((doc as any).url) {
-      await del((doc as any).url as string, { token });
+    // Delete from Spaces first (best-effort), then DB record
+    const ref = (doc as any).pathname || (doc as any).url;
+    if (ref) {
+      await deleteFromSpaces(ref as string);
     }
 
     await db
