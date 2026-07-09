@@ -1,4 +1,4 @@
-import Home1Faq from "@/components/faq/Home1Faq";
+// import Home1Faq from "@/components/faq/Home1Faq";
 import Footer from "@/components/footer/Footer";
 import Header from "@/components/header/Header";
 import FeaturesSection from "@/components/homepage/FeaturesSection";
@@ -12,7 +12,8 @@ export default function Home() {
       <Header />
       <HeroSection />
       <FeaturesSection />
-      <Home1Faq />
+      {/* FAQ / help-community section hidden for now */}
+      {/* <Home1Faq /> */}
       <LogosSection />
       <TestimonialsSection />
       <Footer />

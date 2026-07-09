@@ -33,14 +33,15 @@ const HeroSection = () => {
               Join us as we carve a path to success, driven by passion, powered
               by innovation, and we&apos;re here to turn them into reality.
             </p>
-            <div className="homepage-hero__actions">
+            {/* Buttons temporarily disabled — target route not ready yet */}
+            {/* <div className="homepage-hero__actions">
               <Link className="homepage-hero__btn homepage-hero__btn--primary" href="/auction-grid">
                 Start A Bid
               </Link>
               <Link className="homepage-hero__btn homepage-hero__btn--secondary" href="/auction-grid">
                 View All Auction
               </Link>
-            </div>
+            </div> */}
           </div>
           <div className="homepage-hero__gallery">
             {heroImages.map((image, idx) => (
