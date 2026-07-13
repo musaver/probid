@@ -1,0 +1,339 @@
+/* Sign-in / create-account page styles.
+   Imported by the server page (login/page.tsx) so they are extracted into
+   <head> on first paint — no flash of unstyled content on hard refresh.
+   All selectors are namespaced under .bb-auth to avoid clashing with the
+   global Bootstrap / site stylesheets. */
+
+.bb-auth,
+.bb-auth *,
+.bb-auth *::before,
+.bb-auth *::after {
+  box-sizing: border-box;
+}
+
+.bb-auth {
+  --green: #6aa63b;
+  --green-dark: #2f5117;
+  --green-hover: #5c9333;
+  --ink: #1a2b12;
+  --muted: #6b7566;
+  --line: #e2e6dd;
+  --field: #f6f8f3;
+  --bg1: #eef1f8;
+  --bg2: #eef6e8;
+  --focus: #8dc85a;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  background: radial-gradient(
+      1200px 600px at 10% -10%,
+      var(--bg1),
+      transparent 60%
+    ),
+    radial-gradient(1000px 700px at 100% 110%, var(--bg2), transparent 55%),
+    #fbfcfa;
+}
+
+.bb-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.bb-card {
+  width: 100%;
+  max-width: 448px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 36px 34px 30px;
+  box-shadow: 0 18px 50px -20px rgba(47, 81, 23, 0.28);
+}
+
+.bb-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.bb-seal {
+  width: 104px;
+  height: 104px;
+  display: block;
+}
+
+.bb-head {
+  text-align: center;
+}
+
+.bb-headline {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 16px;
+  letter-spacing: -0.01em;
+}
+
+.bb-sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin-top: 6px;
+}
+
+.bb-sent-to {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.bb-error {
+  margin-top: 18px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: #fdecec;
+  border: 1px solid #f5c2c2;
+  color: #b42318;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.bb-form {
+  margin-top: 24px;
+}
+
+.bb-field {
+  margin-bottom: 16px;
+}
+
+.bb-field label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 7px;
+  color: var(--ink);
+}
+
+.bb-field input[type="email"],
+.bb-field input[type="text"] {
+  width: 100%;
+  font-size: 0.95rem;
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  border-radius: 11px;
+  color: var(--ink);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.bb-field input::placeholder {
+  color: #a6ada0;
+}
+
+.bb-field input:focus {
+  outline: none;
+  border-color: var(--focus);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(141, 200, 90, 0.25);
+}
+
+.bb-otp {
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.42em;
+  padding-left: calc(14px + 0.42em) !important;
+}
+
+.bb-otp::placeholder {
+  letter-spacing: 0.42em;
+  color: #c9cfc3;
+}
+
+.bb-hint {
+  font-size: 0.75rem;
+  color: #a6ada0;
+  margin-top: 6px;
+}
+
+.bb-btn {
+  width: 100%;
+  margin-top: 6px;
+  padding: 14px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--green);
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.bb-btn:hover:not(:disabled) {
+  background: var(--green-hover);
+}
+
+.bb-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.bb-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.bb-check {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 4px 0 14px;
+  font-weight: 400;
+}
+
+.bb-check input {
+  margin-top: 2px;
+  width: 15px;
+  height: 15px;
+  accent-color: var(--green);
+  flex: none;
+}
+
+.bb-check a {
+  color: var(--green);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bb-check a:hover {
+  text-decoration: underline;
+}
+
+.bb-resend {
+  text-align: center;
+  font-size: 0.86rem;
+  color: var(--muted);
+  margin-top: 18px;
+}
+
+.bb-linkbtn {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--green);
+  font-weight: 700;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.bb-linkbtn:disabled {
+  color: #a6ada0;
+  cursor: default;
+  font-weight: 600;
+}
+
+.bb-linkbtn:not(:disabled):hover {
+  text-decoration: underline;
+}
+
+.bb-back {
+  display: block;
+  width: 100%;
+  text-align: center;
+  margin-top: 13px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.bb-back:hover {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
+.bb-switch {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin-top: 22px;
+}
+
+.bb-switch button {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--green);
+  font-weight: 700;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.bb-switch button:hover {
+  text-decoration: underline;
+}
+
+.bb-trust {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+  font-size: 0.76rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.bb-trust svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+.bb-footer {
+  text-align: center;
+  padding: 22px 20px 30px;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.bb-footer a {
+  color: var(--muted);
+  text-decoration: none;
+  margin: 0 9px;
+}
+
+.bb-footer a:hover {
+  color: var(--green-dark);
+  text-decoration: underline;
+}
+
+.bb-disclaimer {
+  margin-top: 8px;
+  max-width: 440px;
+  margin-left: auto;
+  margin-right: auto;
+  line-height: 1.5;
+  color: #9aa294;
+}
+
+@media (max-width: 420px) {
+  .bb-card {
+    padding: 30px 22px 26px;
+    border-radius: 16px;
+  }
+  .bb-headline {
+    font-size: 1.35rem;
+  }
+}

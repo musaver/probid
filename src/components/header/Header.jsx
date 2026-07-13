@@ -331,7 +331,7 @@ const Header = () => {
             </form>
             )}
             <div className="btn-area d-lg-none d-flex">
-              <Link href={session ? "/dashboard" : "/register"} className="login-btn btn-hover">
+              <Link href={session ? "/dashboard" : "/login"} className="login-btn btn-hover">
                 <svg
                   width={15}
                   height={19}
@@ -898,7 +898,7 @@ const Header = () => {
             </div>
           ) : (
             <Link
-              href="/register"
+              href="/login"
               className="login-btn btn-hover d-lg-flex d-none"
               style={{ backgroundColor: "#00008b", color: "white", borderRadius: "25px" }}
             >
