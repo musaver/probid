@@ -55,15 +55,19 @@ export async function POST(req: Request) {
         const linkedBiddersToInsert: any[] = [];
 
         const valuesToInsert = properties.map((p: ImportedProperty) => {
-            // Basic validation: Title is required
-            if (!p.Title) {
-                throw new Error("Missing required field: Title");
-            }
-
             // Use Sale ID if provided, otherwise fallback to Parcel ID or generate one
             const saleId = (p["Sale ID"] ? String(p["Sale ID"]).trim() : null)
                 || (p["Parcel ID"] ? String(p["Parcel ID"]).trim() : null)
                 || uuidv4().slice(0, 8).toUpperCase();
+
+            // Title is no longer required from the user. The `title` column is NOT NULL,
+            // so derive a value: Address (what the rest of the app uses as the name),
+            // then Parcel ID, then the Sale ID as a last resort.
+            const title =
+                (p.Title && String(p.Title).trim())
+                || (p.Address && String(p.Address).trim())
+                || (p["Parcel ID"] && String(p["Parcel ID"]).trim())
+                || saleId;
 
             // Handle Owners
             let ownersArr: string[] = [];
@@ -97,7 +101,7 @@ export async function POST(req: Request) {
 
             return {
                 id: propertyId,
-                title: p.Title,
+                title,
                 address: p.Address || null,
                 city: p.City || null,
                 zipCode: p["Zip Code"] ? String(p["Zip Code"]) : null,

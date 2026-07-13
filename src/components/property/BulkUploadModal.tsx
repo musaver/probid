@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import * as XLSX from "xlsx";
 
 interface ImportedProperty {
-    Title: string;
+    Title?: string;
     "Sale ID"?: string;
     "Parcel ID"?: string;
     Address?: string;
@@ -29,7 +29,6 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
 
     const downloadTemplate = (ext: "xlsx" | "xls" | "csv") => {
         const headers = [
-            "Title",
             "Sale ID",
             "Parcel ID",
             "Address",
@@ -44,8 +43,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
         ];
         const sampleData = [
             {
-                Title: "Example Property",
-                "Sale ID": "2024-001",
+                "Sale ID": "2025-0001",
                 "Parcel ID": "12-34-567",
                 Address: "123 Main St",
                 City: "Anytown",
@@ -58,8 +56,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                 "Status": "active",
             },
             {
-                Title: "Vacant Lot",
-                "Sale ID": "2024-002",
+                "Sale ID": "2025-0002",
                 "Parcel ID": "12-34-568",
                 Address: "0 Oak Ave",
                 City: "Anytown",
@@ -128,10 +125,12 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
         }
 
         items.forEach((item, index) => {
-            if (!item.Title) {
-                newErrors.push(`Row ${index + 2}: Missing required 'Title'.`);
+            // Relaxed validation: a row just needs something to identify it.
+            // Sale ID is the key field (and NOT NULL in the DB); if it's absent the
+            // importer falls back to Parcel ID, so require at least one of them.
+            if (!item["Sale ID"] && !item["Parcel ID"]) {
+                newErrors.push(`Row ${index + 2}: needs a 'Sale ID' (or at least a 'Parcel ID').`);
             }
-            // Relaxed validation: Title is the only strictly required field
         });
         setErrors(newErrors);
     };
@@ -245,7 +244,6 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                             <table style={{ width: "100%", fontSize: "14px", borderCollapse: "collapse" }}>
                                 <thead style={{ background: "#F9FAFB", position: "sticky", top: 0 }}>
                                     <tr>
-                                        <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Title</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Sale ID</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Parcel ID</th>
                                         <th style={{ padding: "8px", textAlign: "left", borderBottom: "1px solid #E5E7EB", whiteSpace: "nowrap" }}>Address</th>
@@ -262,8 +260,7 @@ export default function BulkUploadModal({ onClose }: { onClose: () => void }) {
                                 <tbody>
                                     {data.slice(0, 50).map((row, i) => (
                                         <tr key={i} style={{ borderBottom: "1px solid #F3F4F6" }}>
-                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Title || <span style={{ color: "red" }}>Missing</span>}</td>
-                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Sale ID"] || "-"}</td>
+                                            <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Sale ID"] || row["Parcel ID"] || <span style={{ color: "red" }}>Missing</span>}</td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row["Parcel ID"] || "-"}</td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.Address || "-"}</td>
                                             <td style={{ padding: "8px", whiteSpace: "nowrap" }}>{row.City || "-"}</td>
