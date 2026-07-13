@@ -4,11 +4,9 @@ import "./globals.css";
 import ClientLayout from "./ClientLayout";
 
 export const metadata: Metadata = {
-  title: "Probid- Multi Vendor Auction and Bidding Next js Template.",
-  description: "Your description here",
-  icons: {
-    icon: "/assets/img/fav-icon.svg",
-  },
+  title: "BidBridge — Connecting County Auctions and Bidders",
+  description:
+    "BidBridge connects county tax-sale auctions with bidders. Track properties, place bids, and manage county auctions in one place.",
 };
 
 export default function RootLayout({

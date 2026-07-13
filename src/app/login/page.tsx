@@ -7,9 +7,6 @@ import "./signin.css";
 export const metadata = {
   title: "Sign in · BidBridge",
   description: "Sign in to BidBridge — we'll email you a one-time code.",
-  icons: {
-    icon: "/images/logo.png",
-  },
 };
 
 export default async function LoginPage() {
