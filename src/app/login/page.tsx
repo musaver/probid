@@ -1,7 +1,6 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
-import Header from "@/components/header/Header";
 import SignInContent from "@/components/auth/SignInContent";
 import "./signin.css";
 
@@ -17,10 +16,5 @@ export default async function LoginPage() {
     redirect("/dashboard");
   }
 
-  return (
-    <>
-      <Header />
-      <SignInContent />
-    </>
-  );
+  return <SignInContent />;
 }

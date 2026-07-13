@@ -72,8 +72,7 @@ const Header = () => {
   // slash or when the app is served under a base path / reverse-proxy subpath
   // (where usePathname() can return e.g. "/app/register").
   const normalizedPath = (pathName || "").replace(/\/+$/, "");
-  const isAuthPage =
-    normalizedPath.endsWith("/register") || normalizedPath.endsWith("/login");
+  const isAuthPage = normalizedPath.endsWith("/register");
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
