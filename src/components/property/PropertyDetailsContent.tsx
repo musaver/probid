@@ -364,6 +364,26 @@ const PropertyDetailsContent = ({ id }: { id: string }) => {
         return <div>Loading...</div>;
     }
 
+    // Backstop: if the property couldn't be loaded (e.g. not found, or the request
+    // was unauthorized), render a message instead of crashing on property.* access.
+    if (!property) {
+        return (
+            <div className="dashboard-wrapper">
+                <DashboardNav activeTab="properties" />
+                <div className="property-details-content">
+                    <div className="container" style={{ padding: "48px 0", textAlign: "center" }}>
+                        <h2>Property not available</h2>
+                        <p>This property could not be loaded. It may have been removed, or you may not have access.</p>
+                        <Link href="/properties" className="back-link">
+                            <i className="bi bi-arrow-left"></i> Back to Properties
+                        </Link>
+                    </div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
     return (
         <div className="dashboard-wrapper">
             <DashboardNav activeTab="properties" />
