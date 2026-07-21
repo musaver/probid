@@ -106,7 +106,7 @@ const InnerpageFooter5 = () => {
             </div>
             <div className="footer-bottom">
               <div className="copyright-area">
-                <p>©Copyright 2024 <Link href="/gadget-and-technology">Probid</Link> | Design By <a href="https://www.egenslab.com/">Egens Lab</a></p>
+                <p>©Copyright 2024 <Link href="/gadget-and-technology">BidBridge</Link> | Design By <a href="https://www.egenslab.com/">Egens Lab</a></p>
               </div>
               <div className="footer-bottom-right">
                 <ul>

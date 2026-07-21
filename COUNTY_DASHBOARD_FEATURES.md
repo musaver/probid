@@ -1,6 +1,6 @@
 # County User Dashboard Features (Client Overview)
 
-This document explains what a **County user** can do inside the Probid dashboard. It’s intended to help clients understand the **county role**, the **available screens**, and the **typical workflows**.
+This document explains what a **County user** can do inside the BidBridge dashboard. It’s intended to help clients understand the **county role**, the **available screens**, and the **typical workflows**.
 
 ---
 

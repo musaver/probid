@@ -161,7 +161,7 @@ const Footer6 = () => {
           <div className="footer-bottom">
             <div className="copyright-area">
               <p>
-                ©Copyright 2024 <Link href="/book-and-comic">Probid</Link> |
+                ©Copyright 2024 <Link href="/book-and-comic">BidBridge</Link> |
                 Design By <a href="https://www.egenslab.com/">Egens Lab</a>
               </p>
             </div>

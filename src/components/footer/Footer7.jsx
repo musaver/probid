@@ -115,7 +115,7 @@ const Footer7 = () => {
                           <Link href="/multipurpose2/support-center">Help &amp; Support</Link>
                         </li>
                         <li>
-                          <Link href="/multipurpose2/faq">FAQ Probid</Link>
+                          <Link href="/multipurpose2/faq">FAQ</Link>
                         </li>
                         <li>
                           <Link href="/multipurpose2/contact">Contact Us</Link>
@@ -179,7 +179,7 @@ const Footer7 = () => {
             <div className="footer-bottom">
               <div className="copyright-area">
                 <p>
-                  ©Copyright 2024 <Link href="/multipurpose2">Probid</Link> | Design By{" "}
+                  ©Copyright 2024 <Link href="/multipurpose2">BidBridge</Link> | Design By{" "}
                   <Link href="/multipurpose2/https://www.egenslab.com/">Egens Lab</Link>
                 </p>
               </div>

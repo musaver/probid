@@ -88,7 +88,7 @@ const InnerPageFooter7 = () => {
                     <div className="menu-container">
                       <ul className="widget-list">
                         <li><Link href="/support-center">Help &amp; Support</Link></li>
-                        <li><Link href="/faq">FAQ Probid</Link></li>
+                        <li><Link href="/faq">FAQ</Link></li>
                         <li><Link href="/contact">Contact Us</Link></li>
                         <li><Link href="/terms-condition">Terms of Service</Link></li>
                         <li><Link href="/privacy-policy">Our Policy</Link></li>
@@ -123,7 +123,7 @@ const InnerPageFooter7 = () => {
             </div>
             <div className="footer-bottom">
               <div className="copyright-area">
-                <p>©Copyright 2024 <Link href="/multipurpose2">Probid</Link> | Design By <a href="https://www.egenslab.com/">Egens Lab</a></p>
+                <p>©Copyright 2024 <Link href="/multipurpose2">BidBridge</Link> | Design By <a href="https://www.egenslab.com/">Egens Lab</a></p>
               </div>
               <div className="footer-bottom-right">
                 <ul>

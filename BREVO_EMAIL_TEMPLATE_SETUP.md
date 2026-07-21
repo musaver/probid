@@ -30,7 +30,7 @@
         
         <!-- Logo/Header -->
         <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #333333; margin: 0;">Probid</h1>
+            <h1 style="color: #333333; margin: 0;">BidBridge</h1>
         </div>
 
         <!-- Main Content -->
@@ -75,7 +75,7 @@
                 If you didn't request this verification code, please ignore this email or contact our support team.
             </p>
             <p style="color: #999999; font-size: 12px; margin: 10px 0 0 0;">
-                © 2024 Probid. All rights reserved.
+                © 2024 BidBridge. All rights reserved.
             </p>
         </div>
     </div>

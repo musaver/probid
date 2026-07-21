@@ -150,7 +150,7 @@ const Footer5 = () => {
             <div className="footer-bottom">
               <div className="copyright-area">
                 <p>
-                  ©Copyright 2024 <Link href="/book-and-comic">Probid</Link> | Design By{" "}
+                  ©Copyright 2024 <Link href="/book-and-comic">BidBridge</Link> | Design By{" "}
                   <a href="https://www.egenslab.com/">Egens Lab</a>
                 </p>
               </div>

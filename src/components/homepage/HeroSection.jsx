@@ -21,7 +21,7 @@ const HeroSection = () => {
       <div className="container">
         <div className="homepage-hero__grid">
           <div className="homepage-hero__content">
-            <p className="homepage-hero__eyebrow">PROBID YOU CAN TRUST</p>
+            <p className="homepage-hero__eyebrow">BIDBRIDGE YOU CAN TRUST</p>
             <h1>
               Select Your{" "}
               <span className={`${playfair.className} hero-emphasis`}>

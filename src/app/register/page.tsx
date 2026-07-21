@@ -6,11 +6,8 @@ import RegisterContent from "@/components/register/RegisterContent";
 import Footer from "@/components/footer/Footer";
 
 export const metadata = {
-  title: "Register - Probid Multi Vendor Auctions",
+  title: "Register - BidBridge",
   description: "Create an account to start bidding and selling",
-  icons: {
-    icon: "/assets/img/sm-logo.svg",
-  },
 };
 
 export default async function RegisterPage() {

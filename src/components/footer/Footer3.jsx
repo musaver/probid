@@ -106,7 +106,7 @@ const Footer3 = () => {
             </div>
             <div className="footer-bottom">
               <div className="copyright-area">
-                <p>©Copyright 2024 <Link href="/antiques-auction/">Probid</Link> | Design By <a href="https://www.egenslab.com/">Egens Lab</a></p>
+                <p>©Copyright 2024 <Link href="/antiques-auction/">BidBridge</Link> | Design By <a href="https://www.egenslab.com/">Egens Lab</a></p>
               </div>
               <div className="footer-bottom-right">
                 <ul>
