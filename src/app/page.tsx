@@ -1,22 +1,19 @@
-// import Home1Faq from "@/components/faq/Home1Faq";
-import Footer from "@/components/footer/Footer";
-import Header from "@/components/header/Header";
-import FeaturesSection from "@/components/homepage/FeaturesSection";
-import HeroSection from "@/components/homepage/HeroSection";
-import LogosSection from "@/components/homepage/LogosSection";
-import TestimonialsSection from "@/components/homepage/TestimonialsSection";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import { authOptions } from "@/lib/auth";
 
-export default function Home() {
-  return (
-    <>
-      <Header />
-      <HeroSection />
-      <FeaturesSection />
-      {/* FAQ / help-community section hidden for now */}
-      {/* <Home1Faq /> */}
-      <LogosSection />
-      <TestimonialsSection />
-      <Footer />
-    </>
-  );
+// Session-based redirect must run per-request, not be cached at build time.
+export const dynamic = "force-dynamic";
+
+// Homepage disabled: redirect based on auth state.
+// Logged in  -> /dashboard
+// Logged out -> /login
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+
+  if (session?.user) {
+    redirect("/dashboard");
+  }
+
+  redirect("/login");
 }
