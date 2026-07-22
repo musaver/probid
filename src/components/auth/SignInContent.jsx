@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const COPY = {
   signin: {
@@ -23,6 +23,16 @@ const RESEND_SECONDS = 60;
 
 const SignInContent = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Where to send the user after sign-in. Honors ?callbackUrl set by the
+  // middleware (e.g. /support from "Contact Admin"); rejects absolute URLs
+  // as an open-redirect guard. Defaults to /dashboard.
+  const rawCallback = searchParams?.get("callbackUrl");
+  const postLoginTarget =
+    rawCallback && rawCallback.startsWith("/") && !rawCallback.startsWith("//")
+      ? rawCallback
+      : "/dashboard";
 
   // 'signin' | 'register'
   const [mode, setMode] = useState("signin");
@@ -114,7 +124,7 @@ const SignInContent = () => {
       });
 
       if (login?.ok) {
-        router.push("/dashboard");
+        router.push(postLoginTarget);
       } else {
         setError("Verified, but sign-in failed. Please try again.");
       }

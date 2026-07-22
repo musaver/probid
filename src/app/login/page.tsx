@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import { authOptions } from "@/lib/auth";
@@ -9,12 +10,32 @@ export const metadata = {
   description: "Sign in to BidBridge — we'll email you a one-time code.",
 };
 
-export default async function LoginPage() {
+// Only allow same-site relative paths as post-login targets — never an
+// absolute URL (open-redirect guard). Falls back to /dashboard.
+function safeCallback(cb?: string | string[]): string {
+  const raw = Array.isArray(cb) ? cb[0] : cb;
+  if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
+  return "/dashboard";
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ callbackUrl?: string | string[] }>;
+}) {
   const session = await getServerSession(authOptions);
 
   if (session?.user) {
-    redirect("/dashboard");
+    // Honor where the visitor was headed (e.g. /support from "Contact Admin")
+    // instead of always dumping them on the dashboard.
+    const { callbackUrl } = await searchParams;
+    redirect(safeCallback(callbackUrl));
   }
 
-  return <SignInContent />;
+  // SignInContent uses useSearchParams(), which requires a Suspense boundary.
+  return (
+    <Suspense fallback={null}>
+      <SignInContent />
+    </Suspense>
+  );
 }
