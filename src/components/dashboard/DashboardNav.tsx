@@ -18,7 +18,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab }) => {
     const isCounty = session?.user?.type === "county";
 
     const handleLogout = () => {
-        signOut({ callbackUrl: "/" });
+        signOut({ callbackUrl: "/login" });
     };
 
     return (
