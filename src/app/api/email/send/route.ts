@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import { sendOTPEmail } from '@/lib/email';
 import { verification_tokens } from '@/lib/schema';
 import { rateLimit } from '@/lib/rate-limit';
+import { appUrl } from '@/lib/site';
 
 // Pre-auth endpoint: sends the sign-in / registration OTP, so it cannot require a
 // logged-in session. Instead it is rate-limited (per email + per client IP) and
@@ -37,7 +38,7 @@ export async function POST(req: Request) {
   const hashedOtp = await bcrypt.hash(otp, 10);
   const hashedToken = await bcrypt.hash(token, 10);
   const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
-  const verificationLink = `${process.env.NEXTAUTH_URL}/verify-otp?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+  const verificationLink = `${appUrl()}/verify-otp?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
 
   // Upsert: replace any existing token for this email
   await db.delete(verification_tokens).where(eq(verification_tokens.identifier, email));

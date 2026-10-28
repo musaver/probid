@@ -10,3 +10,17 @@ export const SITE = {
   effectiveDate: 'June 20, 2026',
   responseTime: '[X business days]',     // TODO: client to set the support response time
 };
+
+const PRODUCTION_URL = 'https://trackyourlien.com';
+
+// Absolute base URL for links in outgoing emails. Falls back to the production
+// domain when NEXTAUTH_URL is unset or still points at localhost in production,
+// so a misconfigured deploy can't email users links to their own machine.
+export function appUrl(): string {
+  const url = (process.env.NEXTAUTH_URL || '').replace(/\/+$/, '');
+  if (!url) return PRODUCTION_URL;
+  if (process.env.NODE_ENV === 'production' && /\/\/(localhost|127\.0\.0\.1)(:|\/|$)/.test(url)) {
+    return PRODUCTION_URL;
+  }
+  return url;
+}
