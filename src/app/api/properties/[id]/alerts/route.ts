@@ -6,6 +6,7 @@ import { notifications, property, propertyAlerts, propertyLinkedBidders, user, c
 import { and, eq, or } from "drizzle-orm";
 import { v4 as uuidv4 } from "uuid";
 import { sendTextEmail } from "@/lib/email";
+import { appUrl } from "@/lib/site";
 import CryptoJS from "crypto-js";
 
 export async function POST(
@@ -124,7 +125,7 @@ export async function POST(
     }
 
     // Send emails (best-effort)
-    const emailText = `Property: ${p.address || params.id}\n\n${message}\n\nView: ${process.env.NEXTAUTH_URL}/property-details/${params.id}`;
+    const emailText = `Property: ${p.address || params.id}\n\n${message}\n\nView: ${appUrl()}/property-details/${params.id}`;
     const sendResults: { email: string; ok: boolean; error?: string }[] = [];
     for (const email of Array.from(allEmails)) {
       if (email === actingUser.email && actingUser.type === "county") continue; // Don't email yourself if you are county sending alerts

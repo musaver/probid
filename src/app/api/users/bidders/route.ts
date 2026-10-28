@@ -7,6 +7,7 @@ import { and, eq, like, or, inArray, sql, desc } from "drizzle-orm";
 import { alias } from "drizzle-orm/mysql-core";
 import { v4 as uuidv4 } from "uuid";
 import { sendBidderInviteEmail } from "@/lib/email";
+import { appUrl } from "@/lib/site";
 import { generateUniqueBidderNumber } from "@/lib/bidder-utils";
 
 export async function GET(req: Request) {
@@ -229,7 +230,7 @@ export async function POST(req: Request) {
     } as any);
 
     // Invite email using Brevo template (best-effort)
-    const baseUrl = process.env.NEXTAUTH_URL || "";
+    const baseUrl = appUrl();
     const registerUrl = baseUrl ? `${baseUrl}/register` : "/register";
     const inviteLink = baseUrl ? `${baseUrl}/api/auth/invite?token=${inviteToken}` : `/api/auth/invite?token=${inviteToken}`;
 
